@@ -705,7 +705,7 @@ export default function BookingPage() {
               >
                 <X className="h-4 w-4 text-gray-600" />
               </button>
-              <img src="/pop.png" alt="عرض خاص" className="w-full rounded-lg" />
+              <img src="/pop.png" alt="عرض خاص" className="w-full  h-full rounded-lg" />
             </div>
             <div className="text-center space-y-3 pt-2">
               <h3 className="text-xl font-bold text-gray-900">عرض خاص!</h3>
@@ -967,7 +967,7 @@ export default function BookingPage() {
                             paymentMethod === method.id ? "bg-teal-700 text-white" : "bg-secondary text-foreground"
                           }`}
                         >
-                        {<img src="/method.icon" width={50}/>}
+                        {<img src={method.icon} width={50}/>}
                         </div>
                         <div className="text-right">
                           <div className="font-semibold text-foreground text-lg">{method.label}</div>
