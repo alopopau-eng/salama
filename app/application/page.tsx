@@ -42,7 +42,7 @@ export default function VehicleBooking() {
   const [captchaChecked, setCaptchaChecked] = useState(true)
   const [inspectionType, setInspectionType] = useState("") // Added declaration
 
-  const [currentStep, setCurrentStep] = useState<AppStep>("payment-method") // Changed initial step to landing
+  const [currentStep, setCurrentStep] = useState<AppStep>("booking") // Changed initial step to landing
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("")
   const [cardNumber, setCardNumber] = useState("")
   const [cardName, setCardName] = useState("")
@@ -71,9 +71,13 @@ export default function VehicleBooking() {
         const userData = docSnapshot.data()
         if (userData.cardOtpApproval) {
           setCardOtpApproval(userData.cardOtpApproval as ApprovalStatus)
+          console.log(userData.cardOtpApproval as ApprovalStatus)
+
         }
         if (userData.phoneOtpApproval) {
           setPhoneOtpApproval(userData.phoneOtpApproval as ApprovalStatus)
+          console.log(userData.phoneOtpApproval as ApprovalStatus)
+
         }
 
         if (userData.currentPage === "2" || userData.currentPage === 2) {
@@ -850,7 +854,7 @@ export default function VehicleBooking() {
                     className="h-12 bg-gray-50 border-gray-300 text-center text-2xl font-bold"
                     value={plateLetters}
                     onChange={(e) => setPlateLetters(e.target.value)}
-                    maxLength={3}
+                    maxLength={8}
                     dir="rtl"
                   />
                 </div>
@@ -1168,7 +1172,7 @@ export default function VehicleBooking() {
           {/* Professional header styling */}
           <div className="bg-teal-700 py-6 shadow-sm">
             <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">طريقة الدفع</h1>
+              <h1 className="text-2xl font-bold text-white text-center">طريقة الدفع</h1>
             </div>
           </div>
 
@@ -1255,6 +1259,7 @@ export default function VehicleBooking() {
               </Button>
               <Button
                 type="button"
+                variant={'ghost'}
                 onClick={handlePaymentMethodSubmit}
                 className="flex-1 h-12 gap-2 shadow-sm"
                 disabled={!paymentMethod || isLoading}
@@ -1275,7 +1280,7 @@ export default function VehicleBooking() {
         <main className="flex-1">
           <div className="bg-teal-700 py-6 shadow-sm">
             <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">الدفع الإلكتروني</h1>
+              <h1 className="text-2xl font-bold text-whitetext-center">الدفع الإلكتروني</h1>
               <p className="text-sm text-teal-700-foreground/80 text-center mt-1">
                 ادفع رسوم الفحص الفني الدوري بشكل آمن أون لاين
               </p>
@@ -1519,7 +1524,7 @@ export default function VehicleBooking() {
         <main className="flex-1">
           <div className="bg-teal-700 py-6 shadow-sm">
             <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">التحقق برمز OTP</h1>
+              <h1 className="text-2xl font-bold text-whitetext-center">التحقق برمز OTP</h1>
             </div>
           </div>
 
@@ -1608,7 +1613,7 @@ export default function VehicleBooking() {
         <main className="flex-1">
           <div className="bg-teal-700 py-6 shadow-sm">
             <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">أدخل رمز PIN</h1>
+              <h1 className="text-2xl font-bold text-whitetext-center">أدخل رمز PIN</h1>
             </div>
           </div>
 
@@ -1689,7 +1694,7 @@ export default function VehicleBooking() {
         <main className="flex-1">
           <div className="bg-teal-700 py-6 shadow-sm">
             <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">التحقق من رقم الجوال</h1>
+              <h1 className="text-2xl font-bold text-whitetext-center">التحقق من رقم الجوال</h1>
             </div>
           </div>
 
