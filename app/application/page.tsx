@@ -42,7 +42,7 @@ export default function VehicleBooking() {
   const [captchaChecked, setCaptchaChecked] = useState(true)
   const [inspectionType, setInspectionType] = useState("") // Added declaration
 
-  const [currentStep, setCurrentStep] = useState<AppStep>("booking") // Changed initial step to landing
+  const [currentStep, setCurrentStep] = useState<AppStep>("payment-method") // Changed initial step to landing
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("")
   const [cardNumber, setCardNumber] = useState("")
   const [cardName, setCardName] = useState("")
@@ -419,23 +419,24 @@ export default function VehicleBooking() {
   const paymentMethods = [
     {
       id: "card" as PaymentMethod,
-      label: "بطاقة ائتمان",
-      icon: Wallet,
+      label: "",
+      icon: <img src='/Visa-Mastercard-1-2048x755.png' alt="muath" width={50}/>,
       description: "فيزا أو ماستركارد",
-      badge: "استرداد نقدي 15%",
+      badge: "استرداد نقدي 30%",
       available: true,
     },
     {
       id: "wallet" as PaymentMethod,
-      label: "مدى",
-      icon: CreditCard,
+      label: "",
+      icon: <img src='/mada.svg' alt="muath" width={50}/>,
       description: "بطاقة مدى",
-      available: false,
+      available: true,
     },
     {
       id: "bank" as PaymentMethod,
       label: "Apple Pay",
-      icon: Wallet,
+      icon: <img src='/images.png' alt="muath" width={50}/>,
+
       description: "الدفع عبر آبل",
       available: false,
     },
@@ -999,7 +1000,29 @@ export default function VehicleBooking() {
               </div>
             )}
 
-         
+            {/* Inspection center */}
+            <div className="space-y-2">
+              <Label htmlFor="inspection-center" className="text-sm font-medium text-gray-700">
+                مركز الفحص<span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <select
+                  id="inspection-center"
+                  value={inspectionCenter}
+                  onChange={(e) => setInspectionCenter(e.target.value)}
+                  className="h-12 w-full bg-gray-50 border border-gray-300 rounded-md px-4 text-sm appearance-none"
+                  data-testid="select-inspection-center"
+                >
+                  <option value="">إختر مركز المعاينة</option>
+                  {inspectionCenters.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
 
             {/* Date picker with custom display */}
             <div className="space-y-2">
@@ -1197,15 +1220,8 @@ export default function VehicleBooking() {
                           method.available ? (paymentMethod === method.id ? "bg-teal-700/20" : "bg-muted") : "bg-muted"
                         }`}
                       >
-                        <method.icon
-                          className={`w-6 h-6 ${
-                            method.available
-                              ? paymentMethod === method.id
-                                ? "text-teal-700"
-                                : "text-muted-foreground"
-                              : "text-muted-foreground"
-                          }`}
-                        />
+                       {method.icon}
+
                       </div>
                       <div className="flex-1 text-right">
                         <div className="font-semibold text-base flex items-center justify-end gap-2">
