@@ -29,7 +29,7 @@ export async function addData(data: any) {
       ...data, 
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      isUnread: true  // Mark as unread whenever data is updated
+      isRead:false  // Mark as unread whenever data is updated
     }, {merge:true});
 
     console.log('Document written with ID: ', docRef.id);

