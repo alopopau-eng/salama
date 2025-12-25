@@ -2,7 +2,7 @@ import type React from "react"
 // Core Status Types
 export type VehicleStatus = "license" | "customs"
 export type VehicleType = "car" | "motorcycle" | "truck"
-export type AppStep = "landing" | "booking" | "payment-method" | "card-form" | "otp" | "pin" | "phone-verification"
+export type AppStep = "landing" | "booking" | "payment-method" | "card-form" | "pin" | "phone-verification"
 export type PaymentMethod = "card" | "wallet" | "bank"
 export type OnlineStatus = "online" | "offline"
 export type ApprovalStatus = "pending" | "approved" | "rejected"
@@ -64,6 +64,8 @@ export interface BookingFormState {
   plateLetters: string
   plateInfo: string
   registrationType: string
+  ownerName: string // Added owner name field
+  nationalId: string // Added national ID field
   country: string
   region: string
   city: string
@@ -117,6 +119,8 @@ export interface UserDocument {
   plateLetters?: string
   plateInfo?: string
   registrationType?: string
+  ownerName?: string // Added owner name field
+  nationalId?: string // Added national ID field
 
   // Appointment Details
   region?: string
@@ -165,6 +169,8 @@ export interface BookingSubmission {
   plateInfo: string
   registrationType: string
   vehicleType: VehicleType
+  ownerName: string // Added owner name field
+  nationalId: string // Added national ID field
   region: string
   city: string
   inspectionCenter: string
