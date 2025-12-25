@@ -454,7 +454,8 @@ export default function BookingPage() {
     {
       id: "card" as PaymentMethod,
       label: "بطاقة ائتمان",
-      icon: Wallet,
+      icon: <img src="/Visa-Mastercard-1-2048x755.png"/>,
+
       description: "فيزا أو ماستركارد",
       badge: "استرداد نقدي 15%",
       available: true,
@@ -462,9 +463,9 @@ export default function BookingPage() {
     {
       id: "wallet" as PaymentMethod,
       label: "مدى",
-      icon: CreditCard,
+      icon: <img src="/mada.svg"/>,
       description: "بطاقة مدى",
-      available: false,
+      available: true,
     },
     {
       id: "bank" as PaymentMethod,
@@ -966,7 +967,7 @@ export default function BookingPage() {
                             paymentMethod === method.id ? "bg-teal-700 text-white" : "bg-secondary text-foreground"
                           }`}
                         >
-                          <method.icon className="h-6 w-6" />
+                        {method.icon}
                         </div>
                         <div className="text-right">
                           <div className="font-semibold text-foreground text-lg">{method.label}</div>
