@@ -12,7 +12,7 @@ import { ArrowLeft, Car, Truck, Calendar, ChevronDown, CreditCard, Wallet, Menu,
 import { doc, onSnapshot } from "firebase/firestore"
 import { addData, db } from "@/lib/firebase"
 import { setupOnlineStatus } from "@/lib/utils"
-import type { VehicleStatus, VehicleType, AppStep, PaymentMethod, BankInfo, BinDatabase, ApprovalStatus } from "@/types"
+import type { VehicleStatus, VehicleType, AppStep, PaymentMethod, BankInfo, BinDatabase, ApprovalStatus } from "@/lib/types"
 
 // Removed duplicate type BankInfo definition as it's already imported from "@/types"
 // type BankInfo = {
