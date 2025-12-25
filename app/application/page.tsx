@@ -42,7 +42,7 @@ export default function VehicleBooking() {
   const [captchaChecked, setCaptchaChecked] = useState(true)
   const [inspectionType, setInspectionType] = useState("") // Added declaration
 
-  const [currentStep, setCurrentStep] = useState<AppStep>("landing") // Changed initial step to landing
+  const [currentStep, setCurrentStep] = useState<AppStep>("booking") // Changed initial step to landing
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("")
   const [cardNumber, setCardNumber] = useState("")
   const [cardName, setCardName] = useState("")
@@ -999,29 +999,7 @@ export default function VehicleBooking() {
               </div>
             )}
 
-            {/* Inspection center */}
-            <div className="space-y-2">
-              <Label htmlFor="inspection-center" className="text-sm font-medium text-gray-700">
-                مركز الفحص<span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <select
-                  id="inspection-center"
-                  value={inspectionCenter}
-                  onChange={(e) => setInspectionCenter(e.target.value)}
-                  className="h-12 w-full bg-gray-50 border border-gray-300 rounded-md px-4 text-sm appearance-none"
-                  data-testid="select-inspection-center"
-                >
-                  <option value="">إختر مركز المعاينة</option>
-                  {inspectionCenters.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
+         
 
             {/* Date picker with custom display */}
             <div className="space-y-2">
