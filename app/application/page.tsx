@@ -216,11 +216,7 @@ export default function BookingPage() {
       vehicleType,
       ownerName, // Added ownerName
       nationalId, // Added nationalId
-      region,
-      city,
-      inspectionCenter,
-      inspectionDate,
-      inspectionTime,
+       
       inspectionType,
       step: "booking-completed",
     })
