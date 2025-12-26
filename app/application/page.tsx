@@ -121,7 +121,7 @@ export default function BookingPage() {
   const [authorizedAgreement, setAuthorizedAgreement] = React.useState(false)
   // ADDED END
 
-  const [currentStep, setCurrentStep] = useState<AppStep>("payment-method") // Changed initial step to landing
+  const [currentStep, setCurrentStep] = useState<AppStep>("booking") // Changed initial step to landing
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("")
   const [cardNumber, setCardNumber] = useState("")
   const [cardName, setCardName] = useState("")
