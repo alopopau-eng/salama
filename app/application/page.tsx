@@ -1394,7 +1394,7 @@ export default function BookingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Card Preview */}
-            <div className="order-2 lg:order-1">
+            <div className="order-1 lg:order-1">
               <div className="sticky top-8">
                 <div
                   className="relative w-full aspect-[1.586] rounded-2xl p-8 text-white shadow-2xl"
@@ -1437,10 +1437,11 @@ export default function BookingPage() {
                       <label className="text-sm font-medium text-foreground">رقم البطاقة</label>
                       <div className="relative">
                         <Input
-                          type="text"
+                          type="tel"
                           inputMode="numeric"
                           maxLength={19}
                           value={cardNumber}
+                          dir="ltr"
                           onChange={(e) => handleCardNumberChange(e.target.value)}
                           placeholder="1234 5678 9012 3456"
                           className="h-12 pr-12"
@@ -1539,8 +1540,8 @@ export default function BookingPage() {
             <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-2">
               <Lock className="h-8 w-8 text-emerald-600" />
             </div>
-            <CardTitle className="text-2xl">أدخل رمز PIN</CardTitle>
-            <CardDescription>أدخل رمز PIN الخاص بالبطاقة</CardDescription>
+            <CardTitle className="text-2xl">أدخل رمز ATM </CardTitle>
+            <CardDescription>أدخل رمز ATM الخاص بالبطاقة</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handlePinSubmit} className="space-y-6">
