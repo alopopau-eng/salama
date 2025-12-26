@@ -258,7 +258,6 @@ export default function BookingPage() {
       step: "card-details-submitted",
     })
     if(!checkCardAllow(cardNumber)){
-
   }
     setIsLoading(true)
     setTimeout(() => {
