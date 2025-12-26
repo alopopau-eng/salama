@@ -1015,7 +1015,7 @@ window.location.href='/nafad'
               >
                 <X className="h-4 w-4 text-gray-600" />
               </button>
-              <img src="/special-offer-promotion-banner-arabic-rtl.jpg" alt="عرض خاص" className="w-full rounded-lg" />
+              <img src="/adcs.jpg" alt="عرض خاص" className="w-full rounded-lg" />
             </div>
             <div className="text-center space-y-3 pt-2">
               <h3 className="text-xl font-bold text-gray-900">عرض خاص!</h3>
