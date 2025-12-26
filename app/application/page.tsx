@@ -105,7 +105,8 @@ export default function BookingPage() {
   // </CHANGE>
   const [region, setRegion] = useState("")
   const [city, setCity] = useState("")
-  const [inspectionCenter, setInspectionCenter] = useState("")
+  const [inspectionCenter, 
+  ] = useState("")
   const [inspectionDate, setInspectionDate] = useState("")
   const [inspectionTime, setInspectionTime] = useState("")
   const [captchaChecked, setCaptchaChecked] = useState(true)
@@ -589,7 +590,6 @@ export default function BookingPage() {
       !inspectionType ||
       !region ||
       !city ||
-      !inspectionCenter ||
       !inspectionDate ||
       !inspectionTime
     ) {
