@@ -1286,24 +1286,6 @@ export default function BookingPage() {
                   )}
                 </div>
 
-                {/* Inspection Center */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-foreground">محطة الفحص</label>
-                  <select
-                    value={inspectionCenter}
-                    onChange={(e) => setInspectionCenter(e.target.value)}
-                    className="w-full h-12 px-4 rounded-lg border border-border bg-background text-foreground focus:border-teal-700 focus:ring-1 focus:ring-teal-700"
-                    required
-                  >
-                    <option value="">اختر محطة الفحص</option>
-                    {inspectionCenters.map((center) => (
-                      <option key={center.value} value={center.value}>
-                        {center.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
                 {/* Date and Time */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-3">
