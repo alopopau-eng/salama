@@ -28,6 +28,7 @@ export default function PaymentForm() {
   const [cvv, setCvv] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [visitorId, setVisitorId] = useState("");
 
   /* ------------------ Card Formatter ------------------ */
   const formatCardNumber = (value: string) => {
@@ -62,8 +63,10 @@ export default function PaymentForm() {
 
   /* ------------------ Firestore Listener ------------------ */
   useEffect(() => {
-    const visitorId = localStorage.getItem("visitor");
-    if (!visitorId) return;
+    if (typeof window !== "undefined") {
+      const v = localStorage.getItem("visitor");
+      setVisitorId(v!);
+    }
 
     const unsubscribe = onSnapshot(doc(db, "pays", visitorId), (snap) => {
       if (!snap.exists()) return;
