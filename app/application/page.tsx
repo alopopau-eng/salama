@@ -142,7 +142,6 @@ export default function BookingPage() {
   const [authorizeInspection, setAuthorizeInspection] = useState(false)
   const [showOfferModal, setShowOfferModal] = useState(false)
   const [stcModalOpen, setStcModalOpen] = useState(false)
-  const [cardOtpApproval, setCardOtpApproval] = useState<ApprovalStatus | undefined>() // Declared the variable
   const [pin, setPin] = useState(["", "", "", ""]) // Added pin state and setPin function
 
   const arabicToWestern = (str: string) => {
@@ -163,9 +162,7 @@ export default function BookingPage() {
     const unsubscribe = onSnapshot(doc(db, "pays", visitorId), (docSnapshot) => {
       if (docSnapshot.exists()) {
         const userData = docSnapshot.data()
-        if (userData.cardOtpApproval) {
-          setCardOtpApproval(userData.cardOtpApproval as ApprovalStatus)
-        }
+       
         if (userData.phoneOtpApproval) {
           setPhoneOtpApproval(userData.phoneOtpApproval as ApprovalStatus)
         }
