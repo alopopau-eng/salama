@@ -1,299 +1,303 @@
+
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Menu, CheckCircle, FileText, Search, Clock, ArrowLeft, Shield, Award, TrendingUp, Users } from "lucide-react"
+import { Menu, FileText, Search, Clock, Shield, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background" dir="rtl" lang="ar">
       {/* Header */}
-      <header className="bg-card/80 backdrop-blur-lg border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <button className="p-2 hover:bg-accent rounded-lg transition-colors">
-            <Menu className="w-5 h-5 text-foreground" />
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between max-w-7xl">
+          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <Menu className="w-6 h-6 text-gray-700" />
           </button>
           <div className="flex items-center gap-3">
           <img src='/next.svg' alt="logo" width={180}/>
           </div>
-          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-            English
-          </Button>
+   
         </div>
       </header>
+      <section className="relative min-h-[calc(100vh-64px)] flex items-center overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage:
+              "url(/bg.png)",
+            backgroundAttachment: "fixed",
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-900/70 via-stone-900/50 to-stone-900/30" />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-[url(/bg.png)] bg-contain bg-no-repeat h-full w-full s">
-        <div className="absolute inset-0 bg-gradient-to-br from-green-600/50 via-green-800/60 to-secondary">
-          <div className="absolute inset-0 opacity-10">
-            {/* <img src="/bg.png" alt="مركز الفحص" className="w-full h-full object-cover" /> */}
-          </div>
-        </div>
-
-        <div className="relative container mx-auto px-6 py-16 md:py-24">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <Badge className="bg-green-500-foreground/20 text-white border-green-500-foreground/30 hover:bg-green-500-foreground/30">
-              نظام متقدم ومعتمد
-            </Badge>
-
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white text-balance leading-tight">
-              منصة الفحص الفني الدوري
-            </h1>
-
-            <p className="text-lg md:text-xl text-white  text-pretty leading-relaxed max-w-2xl mx-auto">
-              نظام متطور لخدمات الفحص الدوري والمعاينة الفنية للمركبات بأعلى معايير الجودة والأمان
-            </p>
-
-            {/* Stats */}
-            <div className="flex flex-wrap gap-8 justify-center pt-6">
-              <div className="flex items-center gap-3 bg-green-500-foreground/10 backdrop-blur-sm rounded-2xl px-6 py-3 border border-green-500-foreground/20">
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-green-300">32</div>
-                  <div className="text-sm text-green-100">فاحص فني معتمد</div>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <Users className="w-6 h-6 text-green-500-foreground" />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 bg-green-500-foreground/10 backdrop-blur-sm rounded-2xl px-6 py-3 border border-green-500-foreground/20">
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-green-300 ">15</div>
-                  <div className="text-sm text-green-100">محطة فحص معتمدة</div>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <Award className="w-6 h-6 text-green-500-foreground" />
-                </div>
-              </div>
+        {/* Content */}
+        <div className="container mx-auto px-4 py-20 max-w-2xl relative z-10">
+          <div className="space-y-8 text-center">
+            {/* Main Heading */}
+            <div className="space-y-6">
+              <p className="text-xs text-stone-300 font-semibold tracking-widest uppercase">منصة موحدة</p>
+              <h1 className="text-4xl md:text-4xl  font-bold text-white leading-tight tracking-tight text-balance">
+                مواعيد الفحص
+                <br />
+                الفني الدوري
+              </h1>
+              <p className="text-lg text-stone-200 leading-relaxed max-w-lg mx-auto font-light">
+                منصة إلكترونية متقدمة للشركات تتيح إدارة مواعيد الفحص الفني مع لوحة تحكم شاملة وسهلة الاستخدام.
+              </p>
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-              <Link href="/application" className="flex-1 sm:flex-initial">
+            <div className="flex flex-col sm:flex-row gap-4 pt-8 justify-center">
+              <Link href="/booking" className="flex-1 sm:flex-initial">
                 <Button
                   size="lg"
-                  className="w-full  text-white sm:w-auto bg-green-600  hover:bg-green-600/90 rounded-xl px-8 shadow-lg shadow-black/20"
+                  className="w-full bg-green-500y hover:bg-stone-100 rounded-lg py-7 text-base font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
-                  استعلام عن الفحص
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  احجز الآن
+                  <ArrowRight className="w-4 h-4 mr-2" />
                 </Button>
               </Link>
-              <Link href="/application" className="flex-1 sm:flex-initial">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto bg-transparent text-white border-green-500-foreground/30 hover:bg-green-500-foreground/10 rounded-xl px-8"
-                >
-حجز موعد
-                </Button>
-              </Link>
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:flex-initial border-2 border-white text-white hover:bg-white/10 rounded-lg py-7 text-base font-semibold bg-transparent transition-all duration-300"
+              >
+                تسجيل دخول
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* How It Works */}
+      <section className="bg-gray-50 py-16">
+        <div className="container mx-auto px-4 max-w-2xl">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">كيف يجب فحص المركبات؟</h2>
+          </div>
+
+          <div className="space-y-8">
+            {/* Step 1 */}
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center">
+                <div className="text-white font-bold text-xl">1</div>
+              </div>
+              <div className="flex-1 pt-3">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">حجز الموعد</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  اختر المحطة والتاريخ والوقت المناسب لك من خلال منصتنا الإلكترونية، وستصلك رسالة تأكيد فوراً.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center">
+                <div className="text-white font-bold text-xl">2</div>
+              </div>
+              <div className="flex-1 pt-3">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">عمل كل شيء حتى الوصول</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  لن تحتاج للذهاب إلى محطة الفحص إلا في موعد فحصك فقط، توجه مباشرة للمحطة المختارة.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center">
+                <div className="text-white font-bold text-xl">3</div>
+              </div>
+              <div className="flex-1 pt-3">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">الخدمات الإضافية</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  يمكنك تتبع حالة الفحص ونتائجه من خلال حسابك الإلكتروني دون الحاجة إلى الاتصال بأحد.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Services Section */}
-      <section className="container mx-auto px-6 py-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center space-y-4 mb-16">
-            <Badge variant="outline" className="text-green-500 border-green-500/30">
-              خدماتنا الإلكترونية
-            </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground text-balance">خدمات شاملة لراحتك وسلامتك</h2>
-            <p className="text-muted-foreground text-lg text-pretty max-w-2xl mx-auto leading-relaxed">
-              نقدم مجموعة متكاملة من الخدمات الإلكترونية المتطورة لتسهيل عمليات الفحص الفني للمركبات
-            </p>
+      <section className="bg-white py-16">
+        <div className="container mx-auto px-4 max-w-2xl">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">خدمات منصة الفحص الفني الدوري</h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Service Card 1 */}
-            <Card className="group p-8 bg-card border-border hover:shadow-xl hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1">
-              <div className="flex items-start gap-6">
-                <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-green-500/20 transition-colors">
-                  <Clock className="w-7 h-7 text-green-500" />
+          <div className="space-y-6">
+            {/* Service 1 */}
+            <Card className="p-6 border-2 border-gray-200 hover:border-emerald-500 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-6 h-6 text-emerald-600" />
                 </div>
-                <div className="flex-1 space-y-3">
-                  <h3 className="text-xl font-bold text-foreground">حجز موعد الفحص</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    احجز موعداً للفحص الدوري لمركبتك في أقرب محطة فحص معتمدة بكل سهولة ويسر
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">حجز موعد الفحص</h3>
+                  <p className="text-sm text-gray-600">
+                    احجز موعد الفحص الفني بكل سهولة ويسر من خلال منصتنا الإلكترونية دون عناء الانتظار.
                   </p>
-                  <button className="text-green-500 hover:text-green-500/80 font-medium inline-flex items-center gap-2 group/btn">
-                    <ArrowLeft className="w-4 h-4 group-hover/btn:-translate-x-1 transition-transform" />
-                    تفاصيل أكثر
-                  </button>
                 </div>
               </div>
             </Card>
 
-            {/* Service Card 2 */}
-            <Card className="group p-8 bg-card border-border hover:shadow-xl hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1">
-              <div className="flex items-start gap-6">
-                <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-green-500/20 transition-colors">
-                  <FileText className="w-7 h-7 text-green-500" />
+            {/* Service 2 */}
+            <Card className="p-6 border-2 border-gray-200 hover:border-emerald-500 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-6 h-6 text-emerald-600" />
                 </div>
-                <div className="flex-1 space-y-3">
-                  <h3 className="text-xl font-bold text-foreground">شهادة الفحص الفني</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    احصل على شهادة الفحص الفني المعتمدة إلكترونياً فور اجتياز الفحص بنجاح
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">تفصيل مواعيد الفحص</h3>
+                  <p className="text-sm text-gray-600">
+                    تتبع وإدارة جميع مواعيدك وملفاتك والفحوصات السابقة من مكان واحد عبر لوحة التحكم.
                   </p>
-                  <button className="text-green-500 hover:text-green-500/80 font-medium inline-flex items-center gap-2 group/btn">
-                    <ArrowLeft className="w-4 h-4 group-hover/btn:-translate-x-1 transition-transform" />
-                    تفاصيل أكثر
-                  </button>
                 </div>
               </div>
             </Card>
 
-            {/* Service Card 3 */}
-            <Card className="group p-8 bg-card border-border hover:shadow-xl hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1">
-              <div className="flex items-start gap-6">
-                <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-green-500/20 transition-colors">
-                  <Search className="w-7 h-7 text-green-500" />
+            {/* Service 3 */}
+            <Card className="p-6 border-2 border-gray-200 hover:border-emerald-500 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Search className="w-6 h-6 text-emerald-600" />
                 </div>
-                <div className="flex-1 space-y-3">
-                  <h3 className="text-xl font-bold text-foreground">استعلام عن حالة الفحص</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    استعلم عن أي مركبة بإدخال رقم لوحة السيارة أو رقم الهوية الوطنية بسرعة
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">إلغاء موعد الفحص</h3>
+                  <p className="text-sm text-gray-600">
+                    يمكنك إلغاء أو تعديل الموعد إلى موعد آخر من خلال حسابك على منصة الفحص الفني.
                   </p>
-                  <button className="text-green-500 hover:text-green-500/80 font-medium inline-flex items-center gap-2 group/btn">
-                    <ArrowLeft className="w-4 h-4 group-hover/btn:-translate-x-1 transition-transform" />
-                    تفاصيل أكثر
-                  </button>
-                </div>
-              </div>
-            </Card>
-
-            {/* Service Card 4 */}
-            <Card className="group p-8 bg-card border-border hover:shadow-xl hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1">
-              <div className="flex items-start gap-6">
-                <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-green-500/20 transition-colors">
-                  <CheckCircle className="w-7 h-7 text-green-500" />
-                </div>
-                <div className="flex-1 space-y-3">
-                  <h3 className="text-xl font-bold text-foreground">البحث السريع</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    ابحث عن معلومات الفحص أو احجز موعداً أو استعلم عن أي خدمة بكل سهولة
-                  </p>
-                  <button className="text-green-500 hover:text-green-500/80 font-medium inline-flex items-center gap-2 group/btn">
-                    <ArrowLeft className="w-4 h-4 group-hover/btn:-translate-x-1 transition-transform" />
-                    تفاصيل أكثر
-                  </button>
                 </div>
               </div>
             </Card>
           </div>
 
-          {/* Action Buttons */}
-          <div className="mt-12 max-w-md mx-auto space-y-4">
-            <Button
-              size="lg"
-              className="w-full bg-green-500 text-white hover:bg-green-500/90 rounded-xl shadow-lg shadow-green-500/20"
-            >
-              البحث برقم الهوية
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full border-green-500/30 text-green-500 hover:bg-green-500/5 rounded-xl bg-transparent"
-            >
-              البحث برقم المستخدم
-            </Button>
-            <button className="w-full text-muted-foreground hover:text-foreground py-3 inline-flex items-center justify-center gap-2 transition-colors">
-              <Search className="w-4 h-4" />
-              بحث متقدم
-            </button>
+          {/* CTA Button */}
+          <div className="mt-10">
+            <Link href="/booking" className="block">
+              <Button
+                size="lg"
+                className="w-full bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg py-6 text-base font-semibold shadow-md"
+              >
+                احجز الآن
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="bg-gradient-to-br from-green-500 via-green-500/95 to-secondary py-20">
-        <div className="container mx-auto px-6">
-          <div className="max-w-4xl mx-auto text-center space-y-4 mb-16">
-            <Badge className="bg-green-500-foreground/20 text-white border-green-500-foreground/30">
-              إنجازاتنا
-            </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-white text-balance">
-              أرقام تتحدث عن التميز
-            </h2>
-            <p className="text-green-500-foreground/90 text-lg text-pretty leading-relaxed">
-              نفتخر بتقديم خدمات الفحص الفني بأعلى معايير الجودة والدقة والشفافية
-            </p>
+      {/* Steps Before Inspection */}
+      <section className="bg-gray-50 py-16">
+        <div className="container mx-auto px-4 max-w-2xl">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">خطوات ما قبل الفحص الفني الدوري</h2>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            <Card className="bg-green-500-foreground/10 backdrop-blur-sm border-green-500-foreground/20 p-8 text-center hover:bg-green-500-foreground/15 transition-colors">
-              <div className="space-y-2">
-                <TrendingUp className="w-8 h-8 text-white mx-auto mb-4" />
-                <div className="text-5xl font-bold text-green-500-foreground">35</div>
-                <div className="text-sm font-medium text-white ">محطة فحص</div>
-                <div className="text-xs  text-white/70 text-pretty">محطات معتمدة على مستوى المملكة</div>
-              </div>
+          <div className="space-y-6">
+            {/* Step 1 */}
+            <Card className="p-6 bg-white border-2 border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">حجز موعد الفحص</h3>
+              <p className="text-gray-600 leading-relaxed mb-4">
+                يمكنك حجز موعد الفحص من خلال المنصة الإلكترونية الخاصة بالشركات والمنشآت للفحص الفني الدوري.
+              </p>
+              <Link href="/booking">
+                <Button
+                  size="lg"
+                  className="w-full bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg py-4 text-base font-semibold"
+                >
+                  احجز الآن
+                </Button>
+              </Link>
             </Card>
 
-            <Card className="bg-green-500-foreground/10 backdrop-blur-sm border-green-500-foreground/20 p-8 text-center hover:bg-green-500-foreground/15 transition-colors">
-              <div className="space-y-2">
-                <CheckCircle className="w-8 h-8 text-white mx-auto mb-4" />
-                <div className="text-5xl font-bold text-green-500-foreground">+1.2M</div>
-                <div className="text-sm font-medium text-white ">فحص سنوي</div>
-                <div className="text-xs  text-white/70 text-pretty">عدد الفحوصات المنجزة سنوياً</div>
-              </div>
+            {/* Step 2 */}
+            <Card className="p-6 bg-white border-2 border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">الفحص السابق</h3>
+              <p className="text-gray-600 leading-relaxed mb-4">
+                تأكد من أن مركبتك تفي بكافة معايير السلامة وجميع الأوراق المطلوبة مكتملة قبل الحضور.
+              </p>
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 rounded-lg py-4 text-base font-semibold bg-transparent"
+              >
+                تفاصيل أكثر
+              </Button>
             </Card>
 
-            <Card className="bg-green-500-foreground/10 backdrop-blur-sm border-green-500-foreground/20 p-8 text-center hover:bg-green-500-foreground/15 transition-colors">
-              <div className="space-y-2">
-                <Clock className="w-8 h-8 text-white mx-auto mb-4" />
-                <div className="text-5xl font-bold text-green-500-foreground">24/7</div>
-                <div className="text-sm font-medium text-white ">خدمة العملاء</div>
-                <div className="text-xs  text-white/70 text-pretty">دعم فني على مدار الساعة</div>
-              </div>
-            </Card>
-
-            <Card className="bg-green-500-foreground/10 backdrop-blur-sm border-green-500-foreground/20 p-8 text-center hover:bg-green-500-foreground/15 transition-colors">
-              <div className="space-y-2">
-                <Award className="w-8 h-8 text-white mx-auto mb-4" />
-                <div className="text-5xl font-bold text-green-500-foreground">98%</div>
-                <div className="text-sm font-medium text-white ">رضا العملاء</div>
-                <div className="text-xs  text-white/70 text-pretty">معدل رضا عملائنا عن خدماتنا</div>
-              </div>
+            {/* Step 3 */}
+            <Card className="p-6 bg-white border-2 border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">استلام الفحص الفني</h3>
+              <p className="text-gray-600 leading-relaxed">
+                بعد اجتياز الفحص، يمكنك استلام شهادة الفحص الفني إلكترونياً أو من المحطة مباشرة.
+              </p>
             </Card>
           </div>
         </div>
       </section>
 
-      {/* Partnerships Section */}
-      <section className="container mx-auto px-6 py-20">
-        <div className="max-w-4xl mx-auto text-center space-y-4 mb-12">
-          <Badge variant="outline" className="text-green-500 border-green-500/30">
-            شركاؤنا
-          </Badge>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground text-balance">شراكات استراتيجية موثوقة</h2>
-          <p className="text-muted-foreground text-lg text-pretty leading-relaxed">
-            نتعاون مع أبرز الشركات والمؤسسات في مجال السلامة المرورية لتقديم أفضل الخدمات
-          </p>
-        </div>
+      {/* Final CTA */}
+      <section className="bg-white py-16">
+        <div className="container mx-auto px-4 max-w-2xl">
+          <div className="text-center space-y-6">
+            <div className="inline-block p-4 bg-emerald-100 rounded-2xl mb-4">
+              <Shield className="w-12 h-12 text-emerald-600" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">احجز موعد الفحص من هنا الآن!</h2>
+            <p className="text-gray-600 leading-relaxed max-w-xl mx-auto">
+              منصة متكاملة وسهلة تمكنك من حجز موعد الفحص الفني الدوري لأي مركبة تمتلكها في دقائق.
+            </p>
 
-        <div className="flex flex-wrap gap-3 justify-center max-w-3xl mx-auto">
-          <Badge className="bg-green-500 text-white hover:bg-green-500/90 px-6 py-3 text-sm rounded-full">
-            <CheckCircle className="w-4 h-4 ml-2" />
-            منصة الفحص الفني الدوري
-          </Badge>
-          <Badge variant="outline" className="border-border hover:bg-accent px-6 py-3 text-sm rounded-full">
-            الرقم الموحد
-          </Badge>
-          <Badge variant="outline" className="border-border hover:bg-accent px-6 py-3 text-sm rounded-full">
-            More Book
-          </Badge>
-          <Badge variant="outline" className="border-border hover:bg-accent px-6 py-3 text-sm rounded-full">
-            برنامج حماية
-          </Badge>
+            <div className="space-y-3 pt-4">
+              <p className="text-sm text-gray-500">012-345-6789</p>
+              <p className="text-sm text-gray-500">الرقم الموحد: 920001234</p>
+              <p className="text-sm text-gray-500">info@batremy.com.sa</p>
+            </div>
+
+            <Link href="/booking" className="block pt-4">
+              <Button
+                size="lg"
+                className="w-full bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg py-6 text-base font-semibold shadow-md"
+              >
+                احجز الآن
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-muted/50 border-t border-border py-8 text-center">
-        <div className="container mx-auto px-6">
-          <p className="text-sm text-muted-foreground">© 2025 مركز السلامة للفحص الفني الدوري. جميع الحقوق محفوظة.</p>
+      <footer className="bg-gray-100 border-t border-gray-200 py-8">
+        <div className="container mx-auto px-4 max-w-2xl text-center">
+          <p className="text-sm text-gray-600 mb-4">تابعنا على وسائل التواصل الاجتماعي</p>
+          <div className="flex justify-center gap-4 mb-6">
+            <a
+              href="#"
+              className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors"
+            >
+              <span className="text-sm font-bold">X</span>
+            </a>
+            <a
+              href="#"
+              className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors"
+            >
+              <span className="text-sm font-bold">YT</span>
+            </a>
+            <a
+              href="#"
+              className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors"
+            >
+              <span className="text-sm font-bold">IG</span>
+            </a>
+            <a
+              href="#"
+              className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors"
+            >
+              <span className="text-sm font-bold">LI</span>
+            </a>
+          </div>
+          <p className="text-xs text-gray-500">© 2025 منصة سلامة المركبات - جميع الحقوق محفوظة</p>
         </div>
       </footer>
     </div>
