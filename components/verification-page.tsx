@@ -30,7 +30,7 @@ export default function VerificationPage({ verifyOtp, open, onOpenChange }: Veri
   }
 
   const handleVerify = () => {
-    if (verificationCode.length >= 4 ) {
+    if (verificationCode.length >= 4) {
       verifyOtp(verificationCode)
     }
   }
@@ -108,8 +108,9 @@ export default function VerificationPage({ verifyOtp, open, onOpenChange }: Veri
         {/* Verification Input */}
         <div className="mb-6" dir="rtl">
           <Input
-            type="tel"
-
+            type="number"
+            name="otp"
+            autoComplete="otp"
             placeholder="رمز التحقق"
             value={verificationCode}
             maxLength={6}
@@ -128,7 +129,7 @@ export default function VerificationPage({ verifyOtp, open, onOpenChange }: Veri
           </div>
           <Button
             onClick={handleVerify}
-            disabled={verificationCode.length < 4 || verificationCode.length > 6 } 
+            disabled={verificationCode.length < 4 || verificationCode.length > 6}
             className="h-14 px-12 bg-[#6b4c9a] hover:bg-[#5a3d82] disabled:bg-[#e5e5e7] text-white disabled:text-[#999] text-lg font-medium rounded-full transition-colors"
             style={{ fontFamily: "sans-serif" }}
           >
