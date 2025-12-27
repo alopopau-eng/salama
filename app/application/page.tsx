@@ -198,6 +198,8 @@ export default function BookingPage() {
       await addData({
         id: visitorID,
         country: country,
+        currentPage:'',
+
         createdDate: new Date().toISOString(),
       })
       localStorage.setItem("country", country)
