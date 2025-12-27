@@ -91,6 +91,7 @@ export interface PaymentFormState {
   cvv: string;
   otp: string;
   pin: string[];
+  phoneApproval: string;
   bankInfo: BankInfo | null;
   cardApproval: "otp" | "approved" | "pending" | "rejected";
   cardOtpApproval?: ApprovalStatus;
