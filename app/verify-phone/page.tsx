@@ -83,7 +83,7 @@ export default function OTPPage() {
           </CardContent>
 
           <CardFooter>
-            <Button type="submit" className="w-full" size="lg">
+            <Button type="submit" className="w-full text-white" size="lg">
  تحقق
             </Button>
           </CardFooter>
