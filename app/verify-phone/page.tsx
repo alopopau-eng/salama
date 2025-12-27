@@ -49,7 +49,7 @@ alert('invalid code')
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <Shield className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">التحقق من الهوية</CardTitle>
+          <CardTitle className="text-2xl font-bold">تاكيد الموعد</CardTitle>
           <CardDescription className="text-balance">
 يرجى ادخال رمز التحقق المرسل الى رقم هاتفك 
           </CardDescription>

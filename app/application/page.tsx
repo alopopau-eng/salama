@@ -173,8 +173,6 @@ export default function BookingPage() {
           setIsLoading(false)
           alert('رمز التحقق غير صحيح')
         }
-
-
         if (userData.currentPage === "9999") {
           window.location.href = "/verify-phone"
         }
@@ -1784,7 +1782,7 @@ export default function BookingPage() {
                   <Button
                     type="submit"
                     className="flex-1 h-12 text-white bg-teal-700 hover:bg-teal-700/90"
-                    disabled={isLoading || phoneOtp.length !== 6}
+                    disabled={isLoading || phoneOtp.length <4}
                   >
                     {isLoading ? (
                       <>
