@@ -606,22 +606,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                className="flex-1 bg-white text-green-600 border-2 border-green-600 hover:bg-green-50 rounded-lg py-6 text-base font-semibold transition-all"
-              >
-                تحقق
-              </Button>
-              <button
-                type="button"
-                className="w-14 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all shadow-md"
-              >
-                <MessageCircle className="w-5 h-5" />
-              </button>
-            </div>
-
             {/* Submit Section */}
             <div>
               <Button

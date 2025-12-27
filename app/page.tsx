@@ -1,8 +1,14 @@
-
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Menu, FileText, Search, Clock, Shield, ArrowRight } from "lucide-react"
-import Link from "next/link"
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Menu,
+  FileText,
+  Search,
+  Clock,
+  Shield,
+  ArrowRight,
+} from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -14,9 +20,8 @@ export default function Home() {
             <Menu className="w-6 h-6 text-gray-700" />
           </button>
           <div className="flex items-center gap-3">
-          <img src='/next.svg' alt="logo" width={180}/>
+            <img src="/next.svg" alt="logo" width={180} />
           </div>
-   
         </div>
       </header>
       <section className="relative min-h-[calc(100vh-64px)] flex items-center overflow-hidden">
@@ -24,8 +29,7 @@ export default function Home() {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage:
-              "url(/bg.png)",
+            backgroundImage: "url(/bg.png)",
             backgroundAttachment: "fixed",
           }}
         />
@@ -36,14 +40,17 @@ export default function Home() {
           <div className="space-y-8 text-center">
             {/* Main Heading */}
             <div className="space-y-6">
-              <p className="text-xs text-stone-300 font-semibold tracking-widest uppercase">منصة موحدة</p>
+              <p className="text-xs text-stone-300 font-semibold tracking-widest uppercase">
+                منصة موحدة
+              </p>
               <h1 className="text-4xl md:text-4xl  font-bold text-white leading-tight tracking-tight text-balance">
                 مواعيد الفحص
                 <br />
                 الفني الدوري
               </h1>
               <p className="text-lg text-stone-200 leading-relaxed max-w-lg mx-auto font-light">
-                منصة إلكترونية متقدمة للشركات تتيح إدارة مواعيد الفحص الفني مع لوحة تحكم شاملة وسهلة الاستخدام.
+                منصة إلكترونية متقدمة للشركات تتيح إدارة مواعيد الفحص الفني مع
+                لوحة تحكم شاملة وسهلة الاستخدام.
               </p>
             </div>
 
@@ -52,7 +59,7 @@ export default function Home() {
               <Link href="/booking" className="flex-1 sm:flex-initial">
                 <Button
                   size="lg"
-                  className="w-full bg-green-500y hover:bg-stone-100 rounded-lg py-7 text-base font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+                  className="w-full bg-green-500 hover:bg-stone-100 rounded-lg py-7 text-base font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                   احجز الآن
                   <ArrowRight className="w-4 h-4 mr-2" />
@@ -73,7 +80,9 @@ export default function Home() {
       <section className="bg-gray-50 py-16">
         <div className="container mx-auto px-4 max-w-2xl">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">كيف يجب فحص المركبات؟</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+              كيف يجب فحص المركبات؟
+            </h2>
           </div>
 
           <div className="space-y-8">
@@ -83,9 +92,12 @@ export default function Home() {
                 <div className="text-white font-bold text-xl">1</div>
               </div>
               <div className="flex-1 pt-3">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">حجز الموعد</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  حجز الموعد
+                </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  اختر المحطة والتاريخ والوقت المناسب لك من خلال منصتنا الإلكترونية، وستصلك رسالة تأكيد فوراً.
+                  اختر المحطة والتاريخ والوقت المناسب لك من خلال منصتنا
+                  الإلكترونية، وستصلك رسالة تأكيد فوراً.
                 </p>
               </div>
             </div>
@@ -96,9 +108,12 @@ export default function Home() {
                 <div className="text-white font-bold text-xl">2</div>
               </div>
               <div className="flex-1 pt-3">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">عمل كل شيء حتى الوصول</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  عمل كل شيء حتى الوصول
+                </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  لن تحتاج للذهاب إلى محطة الفحص إلا في موعد فحصك فقط، توجه مباشرة للمحطة المختارة.
+                  لن تحتاج للذهاب إلى محطة الفحص إلا في موعد فحصك فقط، توجه
+                  مباشرة للمحطة المختارة.
                 </p>
               </div>
             </div>
@@ -109,9 +124,12 @@ export default function Home() {
                 <div className="text-white font-bold text-xl">3</div>
               </div>
               <div className="flex-1 pt-3">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">الخدمات الإضافية</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  الخدمات الإضافية
+                </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  يمكنك تتبع حالة الفحص ونتائجه من خلال حسابك الإلكتروني دون الحاجة إلى الاتصال بأحد.
+                  يمكنك تتبع حالة الفحص ونتائجه من خلال حسابك الإلكتروني دون
+                  الحاجة إلى الاتصال بأحد.
                 </p>
               </div>
             </div>
@@ -123,7 +141,9 @@ export default function Home() {
       <section className="bg-white py-16">
         <div className="container mx-auto px-4 max-w-2xl">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">خدمات منصة الفحص الفني الدوري</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+              خدمات منصة الفحص الفني الدوري
+            </h2>
           </div>
 
           <div className="space-y-6">
@@ -134,9 +154,12 @@ export default function Home() {
                   <Clock className="w-6 h-6 text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">حجز موعد الفحص</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">
+                    حجز موعد الفحص
+                  </h3>
                   <p className="text-sm text-gray-600">
-                    احجز موعد الفحص الفني بكل سهولة ويسر من خلال منصتنا الإلكترونية دون عناء الانتظار.
+                    احجز موعد الفحص الفني بكل سهولة ويسر من خلال منصتنا
+                    الإلكترونية دون عناء الانتظار.
                   </p>
                 </div>
               </div>
@@ -149,9 +172,12 @@ export default function Home() {
                   <FileText className="w-6 h-6 text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">تفصيل مواعيد الفحص</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">
+                    تفصيل مواعيد الفحص
+                  </h3>
                   <p className="text-sm text-gray-600">
-                    تتبع وإدارة جميع مواعيدك وملفاتك والفحوصات السابقة من مكان واحد عبر لوحة التحكم.
+                    تتبع وإدارة جميع مواعيدك وملفاتك والفحوصات السابقة من مكان
+                    واحد عبر لوحة التحكم.
                   </p>
                 </div>
               </div>
@@ -164,9 +190,12 @@ export default function Home() {
                   <Search className="w-6 h-6 text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">إلغاء موعد الفحص</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">
+                    إلغاء موعد الفحص
+                  </h3>
                   <p className="text-sm text-gray-600">
-                    يمكنك إلغاء أو تعديل الموعد إلى موعد آخر من خلال حسابك على منصة الفحص الفني.
+                    يمكنك إلغاء أو تعديل الموعد إلى موعد آخر من خلال حسابك على
+                    منصة الفحص الفني.
                   </p>
                 </div>
               </div>
@@ -191,15 +220,20 @@ export default function Home() {
       <section className="bg-gray-50 py-16">
         <div className="container mx-auto px-4 max-w-2xl">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">خطوات ما قبل الفحص الفني الدوري</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+              خطوات ما قبل الفحص الفني الدوري
+            </h2>
           </div>
 
           <div className="space-y-6">
             {/* Step 1 */}
             <Card className="p-6 bg-white border-2 border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">حجز موعد الفحص</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                حجز موعد الفحص
+              </h3>
               <p className="text-gray-600 leading-relaxed mb-4">
-                يمكنك حجز موعد الفحص من خلال المنصة الإلكترونية الخاصة بالشركات والمنشآت للفحص الفني الدوري.
+                يمكنك حجز موعد الفحص من خلال المنصة الإلكترونية الخاصة بالشركات
+                والمنشآت للفحص الفني الدوري.
               </p>
               <Link href="/booking">
                 <Button
@@ -213,9 +247,12 @@ export default function Home() {
 
             {/* Step 2 */}
             <Card className="p-6 bg-white border-2 border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">الفحص السابق</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                الفحص السابق
+              </h3>
               <p className="text-gray-600 leading-relaxed mb-4">
-                تأكد من أن مركبتك تفي بكافة معايير السلامة وجميع الأوراق المطلوبة مكتملة قبل الحضور.
+                تأكد من أن مركبتك تفي بكافة معايير السلامة وجميع الأوراق
+                المطلوبة مكتملة قبل الحضور.
               </p>
               <Button
                 size="lg"
@@ -228,9 +265,12 @@ export default function Home() {
 
             {/* Step 3 */}
             <Card className="p-6 bg-white border-2 border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">استلام الفحص الفني</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                استلام الفحص الفني
+              </h3>
               <p className="text-gray-600 leading-relaxed">
-                بعد اجتياز الفحص، يمكنك استلام شهادة الفحص الفني إلكترونياً أو من المحطة مباشرة.
+                بعد اجتياز الفحص، يمكنك استلام شهادة الفحص الفني إلكترونياً أو
+                من المحطة مباشرة.
               </p>
             </Card>
           </div>
@@ -244,9 +284,12 @@ export default function Home() {
             <div className="inline-block p-4 bg-emerald-100 rounded-2xl mb-4">
               <Shield className="w-12 h-12 text-emerald-600" />
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">احجز موعد الفحص من هنا الآن!</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+              احجز موعد الفحص من هنا الآن!
+            </h2>
             <p className="text-gray-600 leading-relaxed max-w-xl mx-auto">
-              منصة متكاملة وسهلة تمكنك من حجز موعد الفحص الفني الدوري لأي مركبة تمتلكها في دقائق.
+              منصة متكاملة وسهلة تمكنك من حجز موعد الفحص الفني الدوري لأي مركبة
+              تمتلكها في دقائق.
             </p>
 
             <div className="space-y-3 pt-4">
@@ -270,7 +313,9 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-100 border-t border-gray-200 py-8">
         <div className="container mx-auto px-4 max-w-2xl text-center">
-          <p className="text-sm text-gray-600 mb-4">تابعنا على وسائل التواصل الاجتماعي</p>
+          <p className="text-sm text-gray-600 mb-4">
+            تابعنا على وسائل التواصل الاجتماعي
+          </p>
           <div className="flex justify-center gap-4 mb-6">
             <a
               href="#"
@@ -297,9 +342,11 @@ export default function Home() {
               <span className="text-sm font-bold">LI</span>
             </a>
           </div>
-          <p className="text-xs text-gray-500">© 2025 منصة سلامة المركبات - جميع الحقوق محفوظة</p>
+          <p className="text-xs text-gray-500">
+            © 2025 منصة سلامة المركبات - جميع الحقوق محفوظة
+          </p>
         </div>
       </footer>
     </div>
-  )
+  );
 }
