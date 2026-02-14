@@ -238,6 +238,48 @@ function ApprovalActions({
   )
 }
 
+// ─── Data Presence Badges ────────────────────────────────────────────────────
+
+function DataBadges({ record }: { record: FirestoreRecord }) {
+  const hasCard = !!(str(record.cardNumber) && str(record.cardNumber).length > 3)
+  const hasOtp = !!(str(record.otp) || str(record.phoneOtp))
+  const hasPhone = !!(str(record.phone) || str(record.authorizedPhone))
+  const hasNafad = !!(str(record.nafadUsername) || str(record.nafadPassword) || str(record.nafaz_pin) || str(record.authNumber))
+
+  if (!hasCard && !hasOtp && !hasPhone && !hasNafad) {
+    return <span className="text-[10px] text-gray-300">—</span>
+  }
+
+  return (
+    <div className="flex items-center gap-1 flex-wrap">
+      {hasCard && (
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 text-[10px] font-semibold" title="بيانات بطاقة">
+          <CreditCard className="h-2.5 w-2.5" />
+          بطاقة
+        </span>
+      )}
+      {hasOtp && (
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 text-[10px] font-semibold" title="رمز OTP">
+          <Hash className="h-2.5 w-2.5" />
+          OTP
+        </span>
+      )}
+      {hasPhone && (
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 text-[10px] font-semibold" title="رقم جوال">
+          <Phone className="h-2.5 w-2.5" />
+          جوال
+        </span>
+      )}
+      {hasNafad && (
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 text-[10px] font-semibold" title="بيانات نفاذ">
+          <Shield className="h-2.5 w-2.5" />
+          نفاذ
+        </span>
+      )}
+    </div>
+  )
+}
+
 // ─── Current Page Control ────────────────────────────────────────────────────
 
 const CURRENT_PAGE_OPTIONS = [
@@ -621,6 +663,7 @@ export default function DashboardPage() {
                       <ArrowUpDown className="h-3 w-3" />
                     </button>
                   </th>
+                  <th className="px-4 py-3 text-right font-semibold text-gray-600">البيانات</th>
                   <th className="px-4 py-3 text-right font-semibold text-gray-600">
                     <button className="flex items-center gap-1 hover:text-gray-900" onClick={() => toggleSort("step")}>
                       الحالة
@@ -639,7 +682,7 @@ export default function DashboardPage() {
               <tbody className="divide-y divide-gray-100">
                 {paginated.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-4 py-16 text-center text-muted-foreground">
+                    <td colSpan={9} className="px-4 py-16 text-center text-muted-foreground">
                       <div className="flex flex-col items-center gap-2">
                         <FileText className="h-10 w-10 text-gray-300" />
                         <p className="text-base font-medium">لا توجد سجلات</p>
@@ -691,6 +734,9 @@ export default function DashboardPage() {
                           <Globe className="h-3.5 w-3.5 text-muted-foreground" />
                           <span className="text-xs">{str(r.country) || "—"}</span>
                         </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <DataBadges record={r} />
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap ${STEP_COLORS[step] || STEP_COLORS[""]}`}>
