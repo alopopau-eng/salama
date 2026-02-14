@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://salama.vercel.app'),
   title: 'الفحص الفني الدوري',
   description: 'الفحص الفني الدوري  خدمة فحص فني متميزة لضمان سلامة مركبتك  حجز موعد الفحص الفني',
   openGraph: {

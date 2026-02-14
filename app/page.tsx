@@ -8,6 +8,7 @@ import {
   Shield,
   ArrowRight,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function Home() {
@@ -20,7 +21,7 @@ export default function Home() {
             <Menu className="w-6 h-6 text-gray-700" />
           </button>
           <div className="flex items-center gap-3">
-            <img src="/next.svg" alt="logo" width={180} />
+            <Image src="/next.svg" alt="logo" width={180} height={37} />
           </div>
         </div>
       </header>

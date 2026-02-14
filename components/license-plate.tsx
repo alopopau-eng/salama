@@ -40,8 +40,11 @@ export function LicensePlate({ value, onChange }: LicensePlateProps) {
   const [l2, setL2] = React.useState(value?.letter2 || "")
   const [l3, setL3] = React.useState(value?.letter3 || "")
 
+  const onChangeRef = React.useRef(onChange)
+  onChangeRef.current = onChange
+
   React.useEffect(() => {
-    onChange?.({ numbers, letter1: l1, letter2: l2, letter3: l3 })
+    onChangeRef.current?.({ numbers, letter1: l1, letter2: l2, letter3: l3 })
   }, [numbers, l1, l2, l3])
 
   return (
