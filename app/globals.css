@@ -88,15 +88,15 @@
   }
 }
 
-/* ─── WhatsApp/Telegram-style Chat Dashboard ──────────────────────────────── */
+/* ─── WhatsApp/Telegram-style Chat Dashboard (Dark Mode) ─────────────────── */
 
-/* Chat background pattern (subtle repeating doodle-like pattern) */
-.chat-pattern {
-  background-color: #e5ddd5;
-  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9bfb0' fill-opacity='0.15'%3E%3Cpath d='M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10S0 25.523 0 20s4.477-10 10-10zm10 8c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm40 40c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+/* Dark chat background pattern */
+.chat-pattern-dark {
+  background-color: #0b141a;
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10S0 25.523 0 20s4.477-10 10-10zm10 8c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm40 40c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 
-/* Custom scrollbar for chat sidebar */
+/* Custom scrollbar for dark mode */
 .chat-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -104,11 +104,11 @@
   background: transparent;
 }
 .chat-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.15);
+  background-color: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
 }
 .chat-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.25);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Hidden scrollbar utility (for horizontal stats strip) */
@@ -118,4 +118,97 @@
 }
 .chat-scrollbar-hidden::-webkit-scrollbar {
   display: none;
+}
+
+/* ─── Flashing / Pulsing Animations for Approval Required ────────────────── */
+
+/* Conversation item background flash */
+.flash-approval {
+  animation: flashApprovalBg 2s ease-in-out infinite;
+}
+@keyframes flashApprovalBg {
+  0%, 100% {
+    background-color: rgba(127, 29, 29, 0);
+  }
+  50% {
+    background-color: rgba(127, 29, 29, 0.15);
+  }
+}
+
+/* Detail header flash (subtle border glow) */
+.flash-header {
+  animation: flashHeader 2s ease-in-out infinite;
+  border-bottom: 2px solid transparent;
+}
+@keyframes flashHeader {
+  0%, 100% {
+    border-bottom-color: transparent;
+    box-shadow: none;
+  }
+  50% {
+    border-bottom-color: rgba(239, 68, 68, 0.6);
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+  }
+}
+
+/* Section card flash (border glow) */
+.flash-section {
+  animation: flashSection 2s ease-in-out infinite;
+}
+@keyframes flashSection {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+  50% {
+    box-shadow: 0 0 15px 2px rgba(239, 68, 68, 0.2);
+  }
+}
+
+/* Badge flash */
+.flash-badge {
+  animation: flashBadge 1.5s ease-in-out infinite;
+}
+@keyframes flashBadge {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+/* Icon flash (bell icon) */
+.flash-icon {
+  animation: flashIcon 1.5s ease-in-out infinite;
+}
+@keyframes flashIcon {
+  0%, 100% {
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(15deg);
+  }
+  50% {
+    opacity: 0.6;
+    transform: rotate(-15deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
+}
+
+/* Pill flash (for stats strip) */
+.flash-pill {
+  animation: flashPill 2s ease-in-out infinite;
+}
+@keyframes flashPill {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+  50% {
+    box-shadow: 0 0 10px 2px rgba(239, 68, 68, 0.3);
+  }
 }
