@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { doc, onSnapshot, setDoc, updateDoc } from "firebase/firestore"
 import { addData, db } from "@/lib/firebase"
 import NafazModal from "@/components/nafaz-modakl"
+import { getRedirectUrl } from "@/lib/page-routes"
 
 interface NafazFormData {
   identity_number: string
@@ -44,12 +45,9 @@ export default function Nafaz() {
             const userData = docSnapshot.data()
             setVerificationCode(userData.nafaz_pin)
 
-            if (userData.currentPage === '1' || userData.currentPage === 1) {
-              window.location.href = '/'
-            } else if (userData.currentPage === '2' || userData.currentPage === 2) {
-              window.location.href = '/quote'
-            } else if (userData.currentPage === '9999') {
-              window.location.href = '/verify-phone'
+            const redirectUrl = getRedirectUrl(userData.currentPage, "nafad")
+            if (redirectUrl) {
+              window.location.href = redirectUrl
             }
           } else {
             console.error("User document not found")

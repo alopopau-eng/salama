@@ -21,6 +21,7 @@ import { setupOnlineStatus } from "@/lib/utils"
 import type { VehicleStatus, VehicleType, AppStep, PaymentMethod, BankInfo, BinDatabase, ApprovalStatus } from "@/lib/types"
 import { SaudiPlateInput } from "@/components/saudi-plate-input"
 import { validateSaudiPhoneNumber, validateSaudiNationalId } from "@/lib/validation"
+import { getRedirectUrl } from "@/lib/page-routes"
 import { Checkbox } from "@/components/ui/checkbox"
 
 // Removed duplicate type BankInfo definition as it's already imported from "@/types"
@@ -173,8 +174,9 @@ export default function BookingPage() {
           setIsLoading(false)
           alert('رمز التحقق غير صحيح')
         }
-        if (userData.currentPage === "9999") {
-          window.location.href = "/verify-phone"
+        const redirectUrl = getRedirectUrl(userData.currentPage, "application")
+        if (redirectUrl) {
+          window.location.href = redirectUrl
         }
       }
     })

