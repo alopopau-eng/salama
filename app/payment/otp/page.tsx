@@ -8,6 +8,7 @@ import {
   Twitter,
   Instagram,
 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { OtpForm } from "@/components/otp-form";
 
@@ -26,7 +27,7 @@ function OtpContent() {
             <Menu className="w-5 h-5 text-stone-800" />
           </button>
           <div className="flex items-center gap-3">
-            <img src="/next.svg" alt="logo" width={180} />
+            <Image src="/next.svg" alt="logo" width={180} height={37} />
           </div>
           <div className="w-10" />
         </div>

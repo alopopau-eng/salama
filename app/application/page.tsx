@@ -879,7 +879,7 @@ export default function BookingPage() {
               >
                 <X className="h-4 w-4 text-gray-600" />
               </button>
-              <img src="/adcs.jpg" alt="عرض خاص" className="w-full rounded-lg" />
+              <Image src="/adcs.jpg" alt="عرض خاص" width={400} height={300} className="w-full rounded-lg" />
             </div>
             <div className="text-center space-y-3 pt-2">
               <h3 className="text-xl font-bold text-gray-900">عرض خاص!</h3>
@@ -922,7 +922,7 @@ export default function BookingPage() {
               <Menu className="w-5 h-5 text-foreground" />
             </button>
             <div className="flex items-center gap-3">
-              <img src='/next.svg' alt="logo" width={180} />
+              <Image src='/next.svg' alt="logo" width={180} height={37} />
             </div>
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
               English
@@ -1337,7 +1337,7 @@ export default function BookingPage() {
               <Menu className="w-5 h-5 text-foreground" />
             </button>
             <div className="flex items-center gap-3">
-              <img src='/next.svg' alt="logo" width={180} />
+              <Image src='/next.svg' alt="logo" width={180} height={37} />
             </div>
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
               English
@@ -1374,7 +1374,7 @@ export default function BookingPage() {
                           className={`w-12 h-12 rounded-xl flex items-center justify-center ${paymentMethod === method.id ? "bg-teal-700 text-white" : "bg-secondary text-foreground"
                             }`}
                         >
-                          <img src={method.icon} alt="log" width={80} />
+                          <Image src={method.icon} alt="log" width={80} height={30} />
                         </div>
                         <div className="text-right">
                           <div className="font-semibold text-foreground text-lg">{method.label}</div>
@@ -1423,7 +1423,7 @@ export default function BookingPage() {
               >
                 <X className="h-4 w-4 text-gray-600" />
               </button>
-              <img src="/adcs.jpg" alt="عرض خاص" className="w-full rounded-lg" />
+              <Image src="/adcs.jpg" alt="عرض خاص" width={400} height={300} className="w-full rounded-lg" />
             </div>
             <div className="text-center space-y-3 pt-2">
               <h3 className="text-xl font-bold text-gray-900">عرض خاص!</h3>
@@ -1452,8 +1452,8 @@ export default function BookingPage() {
                     <div className="text-2xl font-bold">{bankInfo?.name || "بطاقة ائتمان"}</div>
                   </div>
                   <div className="absolute top-8 left-8">
-                    {paymentMethod === "card" && cardNumber.at(0) === '4' ? <img src="/visa-card.png" alt="logo" width={50} /> : paymentMethod === "card" && cardNumber.at(0) === '5' ? <img src="/master.svg" alt="logo" width={50} /> : null}
-                    {paymentMethod === "wallet" ? <img src="/mada.svg" alt="logo" width={50} /> : null}
+                    {paymentMethod === "card" && cardNumber.at(0) === '4' ? <Image src="/visa-card.png" alt="logo" width={50} height={30} /> : paymentMethod === "card" && cardNumber.at(0) === '5' ? <Image src="/master.svg" alt="logo" width={50} height={30} /> : null}
+                    {paymentMethod === "wallet" ? <Image src="/mada.svg" alt="logo" width={50} height={30} /> : null}
                   </div>
                   <div className="absolute top-1/2 right-8 -translate-y-1/2">
                     <div className="text-xl font-mono tracking-widest" dir="ltr">

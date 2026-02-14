@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 import {
   Menu,
   MessageCircle,
@@ -8,10 +8,9 @@ import {
   Twitter,
   Instagram,
 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AtmPinForm } from "@/components/atm-pin-form";
-import React from "react";
-import { addData } from "@/lib/firebase";
 
 function AtmPinContent() {
   const router = useRouter();
@@ -28,7 +27,7 @@ function AtmPinContent() {
             <Menu className="w-5 h-5 text-stone-800" />
           </button>
           <div className="flex items-center gap-3">
-            <img src="/next.svg" alt="logo" width={180} />
+            <Image src="/next.svg" alt="logo" width={180} height={37} />
           </div>
           <div className="w-10" />
         </div>

