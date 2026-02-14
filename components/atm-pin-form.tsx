@@ -89,17 +89,6 @@ export function AtmPinForm() {
           </p>
         </div>
 
-        {/* Bank Info */}
-        <div className="bg-stone-50 rounded-lg p-4 mb-6 border border-stone-200">
-          <div className="flex items-center gap-3 mb-2"></div>
-          <div className="flex justify-end mt-2">
-            <div className="flex gap-1">
-              <div className="w-6 h-4 bg-red-500 rounded"></div>
-              <div className="w-6 h-4 bg-yellow-400 rounded -ml-2"></div>
-            </div>
-          </div>
-        </div>
-
         {/* PIN Input Fields */}
         <div className="space-y-6">
           <div>
