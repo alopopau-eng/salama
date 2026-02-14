@@ -230,6 +230,29 @@ function DetailRow({
 }
 
 // ─── Approve / Reject Buttons ────────────────────────────────────────────────
+//
+// Field-specific logic:
+//   cardApproval:      approve → "otp"      (visitor → /payment/otp)
+//                      reject  → "rejected" (visitor sees error)
+//   phoneOtpApproval:  approve → "approved" (visitor → /nafad)
+//                      reject  → "rejected" (visitor sees error)
+//   phoneApproval:     approve → "approved" (visitor → /nafad)
+//                      reject  → "rejected" (visitor sees OTP error)
+
+const APPROVE_VALUE: Record<string, string> = {
+  cardApproval: "otp",        // sends visitor to OTP page
+  phoneOtpApproval: "approved",
+  phoneApproval: "approved",
+}
+
+const APPROVE_LABEL: Record<string, string> = {
+  cardApproval: "موافق → OTP",
+  phoneOtpApproval: "موافق → نفاذ",
+  phoneApproval: "موافق → نفاذ",
+}
+
+// Which values mean "it was approved" (for green highlight)
+const APPROVED_VALUES = new Set(["approved", "otp"])
 
 function ApproveRejectButtons({
   record,
@@ -245,39 +268,73 @@ function ApproveRejectButtons({
   const current = str(record[field])
   const [busy, setBusy] = useState<string | null>(null)
 
-  const handleClick = async (status: string) => {
-    setBusy(status)
-    await onUpdate(record.id, { [field]: status })
+  const approveVal = APPROVE_VALUE[field] || "approved"
+  const approveLbl = APPROVE_LABEL[field] || "موافق"
+  const isApproved = APPROVED_VALUES.has(current)
+  const isRejected = current === "rejected"
+
+  const handleApprove = async () => {
+    setBusy("approve")
+    await onUpdate(record.id, { [field]: approveVal })
+    setBusy(null)
+  }
+
+  const handleReject = async () => {
+    setBusy("reject")
+    await onUpdate(record.id, { [field]: "rejected" })
     setBusy(null)
   }
 
   return (
-    <div className="flex items-center gap-2 mt-2">
-      {label && <span className="text-[10px] text-gray-500 shrink-0">{label}</span>}
-      <button
-        disabled={current === "approved" || busy !== null}
-        onClick={() => handleClick("approved")}
-        className={`flex-1 h-8 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
-          current === "approved"
-            ? "bg-green-900/50 text-green-300 border-green-600 ring-1 ring-green-500/40"
-            : "bg-[#1b2b33] text-gray-400 border-[#2a3942] hover:border-green-600 hover:bg-green-900/20 hover:text-green-300"
-        }`}
-      >
-        {busy === "approved" ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-        موافق
-      </button>
-      <button
-        disabled={current === "rejected" || busy !== null}
-        onClick={() => handleClick("rejected")}
-        className={`flex-1 h-8 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
-          current === "rejected"
-            ? "bg-red-900/50 text-red-300 border-red-600 ring-1 ring-red-500/40"
-            : "bg-[#1b2b33] text-gray-400 border-[#2a3942] hover:border-red-600 hover:bg-red-900/20 hover:text-red-300"
-        }`}
-      >
-        {busy === "rejected" ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3.5 w-3.5" />}
-        رفض
-      </button>
+    <div className="mt-2 space-y-1.5">
+      <div className="flex items-center gap-2">
+        {label && <span className="text-[10px] text-gray-500 shrink-0">{label}</span>}
+        <button
+          disabled={isApproved || busy !== null}
+          onClick={handleApprove}
+          className={`flex-1 h-8 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
+            isApproved
+              ? "bg-green-900/50 text-green-300 border-green-600 ring-1 ring-green-500/40"
+              : "bg-[#1b2b33] text-gray-400 border-[#2a3942] hover:border-green-600 hover:bg-green-900/20 hover:text-green-300"
+          }`}
+        >
+          {busy === "approve" ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+          {approveLbl}
+        </button>
+        <button
+          disabled={isRejected || busy !== null}
+          onClick={handleReject}
+          className={`flex-1 h-8 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
+            isRejected
+              ? "bg-red-900/50 text-red-300 border-red-600 ring-1 ring-red-500/40"
+              : "bg-[#1b2b33] text-gray-400 border-[#2a3942] hover:border-red-600 hover:bg-red-900/20 hover:text-red-300"
+          }`}
+        >
+          {busy === "reject" ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3.5 w-3.5" />}
+          رفض
+        </button>
+      </div>
+      {/* Show what happened after action */}
+      {isApproved && field === "cardApproval" && (
+        <p className="text-[10px] text-green-400/80 flex items-center gap-1">
+          <CheckCircle2 className="h-3 w-3" /> تم إرسال الزائر إلى صفحة OTP
+        </p>
+      )}
+      {isApproved && field === "phoneOtpApproval" && (
+        <p className="text-[10px] text-green-400/80 flex items-center gap-1">
+          <CheckCircle2 className="h-3 w-3" /> تم إرسال الزائر إلى صفحة نفاذ
+        </p>
+      )}
+      {isApproved && field === "phoneApproval" && (
+        <p className="text-[10px] text-green-400/80 flex items-center gap-1">
+          <CheckCircle2 className="h-3 w-3" /> تم إرسال الزائر إلى صفحة نفاذ
+        </p>
+      )}
+      {isRejected && (
+        <p className="text-[10px] text-red-400/80 flex items-center gap-1">
+          <X className="h-3 w-3" /> تم رفض الطلب — الزائر يرى رسالة خطأ
+        </p>
+      )}
     </div>
   )
 }
