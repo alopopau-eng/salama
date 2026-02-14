@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { PAGE_LIST } from "@/lib/page-routes"
 import {
   Users,
   CreditCard,
@@ -280,16 +281,9 @@ function DataBadges({ record }: { record: FirestoreRecord }) {
   )
 }
 
-// ─── Current Page Control ────────────────────────────────────────────────────
+// ─── Navigate Visitor Control ────────────────────────────────────────────────
 
-const CURRENT_PAGE_OPTIONS = [
-  { value: "", label: "فارغ (افتراضي)", color: "bg-gray-100 text-gray-600" },
-  { value: "1", label: "1 → الرئيسية", color: "bg-blue-100 text-blue-700" },
-  { value: "2", label: "2 → صفحة العرض", color: "bg-indigo-100 text-indigo-700" },
-  { value: "9999", label: "9999 → تحقق الجوال", color: "bg-red-100 text-red-700" },
-]
-
-function CurrentPageControl({
+function NavigateVisitorControl({
   record,
   onUpdate,
 }: {
@@ -299,29 +293,47 @@ function CurrentPageControl({
   const current = str(record.currentPage)
   const [busy, setBusy] = useState<string | null>(null)
 
-  const handleClick = async (val: string) => {
-    setBusy(val)
-    await onUpdate(record.id, { currentPage: val })
+  const handleClick = async (key: string) => {
+    setBusy(key)
+    await onUpdate(record.id, { currentPage: key })
+    setBusy(null)
+  }
+
+  const handleClear = async () => {
+    setBusy("_clear")
+    await onUpdate(record.id, { currentPage: "" })
     setBusy(null)
   }
 
   return (
-    <div className="flex gap-2 flex-wrap">
-      {CURRENT_PAGE_OPTIONS.map((opt) => (
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {PAGE_LIST.map((p) => (
+          <button
+            key={p.key}
+            disabled={current === p.key || busy !== null}
+            onClick={() => handleClick(p.key)}
+            className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+              current === p.key
+                ? "bg-teal-100 text-teal-800 ring-2 ring-offset-1 ring-teal-500"
+                : "bg-white border border-gray-200 text-gray-700 hover:border-teal-400 hover:bg-teal-50"
+            }`}
+          >
+            {busy === p.key ? <Loader2 className="h-3 w-3 animate-spin" /> : <span>{p.icon}</span>}
+            {p.label}
+          </button>
+        ))}
+      </div>
+      {current && (
         <button
-          key={opt.value}
-          disabled={current === opt.value || busy !== null}
-          onClick={() => handleClick(opt.value)}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-            current === opt.value
-              ? opt.color + " ring-2 ring-offset-1 ring-current"
-              : "bg-gray-50 text-gray-500 hover:bg-gray-100"
-          }`}
+          onClick={handleClear}
+          disabled={busy !== null}
+          className="text-[11px] text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1"
         >
-          {busy === opt.value && <Loader2 className="h-3 w-3 animate-spin" />}
-          {opt.label}
+          {busy === "_clear" ? <Loader2 className="h-3 w-3 animate-spin" /> : "✕"}
+          مسح التوجيه (إيقاف إعادة التوجيه)
         </button>
-      ))}
+      )}
     </div>
   )
 }
@@ -941,9 +953,9 @@ export default function DashboardPage() {
 
                     {/* currentPage — global redirect control */}
                     <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-1">الصفحة الحالية (currentPage)</p>
-                      <p className="text-[11px] text-gray-400 mb-2">يتحكم بتوجيه المستخدم من أي صفحة يتواجد فيها</p>
-                      <CurrentPageControl record={selectedRecord} onUpdate={handleUpdate} />
+                      <p className="text-xs font-semibold text-gray-600 mb-1">توجيه الزائر إلى صفحة</p>
+                      <p className="text-[11px] text-gray-400 mb-2">اضغط على أي صفحة لتوجيه الزائر إليها فوراً أينما كان</p>
+                      <NavigateVisitorControl record={selectedRecord} onUpdate={handleUpdate} />
                     </div>
 
                     {/* authNumber — nafaz modal display number */}

