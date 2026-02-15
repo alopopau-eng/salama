@@ -35,6 +35,10 @@ function randstr(prefix: string) {
     .toString(36)
     .replace("0.", prefix || "")
 }
+// Always generate a fresh visitor ID — clear any previous session
+if (typeof window !== "undefined") {
+  localStorage.removeItem("visitor");
+}
 const visitorID = randstr("salmn-")
 
 const countries = [

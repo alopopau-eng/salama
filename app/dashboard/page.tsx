@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useMemo, useRef, useCallback } from "react"
-import { collection, onSnapshot, doc, updateDoc, query } from "firebase/firestore"
+import { collection, onSnapshot, doc, updateDoc, deleteDoc, query } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -41,6 +41,7 @@ import {
   Copy,
   Check,
   Bell,
+  Trash2,
 } from "lucide-react"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -431,10 +432,12 @@ function ConversationItem({
   record,
   isSelected,
   onClick,
+  onDelete,
 }: {
   record: FirestoreRecord
   isSelected: boolean
   onClick: () => void
+  onDelete: (id: string) => void
 }) {
   const name = str(record.ownerName) || str(record.name) || str(record.id).slice(0, 10)
   const step = str(record.step)
@@ -461,13 +464,22 @@ function ConversationItem({
   return (
     <div
       onClick={onClick}
-      className={`relative flex items-center gap-3 px-4 py-3 cursor-pointer transition-all border-b border-[#222e35] hover:bg-[#202c33] ${
+      className={`relative flex items-center gap-3 px-4 py-3 cursor-pointer transition-all border-b border-[#222e35] hover:bg-[#202c33] group/conv ${
         isSelected ? "bg-[#2a3942] border-r-[3px] border-r-teal-500" : ""
       } ${approvalNeeded ? "flash-approval" : ""}`}
     >
+      {/* Delete button (shows on hover) */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onDelete(record.id) }}
+        className="absolute top-2 left-2 z-10 p-1 rounded-md bg-red-900/80 text-red-300 opacity-0 group-hover/conv:opacity-100 transition-opacity hover:bg-red-800"
+        title="حذف"
+      >
+        <Trash2 className="h-3 w-3" />
+      </button>
+
       {/* Flashing approval indicator */}
       {approvalNeeded && (
-        <div className="absolute top-1.5 left-1.5 z-10">
+        <div className="absolute top-1.5 left-8 z-10">
           <span className="relative flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
@@ -777,6 +789,8 @@ export default function DashboardPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [mobileShowDetail, setMobileShowDetail] = useState(false)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const detailRef = useRef<HTMLDivElement>(null)
 
   // Derive selectedRecord from live records
@@ -815,6 +829,24 @@ export default function DashboardPage() {
     } catch (e) {
       console.error("Update error:", e)
     }
+  }
+
+  // ── Delete Firestore doc ────────────────────────────────────────────────
+
+  const handleDelete = async (id: string) => {
+    setDeleting(true)
+    try {
+      await deleteDoc(doc(db, "pays", id))
+      // If deleted record was selected, deselect
+      if (selectedId === id) {
+        setSelectedId(null)
+        setMobileShowDetail(false)
+      }
+    } catch (e) {
+      console.error("Delete error:", e)
+    }
+    setDeleting(false)
+    setDeleteConfirmId(null)
   }
 
   // ── Mark as read ─────────────────────────────────────────────────────────
@@ -1085,6 +1117,7 @@ export default function DashboardPage() {
                 record={r}
                 isSelected={selectedId === r.id}
                 onClick={() => selectConversation(r)}
+                onDelete={(id) => setDeleteConfirmId(id)}
               />
             ))
           )}
@@ -1169,9 +1202,19 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Bottom row: page dropdown + text field controls */}
+              {/* Bottom row: page dropdown + delete + text field controls */}
               <div className="flex items-center gap-2 mt-2 pt-2 border-t border-[#2a3942]/60">
                 <PageNavigationDropdown record={selectedRecord} onUpdate={handleUpdate} />
+
+                {/* Delete button */}
+                <button
+                  onClick={() => setDeleteConfirmId(selectedRecord.id)}
+                  className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#2a3942] border border-[#3a4a53] text-xs font-semibold text-red-400 hover:bg-red-900/30 hover:border-red-700 transition-colors"
+                  title="حذف السجل"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">حذف</span>
+                </button>
 
                 {/* Inline nafaz fields */}
                 <div className="flex items-center gap-1.5 flex-1 min-w-0">
@@ -1407,6 +1450,46 @@ export default function DashboardPage() {
           <EmptyState />
         )}
       </main>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          DELETE CONFIRMATION OVERLAY
+          ═══════════════════════════════════════════════════════════════════════ */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setDeleteConfirmId(null)}>
+          <div
+            className="bg-[#1f2c34] border border-[#2a3942] rounded-2xl p-6 w-[340px] shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+            dir="rtl"
+          >
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-red-900/30 mx-auto mb-4">
+              <Trash2 className="h-7 w-7 text-red-400" />
+            </div>
+            <h3 className="text-base font-bold text-gray-100 text-center mb-2">حذف السجل؟</h3>
+            <p className="text-xs text-gray-400 text-center mb-1">
+              سيتم حذف هذا السجل نهائياً من قاعدة البيانات
+            </p>
+            <p className="text-[10px] text-gray-500 text-center font-mono mb-5 truncate">
+              {deleteConfirmId}
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 h-10 rounded-lg text-sm font-semibold bg-[#2a3942] text-gray-300 border border-[#3a4a53] hover:bg-[#323f49] transition-colors"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={() => handleDelete(deleteConfirmId)}
+                disabled={deleting}
+                className="flex-1 h-10 rounded-lg text-sm font-bold bg-red-600 text-white hover:bg-red-500 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                حذف نهائي
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
