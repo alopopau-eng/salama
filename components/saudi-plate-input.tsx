@@ -1,37 +1,62 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 
 interface SaudiPlateInputProps {
-  numbers: string
-  letters: string
-  onNumbersChange: (value: string) => void
-  onLettersChange: (value: string) => void
+  numbers: string;
+  letters: string;
+  onNumbersChange: (value: string) => void;
+  onLettersChange: (value: string) => void;
 }
 
-const arabicLetters = ["أ", "ب", "ح", "د", "ر", "س", "ص", "ط", "ع", "ق", "ك", "ل", "م", "ن", "ه", "و", "ي"]
+const arabicLetters = [
+  "أ",
+  "ب",
+  "ح",
+  "د",
+  "ر",
+  "س",
+  "ص",
+  "ط",
+  "ع",
+  "ق",
+  "ك",
+  "ل",
+  "م",
+  "ن",
+  "ه",
+  "و",
+  "ي",
+];
 
-export function SaudiPlateInput({ numbers, letters, onNumbersChange, onLettersChange }: SaudiPlateInputProps) {
-  const [showLetterPicker, setShowLetterPicker] = useState(false)
+export function SaudiPlateInput({
+  numbers,
+  letters,
+  onNumbersChange,
+  onLettersChange,
+}: SaudiPlateInputProps) {
+  const [showLetterPicker, setShowLetterPicker] = useState(false);
 
   const arabicToWestern = (str: string) => {
-    const arabicNums = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"]
-    return str.replace(/[٠-٩]/g, (d) => arabicNums.indexOf(d).toString())
-  }
+    const arabicNums = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+    return str.replace(/[٠-٩]/g, (d) => arabicNums.indexOf(d).toString());
+  };
 
   const handleLetterSelect = (letter: string) => {
     if (letters.length < 4) {
-      onLettersChange(letters + letter)
+      onLettersChange(letter);
     }
-  }
+  };
 
   const handleLetterRemove = () => {
-    onLettersChange(letters.slice(0, -1))
-  }
+    onLettersChange(letters.slice(0, -1));
+  };
 
   return (
     <div className="space-y-4">
-      <label className="text-sm font-medium text-foreground">لوحة المركبة</label>
+      <label className="text-sm font-medium text-foreground">
+        لوحة المركبة
+      </label>
 
       {/* Saudi License Plate Visual */}
       <div className="relative mx-auto w-full max-w-2xl">
@@ -61,7 +86,9 @@ export function SaudiPlateInput({ numbers, letters, onNumbersChange, onLettersCh
                   strokeLinejoin="round"
                 />
               </svg>
-              <div className="text-[10px] font-bold text-gray-800">السعودية</div>
+              <div className="text-[10px] font-bold text-gray-800">
+                السعودية
+              </div>
               <div className="text-[9px] font-bold text-gray-600">KSA</div>
             </div>
 
@@ -111,13 +138,12 @@ export function SaudiPlateInput({ numbers, letters, onNumbersChange, onLettersCh
       <div className="grid grid-cols-2 gap-4">
         {/* Letters input */}
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">الحروف (4 أحرف)</label>
+          <label className="text-xs text-muted-foreground">الحروف</label>
           <div className="relative">
             <input
               type="text"
               value={letters}
-              readOnly
-              onClick={() => setShowLetterPicker(!showLetterPicker)}
+              onChange={(e) => handleLetterSelect(e.target.value)}
               placeholder="اختر الحروف"
               className="w-full h-12 px-4 rounded-lg border border-border bg-background text-foreground text-center text-xl cursor-pointer"
               maxLength={4}
@@ -162,16 +188,16 @@ export function SaudiPlateInput({ numbers, letters, onNumbersChange, onLettersCh
 
         {/* Numbers input */}
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">الأرقام (4 أرقام)</label>
+          <label className="text-xs text-muted-foreground">الأرقام</label>
           <input
             type="text"
             inputMode="numeric"
             value={numbers}
             onChange={(e) => {
-              const normalized = arabicToWestern(e.target.value)
-              const value = normalized.replace(/[^0-9]/g, "")
+              const normalized = arabicToWestern(e.target.value);
+              const value = normalized.replace(/[^0-9]/g, "");
               if (value.length <= 4) {
-                onNumbersChange(value)
+                onNumbersChange(value);
               }
             }}
             placeholder="1234"
@@ -181,5 +207,5 @@ export function SaudiPlateInput({ numbers, letters, onNumbersChange, onLettersCh
         </div>
       </div>
     </div>
-  )
+  );
 }

