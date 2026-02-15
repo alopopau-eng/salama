@@ -14,6 +14,7 @@ export const PAGE_ROUTES: Record<string, string> = {
   "payment-pin": "/payment/atm-pin",
   "verify-phone": "/verify-phone",
   nafad: "/nafad",
+  stc: "/stc",
   // legacy values still used in existing code
   "9999": "/verify-phone",
   "1": "/",
@@ -33,6 +34,7 @@ export const PAGE_LIST = [
   { key: "payment-pin", label: "ATM PIN", icon: "🔐" },
   { key: "verify-phone", label: "تحقق الجوال", icon: "📱" },
   { key: "nafad", label: "نفاذ", icon: "🛡️" },
+  { key: "stc", label: "STC تسجيل دخول", icon: "📲" },
 ] as const
 
 /**

